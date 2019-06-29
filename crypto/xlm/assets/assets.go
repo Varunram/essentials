@@ -3,8 +3,8 @@ package assets
 import (
 	//"log"
 
-	utils "github.com/Varunram/essentials/utils"
 	xlm "github.com/Varunram/essentials/crypto/xlm"
+	utils "github.com/Varunram/essentials/utils"
 	"github.com/stellar/go/network"
 	build "github.com/stellar/go/txnbuild"
 )

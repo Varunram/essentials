@@ -159,3 +159,8 @@ func RefillAccount(publicKey string, platformSeed string) error {
 	}
 	return nil
 }
+
+type StellarWallet struct {
+	PublicKey string
+	Seed      string
+}

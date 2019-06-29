@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"log"
 
+	utils "github.com/Varunram/essentials/utils"
 	consts "github.com/YaleOpenLab/openx/consts"
 	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
@@ -319,4 +320,26 @@ func GenerateBackup(walletName string, password string) (string, error) {
 	}
 
 	return backupPhrase, nil
+}
+
+type AlgorandWallet struct {
+	WalletName string
+	WalletID   string
+}
+
+func GenNewWallet(walletName string, password string) (AlgorandWallet, error) {
+
+	var x AlgorandWallet
+	var err error
+	if len(walletName) > 16 {
+		return x, errors.New("wallet name too long, quitting")
+	}
+
+	x.WalletName = "algowl" + utils.GetRandomString(16-len(walletName))
+	x.WalletID, err = CreateNewWallet(x.WalletName, password)
+	if err != nil {
+		return x, errors.Wrap(err, "couldn't create new wallet id, quitting")
+	}
+
+	return x, nil
 }

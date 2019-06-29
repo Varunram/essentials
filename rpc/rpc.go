@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"encoding/json"
 )
 
 // API documentation over at the apidocs repo
@@ -131,6 +132,56 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 	}
 
 	return x, nil
+}
+
+// GetAndSendJson is a handler that makes a get request and returns json data
+func GetAndSendJson(w http.ResponseWriter, r *http.Request, body string, x interface{}) {
+	data, err := GetRequest(body)
+	if err != nil {
+		log.Println("did not get response", err)
+		ResponseHandler(w, StatusBadRequest)
+		return
+	}
+	// now data is in byte, we need the other structure now
+	err = json.Unmarshal(data, &x)
+	if err != nil {
+		log.Println("did not unmarshal json", err)
+		ResponseHandler(w, StatusInternalServerError)
+		return
+	}
+	MarshalSend(w, x)
+}
+
+// GetAndSendByte is a handler that makes a get request and returns byte data. THis is used
+// in cases for which we don;t know the format of the returned data, so we can't parse
+// what stuff is in here.
+func GetAndSendByte(w http.ResponseWriter, r *http.Request, body string) {
+	data, err := GetRequest(body)
+	if err != nil {
+		log.Println("did not get response", err)
+		ResponseHandler(w, StatusBadRequest)
+		return
+	}
+
+	w.Write(data)
+}
+
+// PutAndSend is a handler that PUTs data and returns the response
+func PutAndSend(w http.ResponseWriter, r *http.Request, body string, payload io.Reader) {
+	data, err := PutRequest(body, payload)
+	if err != nil {
+		log.Println("did not receive success response", err)
+		ResponseHandler(w, StatusBadRequest)
+		return
+	}
+	var x interface{}
+	err = json.Unmarshal(data, &x)
+	if err != nil {
+		log.Println("did not unmarshal json", err)
+		ResponseHandler(w, StatusInternalServerError)
+		return
+	}
+	MarshalSend(w, x)
 }
 
 // setupDefaultHandler sets up the default handler (ie returns 404 for invalid routes)

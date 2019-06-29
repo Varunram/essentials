@@ -5,11 +5,11 @@ import (
 	"log"
 	// "time"
 
+	tickers "github.com/Varunram/essentials/crypto/exchangetickers"
 	xlm "github.com/Varunram/essentials/crypto/xlm"
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
 	utils "github.com/Varunram/essentials/utils"
 	consts "github.com/YaleOpenLab/openx/consts"
-	tickers "github.com/Varunram/essentials/crypto/exchangetickers"
 )
 
 // GetAnchorUSD gets anchorUSD from Anchor

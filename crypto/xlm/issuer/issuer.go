@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	wallet "github.com/Varunram/essentials/crypto/xlm/wallet"
 	xlm "github.com/Varunram/essentials/crypto/xlm"
+	wallet "github.com/Varunram/essentials/crypto/xlm/wallet"
 	utils "github.com/Varunram/essentials/utils"
 	"github.com/pkg/errors"
 )

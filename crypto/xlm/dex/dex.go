@@ -4,8 +4,8 @@ import (
 	"github.com/pkg/errors"
 	//"log"
 
-	utils "github.com/Varunram/essentials/utils"
 	xlm "github.com/Varunram/crypto/essentials/xlm"
+	utils "github.com/Varunram/essentials/utils"
 	consts "github.com/YaleOpenLab/openx/consts"
 	oracle "github.com/YaleOpenLab/openx/oracle"
 	"github.com/stellar/go/network"

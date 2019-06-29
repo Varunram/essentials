@@ -243,7 +243,6 @@ func XLMUSD() (float64, error) {
 	return binanceTicker*(binanceVolume/netVolume) + cbTicker*(cbVolume/netVolume) + krakenTicker*(krakenVolume/netVolume), nil
 }
 
-
 // ExchangeXLMforUSD retrieves the current price of XLM/USD and then returns the USD amount
 // that the XLM deposited is worth and takes a percentage premium that emulates
 // how real world exchanges would behave. This fee is 0.01% for now
