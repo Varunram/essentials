@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	utils "github.com/YaleOpenLab/openx/utils"
+	utils "github.com/Varunram/essentials/utils"
 )
 
 func TestAlgorandFunctions(t *testing.T) {

@@ -9,7 +9,6 @@ import (
 	xlm "github.com/Varunram/essentials/crypto/xlm"
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
 	utils "github.com/Varunram/essentials/utils"
-	consts "github.com/YaleOpenLab/openx/consts"
 )
 
 // Exchange exchanges xlm for STABLEUSD
@@ -30,7 +29,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 	}
 
 	var trustLimit string
-	trustLimit, err = xlm.GetAssetTrustLimit(recipientPK, consts.StablecoinCode)
+	trustLimit, err = xlm.GetAssetTrustLimit(recipientPK, StablecoinCode)
 	if err != nil {
 		// asset doesn't exist
 		trustLimit = "0"
@@ -40,14 +39,14 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 		return errors.Wrap(err, "trust limit doesn't warrant investment, please contact platform admin")
 	}
 
-	hash, err := assets.TrustAsset(consts.StablecoinCode, consts.StableCoinAddress, consts.StablecoinTrustLimit, recipientSeed)
+	hash, err := assets.TrustAsset(StablecoinCode, StableCoinAddress, StablecoinTrustLimit, recipientSeed)
 	if err != nil {
 		return errors.Wrap(err, "couldn't trust asset")
 	}
 	log.Println("tx hash for trusting stableUSD: ", hash)
 	// now send coins across and see if our tracker detects it
-	log.Println(consts.StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
-	_, hash, err = xlm.SendXLM(consts.StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
+	log.Println(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
+	_, hash, err = xlm.SendXLM(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
 	if err != nil {
 		return errors.Wrap(err, "couldn't send xlm")
 	}
@@ -59,7 +58,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 // stableUSD to complete the payment
 func OfferExchange(publicKey string, seed string, invAmount string) error {
 
-	balance, err := xlm.GetAssetBalance(publicKey, consts.StablecoinCode)
+	balance, err := xlm.GetAssetBalance(publicKey, StablecoinCode)
 	if err != nil {
 		// the user does not have a balance in STABLEUSD
 		balance = "0"

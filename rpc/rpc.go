@@ -6,11 +6,11 @@ package rpc
 // frontend is in react. Not many advantages per se and this works fine, so I guess
 // we'll stay with this one for a while
 import (
+	"encoding/json"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"encoding/json"
 )
 
 // API documentation over at the apidocs repo

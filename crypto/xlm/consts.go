@@ -16,3 +16,4 @@ var TestNetClient = &horizon.Client{
 }
 
 var Passphrase = network.TestNetworkPassphrase
+var RefillAmount = "10"

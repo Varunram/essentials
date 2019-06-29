@@ -3,7 +3,7 @@
 package xlm
 
 import (
-	utils "github.com/YaleOpenLab/openx/utils"
+	utils "github.com/Varunram/essentials/utils"
 	"testing"
 )
 

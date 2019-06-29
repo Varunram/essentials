@@ -6,8 +6,8 @@ import (
 	"log"
 	"testing"
 
+	consts "github.com/Varunram/essentials/crypto/consts"
 	xlm "github.com/Varunram/essentials/xlm"
-	consts "github.com/YaleOpenLab/openx/consts"
 )
 
 func TestMultisig2of2(t *testing.T) {

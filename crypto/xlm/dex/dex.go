@@ -4,10 +4,10 @@ import (
 	"github.com/pkg/errors"
 	//"log"
 
-	xlm "github.com/Varunram/crypto/essentials/xlm"
+	ticker "github.com/Varunram/essentials/crypto/exchangetickers"
+	stablecoin "github.com/Varunram/essentials/crypto/stablecoin"
+	xlm "github.com/Varunram/essentials/crypto/xlm"
 	utils "github.com/Varunram/essentials/utils"
-	consts "github.com/YaleOpenLab/openx/consts"
-	oracle "github.com/YaleOpenLab/openx/oracle"
 	"github.com/stellar/go/network"
 	build "github.com/stellar/go/txnbuild"
 )
@@ -72,8 +72,8 @@ func NewSellOrder(seed string, assetName string, issuer string, amount string,
 // DexStableCoinBuy gets the price from an oracle and places an order on the DEX to buy AnchorUSD
 func DexStableCoinBuy(seed string, amount string) (int32, string, error) {
 	assetName := "USD"
-	issuer := consts.AnchorUSDAddress
-	price, err := oracle.BinanceTicker()
+	issuer := stablecoin.AnchorUSDAddress
+	price, err := ticker.BinanceTicker()
 	if err != nil {
 		return -1, "", errors.New("could not fetch price form binance, quitting")
 	}
@@ -84,8 +84,8 @@ func DexStableCoinBuy(seed string, amount string) (int32, string, error) {
 // DexStableCoinBuy gets the price from an oracle and places an order on the DEX to sell AnchorUSD
 func DexStableCoinSell(seed string, amount string) (int32, string, error) {
 	assetName := "USD"
-	issuer := consts.AnchorUSDAddress
-	price, err := oracle.BinanceTicker()
+	issuer := stablecoin.AnchorUSDAddress
+	price, err := ticker.BinanceTicker()
 	if err != nil {
 		return -1, "", errors.New("could not fetch price form binance, quitting")
 	}

@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	utils "github.com/Varunram/essentials/utils"
-	consts "github.com/YaleOpenLab/openx/consts"
+	consts "github.com/Varunram/essentials/crypto/consts"
 	shell "github.com/ipfs/go-ipfs-api"
 )
 

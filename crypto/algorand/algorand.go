@@ -5,7 +5,6 @@ import (
 	"log"
 
 	utils "github.com/Varunram/essentials/utils"
-	consts "github.com/YaleOpenLab/openx/consts"
 	"github.com/algorand/go-algorand-sdk/client/algod"
 	"github.com/algorand/go-algorand-sdk/client/algod/models"
 	"github.com/algorand/go-algorand-sdk/client/kmd"
@@ -35,7 +34,7 @@ var KmdClient kmd.Client
 // InitAlgodClient initializes a new algorand daemon client
 func InitAlgodClient() (algod.Client, error) {
 	var err error
-	AlgodClient, err = algod.MakeClient(consts.AlgodAddress, consts.AlgodToken)
+	AlgodClient, err = algod.MakeClient(AlgodAddress, AlgodToken)
 	if err != nil {
 		log.Printf("failed to make algod client: %s\n", err)
 		return AlgodClient, nil
@@ -46,7 +45,7 @@ func InitAlgodClient() (algod.Client, error) {
 
 // InitKmdClient initializes a new key management daemon client
 func InitKmdClient() (kmd.Client, error) {
-	return kmd.MakeClient(consts.KmdAddress, consts.KmdToken)
+	return kmd.MakeClient(KmdAddress, KmdToken)
 }
 
 func Init() error {

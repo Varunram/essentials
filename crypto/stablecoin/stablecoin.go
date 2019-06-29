@@ -28,7 +28,6 @@ import (
 	wallet "github.com/Varunram/essentials/crypto/xlm/wallet"
 	scan "github.com/Varunram/essentials/scan"
 	utils "github.com/Varunram/essentials/utils"
-	consts "github.com/YaleOpenLab/openx/consts"
 	"github.com/pkg/errors"
 	horizon "github.com/stellar/go/clients/horizonclient"
 	"github.com/stellar/go/protocols/horizon/operations"
@@ -39,14 +38,14 @@ func InitStableCoin() error {
 	var publicKey string
 	var seed string
 	// now we can be sure we have the directory, check for seed
-	if _, err := os.Stat(consts.StableCoinSeedFile); !os.IsNotExist(err) {
+	if _, err := os.Stat(StableCoinSeedFile); !os.IsNotExist(err) {
 		// the seed exists
 		fmt.Println("ENTER YOUR PASSWORD TO DECRYPT THE STABLECOIN SEED FILE")
 		password, err := scan.ScanRawPassword()
 		if err != nil {
 			return errors.Wrap(err, "couldn't scan raw password")
 		}
-		publicKey, seed, err = wallet.RetrieveSeed(consts.StableCoinSeedFile, password)
+		publicKey, seed, err = wallet.RetrieveSeed(StableCoinSeedFile, password)
 		// catch error here due to scope sharing
 		if err != nil {
 			return err
@@ -57,7 +56,7 @@ func InitStableCoin() error {
 		if err != nil {
 			return err
 		}
-		publicKey, seed, err = wallet.NewSeed(consts.StableCoinSeedFile, password)
+		publicKey, seed, err = wallet.NewSeed(StableCoinSeedFile, password)
 		if err != nil {
 			return err
 		}
@@ -67,8 +66,8 @@ func InitStableCoin() error {
 		}
 	}
 	// the user doesn't have seed, so create a new platform
-	consts.StablecoinPublicKey = publicKey
-	consts.StablecoinSeed = seed
+	StablecoinPublicKey = publicKey
+	StablecoinSeed = seed
 
 	go ListenForPayments()
 	return nil
@@ -77,7 +76,7 @@ func InitStableCoin() error {
 func ListenForPayments() {
 	client := xlm.TestNetClient
 	// all payments
-	opRequest := horizon.OperationRequest{ForAccount: consts.StableCoinAddress}
+	opRequest := horizon.OperationRequest{ForAccount: StableCoinAddress}
 
 	ctx, _ := context.WithCancel(context.Background()) // cancel
 	go func() {
@@ -108,7 +107,7 @@ func ListenForPayments() {
 					xlmWorth := tickers.ExchangeXLMforUSD(amount)
 					log.Println("The deposited amount is worth: ", xlmWorth)
 					// now send the stableusd asset over to this guy
-					_, hash, err := assets.SendAssetFromIssuer(consts.StablecoinCode, payee, utils.FtoS(xlmWorth), consts.StablecoinSeed, consts.StablecoinPublicKey)
+					_, hash, err := assets.SendAssetFromIssuer(StablecoinCode, payee, utils.FtoS(xlmWorth), StablecoinSeed, StablecoinPublicKey)
 					if err != nil {
 						log.Println("Error while sending USD Assets back to payee: ", payee, err)
 						//  don't skip here, there's technically nothing we can do

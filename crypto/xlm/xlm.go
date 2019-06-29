@@ -5,7 +5,6 @@ import (
 	"log"
 
 	utils "github.com/Varunram/essentials/utils"
-	consts "github.com/YaleOpenLab/openx/consts"
 	horizon "github.com/stellar/go/clients/horizonclient"
 	"github.com/stellar/go/keypair"
 	horizonprotocol "github.com/stellar/go/protocols/horizon"
@@ -139,7 +138,7 @@ func RefillAccount(publicKey string, platformSeed string) error {
 		// there is no account under the user's name
 		// means we need to setup an account first
 		log.Println("Account does not exist, creating: ", publicKey)
-		_, _, err = SendXLMCreateAccount(publicKey, consts.RefillAmount, platformSeed)
+		_, _, err = SendXLMCreateAccount(publicKey, RefillAmount, platformSeed)
 		if err != nil {
 			log.Println("Account Could not be created")
 			return errors.New("Account Could not be created")
@@ -152,7 +151,7 @@ func RefillAccount(publicKey string, platformSeed string) error {
 	}
 	balanceI := utils.StoF(balance)
 	if balanceI < 3 { // to setup trustlines
-		_, _, err = SendXLM(publicKey, consts.RefillAmount, platformSeed, "Sending XLM to refill")
+		_, _, err = SendXLM(publicKey, RefillAmount, platformSeed, "Sending XLM to refill")
 		if err != nil {
 			return errors.New("Account doesn't have funds or invalid seed")
 		}

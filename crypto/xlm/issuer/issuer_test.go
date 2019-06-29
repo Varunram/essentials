@@ -5,8 +5,8 @@ package issuer
 import (
 	"testing"
 
+	consts "github.com/Varunram/essentials/crypto/consts"
 	xlm "github.com/Varunram/essentials/crypto/xlm"
-	consts "github.com/YaleOpenLab/openx/consts"
 )
 
 func TestIssuer(t *testing.T) {

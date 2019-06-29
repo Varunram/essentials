@@ -3,10 +3,11 @@ package escrow
 import (
 	"log"
 
+	stablecoin "github.com/Varunram/essentials/crypto/stablecoin"
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
 	multisig "github.com/Varunram/essentials/crypto/xlm/multisig"
+	wallet "github.com/Varunram/essentials/crypto/xlm/wallet"
 	utils "github.com/Varunram/essentials/utils"
-	consts "github.com/YaleOpenLab/openx/consts"
 	"github.com/pkg/errors"
 )
 
@@ -22,15 +23,20 @@ import (
 // In financial terms, an escrow is a special purpose vehicle (kind of cool that we have SPV in finance)
 
 // InitEscrow creates a new keypair and stores it in a file
-func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string) (string, error) {
-	pubkey, err := initMultisigEscrow(recpPubkey)
+func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string, platformSeed string) (string, error) {
+	platformPubkey, err := wallet.ReturnPubkey(platformSeed)
+	if err != nil {
+		return "", errors.Wrap(err, "could not get pubkey from seed")
+	}
+
+	pubkey, err := initMultisigEscrow(recpPubkey, platformPubkey)
 	if err != nil {
 		return pubkey, errors.Wrap(err, "error while initializing multisig escrow, quitting!")
 	}
 
 	log.Println("successfully initialized multisig escrow")
 	// define two seeds that are needed for signing transactions from the escrow
-	seed1 := consts.PlatformSeed
+	seed1 := platformSeed
 	seed2 := mySeed
 
 	log.Println("stored escrow pubkey successfully")
@@ -40,7 +46,7 @@ func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string)
 	}
 
 	log.Println("set auth immutable on account successfully")
-	multisig.TrustAssetTx(consts.StablecoinCode, consts.StablecoinPublicKey, "10000000000", pubkey, seed1, seed2)
+	multisig.TrustAssetTx(stablecoin.StablecoinCode, stablecoin.StablecoinPublicKey, "10000000000", pubkey, seed1, seed2)
 	if err != nil {
 		return pubkey, errors.Wrap(err, "could not trust stablecoin, quitting!")
 	}
@@ -49,10 +55,10 @@ func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string)
 }
 
 // TransferFundsToEscrow transfers a specific amount of currency to the escrow. Usually called by the platform or recipient
-func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string) error {
+func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string, platformSeed string) error {
 	// we have the wallet pubkey, transfer funds to the escrow now
-	_, txhash, err := assets.SendAsset(consts.StablecoinCode, consts.StablecoinPublicKey, escrowPubkey,
-		utils.FtoS(amount), consts.PlatformSeed, "escrow init")
+	_, txhash, err := assets.SendAsset(stablecoin.StablecoinCode, stablecoin.StablecoinPublicKey, escrowPubkey,
+		utils.FtoS(amount), platformSeed, "escrow init")
 	if err != nil {
 		return errors.Wrap(err, "could not fund escrow, quitting!")
 	}
@@ -62,16 +68,15 @@ func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string) e
 }
 
 // InitMultisigEscrow initializes a multisig escrow with one signer as the recipient and the other as the platform
-func initMultisigEscrow(pubkey1 string) (string, error) {
+func initMultisigEscrow(pubkey1 string, platformPubkey string) (string, error) {
 	// recpPubkey is the public key of the recipient
 	// the seed of the escrow is needed to init the first tx that will change options
-	pubkey2 := consts.PlatformPublicKey
 	// we now have the two public keys that are needed to authorize this transaction. Construct a 2of2 multisig
-	return multisig.New2of2(pubkey1, pubkey2)
+	return multisig.New2of2(pubkey1, platformPubkey)
 }
 
 // SendFundsFromEscrow sends funds to a destination address from the project escrow
-func SendFundsFromEscrow(escrowPubkey string, destination string, signer1 string, amount string, memo string) error {
+func SendFundsFromEscrow(escrowPubkey string, destination string, signer1 string, signer2 string, amount string, memo string) error {
 	log.Println("ESCROW PUBKEY: ", escrowPubkey, "destination: ", destination, "signer1: ", signer1, "amount: ", amount, "memo: ", memo)
-	return multisig.Tx2of2(escrowPubkey, destination, signer1, consts.PlatformSeed, amount, memo)
+	return multisig.Tx2of2(escrowPubkey, destination, signer1, signer2, amount, memo)
 }
