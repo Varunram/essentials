@@ -7,6 +7,7 @@ package rpc
 // we'll stay with this one for a while
 import (
 	"encoding/json"
+	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -32,29 +33,42 @@ func SetupBasicHandlers() {
 }
 
 // CheckOrigin checks the origin of the incoming request
-func CheckOrigin(w http.ResponseWriter, r *http.Request) {
+func CheckOrigin(w http.ResponseWriter, r *http.Request) error {
 	// re-enable this function for all private routes
 	if r.Header.Get("Origin") != "localhost" { // allow only our frontend UI to connect to our RPC instance
-		http.Error(w, "404 page not found", http.StatusNotFound)
+		return errors.New("origin not localhost")
 	}
+	return nil
 }
 
 // CheckGet checks if the invoming request is a GET request
-func CheckGet(w http.ResponseWriter, r *http.Request) {
-	CheckOrigin(w, r)
-	if r.Method != "GET" {
+func CheckGet(w http.ResponseWriter, r *http.Request) error {
+	err := CheckOrigin(w, r)
+	if err != nil || r.Method != "GET" {
 		ResponseHandler(w, StatusNotFound)
-		return
+		return errors.New("method not get or origin not localhost")
 	}
+	return nil
 }
 
 // checkPost checks whether the incomign request is a POST request
-func CheckPost(w http.ResponseWriter, r *http.Request) {
-	CheckOrigin(w, r)
-	if r.Method != "POST" {
+func CheckPost(w http.ResponseWriter, r *http.Request) error {
+	err := CheckOrigin(w, r)
+	if err != nil || r.Method != "POST" {
 		ResponseHandler(w, StatusNotFound)
-		return
+		return errors.New("method not post or origin not localhost")
 	}
+	return nil
+}
+
+// checkPost checks whether the incomign request is a POST request
+func CheckPut(w http.ResponseWriter, r *http.Request) error {
+	err := CheckOrigin(w, r)
+	if err != nil || r.Method != "PUT" {
+		ResponseHandler(w, StatusNotFound)
+		return errors.New("method not put or origin not localhost")
+	}
+	return nil
 }
 
 // GetRequest is a handler that makes it easy to send out GET requests
@@ -135,7 +149,7 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 }
 
 // GetAndSendJson is a handler that makes a get request and returns json data
-func GetAndSendJson(w http.ResponseWriter, r *http.Request, body string, x interface{}) {
+func GetAndSendJson(w http.ResponseWriter, body string, x interface{}) {
 	data, err := GetRequest(body)
 	if err != nil {
 		log.Println("did not get response", err)
@@ -155,7 +169,7 @@ func GetAndSendJson(w http.ResponseWriter, r *http.Request, body string, x inter
 // GetAndSendByte is a handler that makes a get request and returns byte data. THis is used
 // in cases for which we don;t know the format of the returned data, so we can't parse
 // what stuff is in here.
-func GetAndSendByte(w http.ResponseWriter, r *http.Request, body string) {
+func GetAndSendByte(w http.ResponseWriter, body string) {
 	data, err := GetRequest(body)
 	if err != nil {
 		log.Println("did not get response", err)
@@ -167,7 +181,7 @@ func GetAndSendByte(w http.ResponseWriter, r *http.Request, body string) {
 }
 
 // PutAndSend is a handler that PUTs data and returns the response
-func PutAndSend(w http.ResponseWriter, r *http.Request, body string, payload io.Reader) {
+func PutAndSend(w http.ResponseWriter, body string, payload io.Reader) {
 	data, err := PutRequest(body, payload)
 	if err != nil {
 		log.Println("did not receive success response", err)
@@ -188,17 +202,23 @@ func PutAndSend(w http.ResponseWriter, r *http.Request, body string, payload io.
 func SetupDefaultHandler() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// default to 404 for every application not running on localhost
-		CheckGet(w, r)
-		CheckOrigin(w, r)
-		ResponseHandler(w, StatusNotFound)
+		err := CheckGet(w, r)
+		if err != nil {
+			log.Println(err) // don't return a response since we've already written to the API caller
+			return
+		}
+		ResponseHandler(w, StatusNotFound) // default response for routes not found is 404
 	})
 }
 
 // setupPingHandler is a ping route for remote callers to check if the platform is up
 func SetupPingHandler() {
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
-		CheckGet(w, r)
-		CheckOrigin(w, r)
+		err := CheckGet(w, r)
+		if err != nil {
+			log.Println(err) // don't return a response since we've already written to the API caller
+			return
+		}
 		ResponseHandler(w, StatusOK)
 	})
 }

@@ -74,7 +74,6 @@ func MarshalSend(w http.ResponseWriter, x interface{}) {
 		WriteToHandler(w, []byte(errString))
 		return
 	}
-	log.Println("JSON: ", string(xJson))
 	WriteToHandler(w, xJson)
 }
 
