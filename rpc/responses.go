@@ -2,7 +2,7 @@ package rpc
 
 import (
 	"encoding/json"
-	"log"
+	//"log"
 	"net/http"
 )
 
@@ -69,8 +69,7 @@ func ResponseHandler(w http.ResponseWriter, status int) {
 func MarshalSend(w http.ResponseWriter, x interface{}) {
 	xJson, err := json.Marshal(x)
 	if err != nil {
-		log.Println("did not marshal json", err)
-		errString := "Internal Server Error"
+		errString := "did not marshal json"
 		WriteToHandler(w, []byte(errString))
 		return
 	}
