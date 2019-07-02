@@ -39,7 +39,7 @@ import (
 
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 	utils "github.com/Varunram/essentials/utils"
-	"github.com/btcsuite/btcutil/base58"
+	"github.com/Varunram/essentials/crypto/btc/base58"
 )
 
 // declare version bytes and HMAC key
