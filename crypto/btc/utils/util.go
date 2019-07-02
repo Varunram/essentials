@@ -2,7 +2,7 @@
 	Copyright 2013-present wemeetagain https://github.com/wemeetagain/go-hdwallet
 	Copyright 2019-present Varunram Ganesh
 */
-package hdwallet
+package utils
 
 import (
 	"crypto/sha256"
@@ -14,7 +14,7 @@ import (
 	"golang.org/x/crypto/ripemd160"
 )
 
-var curve *btcec.KoblitzCurve = btcec.S256()
+var Curve *btcec.KoblitzCurve = btcec.S256()
 
 func Hash160(data []byte) []byte {
 	sha := sha256.New()
@@ -35,7 +35,7 @@ func DoubleSha256(data []byte) []byte {
 }
 
 func PrivToPub(key []byte) []byte {
-	return Compress(curve.ScalarBaseMult(key))
+	return Compress(Curve.ScalarBaseMult(key))
 }
 
 func Compress(x, y *big.Int) []byte {
@@ -55,7 +55,7 @@ func Compress(x, y *big.Int) []byte {
 
 //2.3.4 of SEC1 - http://www.secg.org/index.php?action=secg,docs_secg
 func Expand(key []byte) (*big.Int, *big.Int) {
-	params := curve.Params()
+	params := Curve.Params()
 	exp := big.NewInt(1)
 	exp.Add(params.P, exp)
 	exp.Div(exp, big.NewInt(4))
@@ -77,7 +77,7 @@ func AddPrivKeys(k1, k2 []byte) []byte {
 	i1 := big.NewInt(0).SetBytes(k1)
 	i2 := big.NewInt(0).SetBytes(k2)
 	i1.Add(i1, i2)
-	i1.Mod(i1, curve.Params().N)
+	i1.Mod(i1, Curve.Params().N)
 	k := i1.Bytes()
 	zero, _ := hex.DecodeString("00")
 	return append(zero, k...)
@@ -86,5 +86,5 @@ func AddPrivKeys(k1, k2 []byte) []byte {
 func AddPubKeys(k1, k2 []byte) []byte {
 	x1, y1 := Expand(k1)
 	x2, y2 := Expand(k2)
-	return Compress(curve.Add(x1, y1, x2, y2))
+	return Compress(Curve.Add(x1, y1, x2, y2))
 }
