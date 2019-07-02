@@ -1,8 +1,10 @@
 package bech32
 
 import (
-	"log"
 	"github.com/btcsuite/btcd/btcec"
+	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
+	// "github.com/btcsuite/btcutil/base58"
+	// "log"
 )
 
 var Curve *btcec.KoblitzCurve = btcec.S256()
@@ -14,30 +16,10 @@ func GetNewBech32Address() (string, error) {
 	}
 
 	pubkey := localPriv.PubKey().SerializeCompressed()
-	log.Println("BECH #@ Pubkey: ", pubkey, len(pubkey))
-	conv, err := ConvertBits(pubkey, 8, 5, true) // bit conversion stuff
-	if err != nil {
-		return "", nil
+	hash160 := btcutils.Hash160(pubkey) // p2wpkh
+	var program []int
+	for _, vals := range hash160 {
+		program = append(program, int(vals))
 	}
-
-	bech32Pubkey, err := Encode("bc", conv)
-	if err != nil {
-		return "", nil
-	}
-
-	return bech32Pubkey, nil
-}
-
-func StringToBech32(address []byte) (string, error) {
-	conv, err := ConvertBits([]byte(address), 8, 5, true) // bit conversion stuff
-	if err != nil {
-		return "", nil
-	}
-
-	bech32Pubkey, err := Encode("bc", conv)
-	if err != nil {
-		return "", nil
-	}
-
-	return bech32Pubkey, nil
+	return SegwitAddrEncode("bc", 0, program)
 }

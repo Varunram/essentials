@@ -39,7 +39,6 @@ import (
 	"math/big"
 
 	"github.com/Varunram/essentials/crypto/btc/base58"
-	"github.com/Varunram/essentials/crypto/btc/bech32"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 	utils "github.com/Varunram/essentials/utils"
 )
@@ -135,7 +134,7 @@ func (w *HDWallet) Pub() *HDWallet {
 // Address returns bitcoin address represented by wallet w.
 func (w *HDWallet) Address() string {
 	x, y := btcutils.Expand(w.Key)
-	paddedKey := append([]byte{4}, append(x.Bytes(), y.Bytes()...)...) // 04
+	paddedKey := append([]byte{4}, append(x.Bytes(), y.Bytes()...)...) // 04 prefix, uncompressed pubkey
 	var prefix []byte
 	if bytes.Compare(w.VersionBytes, TestPubkeyVByte) == 0 || bytes.Compare(w.VersionBytes, TestPrivkeyVByte) == 0 {
 		prefix = []byte{111} // 6F for testnet
@@ -143,6 +142,7 @@ func (w *HDWallet) Address() string {
 		prefix = []byte{0} // 00 for mainnet
 	}
 	address := append(prefix, btcutils.Hash160(paddedKey)...)
+	log.Println("HASH 160 length: ", len(btcutils.Hash160(paddedKey)), btcutils.Hash160(paddedKey))
 	chksum := btcutils.DoubleSha256(address)
 	return base58.Encode(append(address, chksum[:4]...))
 }
@@ -156,22 +156,6 @@ func paddedAppend(size uint, dst, src []byte) []byte {
 
 func isOdd(a *big.Int) bool {
 	return a.Bit(0) == 1
-}
-// Address returns bitcoin address represented by wallet w.
-func (w *HDWallet) AddressBech32() (string, error) {
-	x, y := btcutils.Expand(w.Key)
-	// now we have the uncompressed pubkey
-
-	b := make([]byte, 0, 33)
-	var format byte = 0x2
-
-	if isOdd(y) { // ie the number is odd
-		format |= 0x1
-	}
-	b = append(b, format)
-	byt33key := paddedAppend(32, b, x.Bytes())
-	log.Println("hi")
-	return bech32.StringToBech32(byt33key)
 }
 
 // GenSeed returns a random seed with a length measured in bytes.
