@@ -4,6 +4,31 @@
 */
 package hdwallet
 
+/*
+	HD Wallet stuff for bitcoin:
+
+	seed, err := hdwallet.GenSeed(256)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	masterprv := hdwallet.MasterKey(seed)
+	log.Println("Master priv key: ", masterprv)
+	// Convert a private key to public key
+	masterpub := masterprv.Pub()
+	log.Println("MASTER PUBKEY: ", masterpub)
+
+	// Generate new child key based on private or public key
+	childprv, err := masterprv.Child(0)
+	childpub, err := masterpub.Child(0)
+
+	log.Println("childprv: ", childprv, "childpub: ", childpub)
+
+	// Create bitcoin address from public key
+	address := childpub.Address()
+	log.Println("childpub address: ", address)
+
+*/
 import (
 	"bytes"
 	"crypto/hmac"
@@ -12,8 +37,8 @@ import (
 	"github.com/pkg/errors"
 	"math/big"
 
-	utils "github.com/Varunram/essentials/utils"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
+	utils "github.com/Varunram/essentials/utils"
 	"github.com/btcsuite/btcutil/base58"
 )
 
@@ -44,7 +69,7 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 	switch {
 	case bytes.Compare(w.VersionBytes, MnPrivkeyVByte) == 0, bytes.Compare(w.VersionBytes, TestPrivkeyVByte) == 0:
 		mac := hmac.New(sha512.New, w.Chaincode)
-		if i >= uint32(0x80000000) {
+		if i >= uint32(0x80000000) { // Hardened
 			mac.Write(append(w.Key, utils.Uint32tB(i)...))
 		} else {
 			pub := btcutils.PrivToPub(w.Key)
@@ -57,7 +82,7 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 		}
 		newkey = btcutils.AddPrivKeys(childNumber[:32], w.Key)
 		fingerprint = btcutils.Hash160(btcutils.PrivToPub(w.Key))[:4]
-
+		// end of privkey case
 	case bytes.Compare(w.VersionBytes, MnPubkeyVByte) == 0, bytes.Compare(w.VersionBytes, TestPubkeyVByte) == 0:
 		mac := hmac.New(sha512.New, w.Chaincode)
 		if i >= uint32(0x80000000) {
