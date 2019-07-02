@@ -13,6 +13,7 @@ import (
 	"math/big"
 
 	utils "github.com/Varunram/essentials/utils"
+	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 	"github.com/btcsuite/btcutil/base58"
 )
 
@@ -46,16 +47,16 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 		if i >= uint32(0x80000000) {
 			mac.Write(append(w.Key, utils.Uint32tB(i)...))
 		} else {
-			pub := PrivToPub(w.Key)
+			pub := btcutils.PrivToPub(w.Key)
 			mac.Write(append(pub, utils.Uint32tB(i)...))
 		}
 		childNumber = mac.Sum(nil)
 		iL := new(big.Int).SetBytes(childNumber[:32])
-		if iL.Cmp(curve.N) >= 0 || iL.Sign() == 0 {
+		if iL.Cmp(btcutils.Curve.N) >= 0 || iL.Sign() == 0 {
 			return &HDWallet{}, errors.New("Invalid Child")
 		}
-		newkey = AddPrivKeys(childNumber[:32], w.Key)
-		fingerprint = Hash160(PrivToPub(w.Key))[:4]
+		newkey = btcutils.AddPrivKeys(childNumber[:32], w.Key)
+		fingerprint = btcutils.Hash160(btcutils.PrivToPub(w.Key))[:4]
 
 	case bytes.Compare(w.VersionBytes, MnPubkeyVByte) == 0, bytes.Compare(w.VersionBytes, TestPubkeyVByte) == 0:
 		mac := hmac.New(sha512.New, w.Chaincode)
@@ -65,11 +66,11 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 		mac.Write(append(w.Key, utils.Uint32tB(i)...))
 		childNumber = mac.Sum(nil)
 		iL := new(big.Int).SetBytes(childNumber[:32])
-		if iL.Cmp(curve.N) >= 0 || iL.Sign() == 0 {
+		if iL.Cmp(btcutils.Curve.N) >= 0 || iL.Sign() == 0 {
 			return &HDWallet{}, errors.New("Invalid Child")
 		}
-		newkey = AddPubKeys(PrivToPub(childNumber[:32]), w.Key)
-		fingerprint = Hash160(w.Key)[:4]
+		newkey = btcutils.AddPubKeys(btcutils.PrivToPub(childNumber[:32]), w.Key)
+		fingerprint = btcutils.Hash160(w.Key)[:4]
 	}
 	return &HDWallet{w.VersionBytes, w.Depth + 1, fingerprint, utils.Uint32tB(i), childNumber[32:], newkey}, nil
 }
@@ -85,7 +86,7 @@ func (w *HDWallet) Serialize() []byte {
 	copy(bindata[9:], w.ChildNumber)
 	copy(bindata[13:], w.Chaincode)
 	copy(bindata[45:], w.Key)
-	chksum := DoubleSha256(bindata)[:4]
+	chksum := btcutils.DoubleSha256(bindata)[:4]
 	return append(bindata, chksum...)
 }
 
@@ -100,13 +101,13 @@ func (w *HDWallet) Pub() *HDWallet {
 	if bytes.Compare(w.VersionBytes, MnPubkeyVByte) == 0 {
 		return &HDWallet{w.VersionBytes, w.Depth, w.Fingerprint, w.ChildNumber, w.Chaincode, w.Key}
 	} else {
-		return &HDWallet{MnPubkeyVByte, w.Depth, w.Fingerprint, w.ChildNumber, w.Chaincode, PrivToPub(w.Key)}
+		return &HDWallet{MnPubkeyVByte, w.Depth, w.Fingerprint, w.ChildNumber, w.Chaincode, btcutils.PrivToPub(w.Key)}
 	}
 }
 
 // Address returns bitcoin address represented by wallet w.
 func (w *HDWallet) Address() string {
-	x, y := Expand(w.Key)
+	x, y := btcutils.Expand(w.Key)
 	paddedKey := append([]byte{4}, append(x.Bytes(), y.Bytes()...)...) // 04
 	var prefix []byte
 	if bytes.Compare(w.VersionBytes, TestPubkeyVByte) == 0 || bytes.Compare(w.VersionBytes, TestPrivkeyVByte) == 0 {
@@ -114,8 +115,8 @@ func (w *HDWallet) Address() string {
 	} else {
 		prefix = []byte{0} // 00 for mainnet
 	}
-	address := append(prefix, Hash160(paddedKey)...)
-	chksum := DoubleSha256(address)
+	address := append(prefix, btcutils.Hash160(paddedKey)...)
+	chksum := btcutils.DoubleSha256(address)
 	return base58.Encode(append(address, chksum[:4]...))
 }
 
