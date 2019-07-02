@@ -1,15 +1,16 @@
 package bech32
 
 import (
-	"github.com/btcsuite/btcd/btcec"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
+	"github.com/btcsuite/btcd/btcec"
 	// "github.com/btcsuite/btcutil/base58"
 	// "log"
 )
 
 var Curve *btcec.KoblitzCurve = btcec.S256()
 
-func GetNewBech32Address() (string, error) {
+func GetNewp2wpkh() (string, error) {
+	segwitVersion := 0
 	localPriv, err := btcec.NewPrivateKey(Curve)
 	if err != nil {
 		return "", nil
@@ -21,5 +22,5 @@ func GetNewBech32Address() (string, error) {
 	for _, vals := range hash160 {
 		program = append(program, int(vals))
 	}
-	return SegwitAddrEncode("bc", 0, program)
+	return SegwitAddrEncode("bc", segwitVersion, program)
 }
