@@ -7,6 +7,7 @@ import (
 	"os/user"
 	"strconv"
 	"time"
+	"encoding/binary"
 
 	"golang.org/x/crypto/sha3"
 )
@@ -87,6 +88,26 @@ func SHA3hash(inputString string) string {
 func GetHomeDir() (string, error) {
 	usr, err := user.Current()
 	return usr.HomeDir, err
+}
+
+func Uint32tB(i uint32) []byte {
+	a := make([]byte, 4)
+	binary.BigEndian.PutUint32(a, i)
+	return a
+}
+
+func Uint16tB(i uint16) []byte {
+	a := make([]byte, 2)
+	binary.BigEndian.PutUint16(a, i)
+	return a[1:]
+}
+
+func BtUint16(b []byte) uint16 {
+	if len(b) == 1 {
+		zero := make([]byte, 1)
+		b = append(zero, b...)
+	}
+	return binary.BigEndian.Uint16(b)
 }
 
 // GetRandomString gets a random string of length _n_
