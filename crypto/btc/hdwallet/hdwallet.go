@@ -35,11 +35,13 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"github.com/pkg/errors"
+	"log"
 	"math/big"
 
+	"github.com/Varunram/essentials/crypto/btc/base58"
+	"github.com/Varunram/essentials/crypto/btc/bech32"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 	utils "github.com/Varunram/essentials/utils"
-	"github.com/Varunram/essentials/crypto/btc/base58"
 )
 
 // declare version bytes and HMAC key
@@ -143,6 +145,33 @@ func (w *HDWallet) Address() string {
 	address := append(prefix, btcutils.Hash160(paddedKey)...)
 	chksum := btcutils.DoubleSha256(address)
 	return base58.Encode(append(address, chksum[:4]...))
+}
+
+func paddedAppend(size uint, dst, src []byte) []byte {
+	for i := 0; i < int(size)-len(src); i++ {
+		dst = append(dst, 0)
+	}
+	return append(dst, src...)
+}
+
+func isOdd(a *big.Int) bool {
+	return a.Bit(0) == 1
+}
+// Address returns bitcoin address represented by wallet w.
+func (w *HDWallet) AddressBech32() (string, error) {
+	x, y := btcutils.Expand(w.Key)
+	// now we have the uncompressed pubkey
+
+	b := make([]byte, 0, 33)
+	var format byte = 0x2
+
+	if isOdd(y) { // ie the number is odd
+		format |= 0x1
+	}
+	b = append(b, format)
+	byt33key := paddedAppend(32, b, x.Bytes())
+	log.Println("hi")
+	return bech32.StringToBech32(byt33key)
 }
 
 // GenSeed returns a random seed with a length measured in bytes.
