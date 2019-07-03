@@ -36,6 +36,7 @@ import (
 	"crypto/sha512"
 	"github.com/pkg/errors"
 	"math/big"
+	"log"
 
 	"github.com/Varunram/essentials/crypto/btc/base58"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
@@ -141,6 +142,7 @@ func (w *HDWallet) Address() string {
 		prefix = []byte{0} // 00 for mainnet
 	}
 	address := append(prefix, btcutils.Hash160(paddedKey)...)
+	log.Println("HDWALLETADDRESSLEN: ", len(address))
 	chksum := btcutils.DoubleSha256(address)
 	return base58.Encode(append(address, chksum[:4]...))
 }
