@@ -209,7 +209,6 @@ func SegwitAddrEncode(hrp string, version int, program []int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println("LENGTH OF PAYLOAD: ", len(append([]int{version}, data...)))
 	ret, err := Encode(hrp, append([]int{version}, data...))
 	if err != nil {
 		return "", err

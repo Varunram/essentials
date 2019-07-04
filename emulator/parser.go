@@ -5,6 +5,8 @@ import (
 	"log"
 
 	bech32 "github.com/Varunram/essentials/crypto/btc/bech32"
+	bip39 "github.com/Varunram/essentials/crypto/btc/bip39"
+	hdwallet "github.com/Varunram/essentials/crypto/btc/hdwallet"
 	paynym "github.com/Varunram/essentials/crypto/btc/paynym"
 	sss "github.com/Varunram/essentials/sss"
 	utils "github.com/Varunram/essentials/utils"
@@ -22,7 +24,7 @@ func ParseInput(cmd []string) error {
 
 	switch command {
 	case "help":
-		log.Println("list of supported commands: ")
+		ColorOutput("list of supported commands: sss, new, paynym, combine", CyanColor)
 		return nil
 	case "sss":
 		if len(cmd) < 2 {
@@ -119,6 +121,68 @@ func ParseInput(cmd []string) error {
 		ColorOutput("PAYNYM CODE: "+paynymCode, GreenColor)
 
 		// end of paynym
+
+	case "mnemonic":
+		// generate a mnemonic here
+		if len(cmd) != 3 {
+			return errors.New("USAGE: mnemonic <12/15/18/21/24> passphrase")
+		}
+
+		wordSize, err := utils.StoICheck(cmd[1])
+		if err != nil {
+			return errors.Wrap(err, "could not convert input into string, returning")
+		}
+		wordSizeMap := make(map[int]int, 5)
+
+		wordSizeMap[12] = 128
+		wordSizeMap[15] = 160
+		wordSizeMap[18] = 192
+		wordSizeMap[21] = 224
+		wordSizeMap[24] = 256
+
+		entropy, _ := bip39.NewEntropy(wordSizeMap[wordSize])
+		mnemonic, err := bip39.NewMnemonic(entropy)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ColorOutput("MNEMONIC: "+mnemonic, GreenColor)
+
+		passphrase := cmd[2]
+		seed, err := bip39.NewSeed(mnemonic, passphrase)
+		if err != nil {
+			return errors.Wrap(err, "could not get new seed, quitting")
+		}
+
+		masterKey := hdwallet.MasterKey(seed)
+		publicKey := masterKey.Pub()
+
+		ColorOutput("xpub: "+publicKey.String(), GreenColor)
+		// end of mnemonic
+
+	case "recover":
+		// recover seed from mnemonic
+		if len(cmd) < 2 {
+			return errors.New("USAGE: recover passphrase <mnemonic>")
+		}
+		var mnemonic string
+		for _, strings := range cmd[2:] {
+			mnemonic = mnemonic + " " + strings
+		}
+
+		passphrase := cmd[1]
+		ColorOutput("PASSPHRASE: "+passphrase, CyanColor)
+		mnemonic = mnemonic[1:] // get the first " " out
+		ColorOutput("MNEMONIC: "+mnemonic, CyanColor)
+		seed, err := bip39.NewSeed(mnemonic, passphrase)
+		if err != nil {
+			return errors.Wrap(err, "could not get new seed, quitting")
+		}
+
+		masterKey := hdwallet.MasterKey(seed)
+		publicKey := masterKey.Pub()
+
+		ColorOutput("xpub: "+publicKey.String(), GreenColor)
+
 	default:
 		return errors.New("command not recognized")
 	}
