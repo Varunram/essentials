@@ -5,6 +5,7 @@ import (
 	"log"
 
 	bech32 "github.com/Varunram/essentials/crypto/btc/bech32"
+	paynym "github.com/Varunram/essentials/crypto/btc/paynym"
 	sss "github.com/Varunram/essentials/sss"
 	utils "github.com/Varunram/essentials/utils"
 )
@@ -99,6 +100,25 @@ func ParseInput(cmd []string) error {
 			ColorOutput("ADDRESS: "+base58Addr, GreenColor)
 		}
 		// end of new
+
+	case "paynym":
+		// first we need a hd wallet
+		xpriv, _, err := paynym.SetupWallets()
+		if err != nil {
+			return errors.Wrap(err, "failed to setup a hd wallet")
+		}
+
+		bobPubkey := make([]byte, 32)
+		outpoint := make([]byte, 36)
+
+		paynymCode, err := paynym.GenPaynym(xpriv.Key[1:], bobPubkey, xpriv.Chaincode, outpoint)
+		if err != nil {
+			return errors.Wrap(err, "could not generate paynym, quitting")
+		}
+
+		ColorOutput("PAYNYM CODE: "+paynymCode, GreenColor)
+
+		// end of paynym
 	default:
 		return errors.New("command not recognized")
 	}
