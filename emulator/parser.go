@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"log"
 
+	bech32 "github.com/Varunram/essentials/crypto/btc/bech32"
 	sss "github.com/Varunram/essentials/sss"
 	utils "github.com/Varunram/essentials/utils"
 )
@@ -62,16 +63,44 @@ func ParseInput(cmd []string) error {
 			var shares = cmd[2:] // slice off sss combine
 			combinedSecret, err := sss.Combine(shares)
 			if err != nil {
-				return errors.Wrap(err, "could not combine shares, quitting")
+				return errors.Wrap(err, "could not combine shares")
 			}
 			ColorOutput("RETRIEVED SECRET: "+combinedSecret, GreenColor)
 
 		default:
 			return errors.New("USAGE: sss <new/combine>")
 		}
+		// send of sss
+	case "new":
+		if len(cmd) != 2 {
+			return errors.New("USAGE: new <p2pkh / p2wpkh>")
+		}
 
+		cmd = cmd[1:]
+		switch cmd[0] {
+		case "p2wpkh":
+			address, err := bech32.GetNewp2wpkh()
+			if err != nil {
+				return errors.Wrap(err, "could not generate p2wpkh address")
+			}
+			ColorOutput("ADDRESS: "+address, GreenColor)
+
+		case "p2pkh":
+			address, err := bech32.GetNewp2wpkh()
+			if err != nil {
+				return errors.Wrap(err, "could not generate p2wpkh address")
+			}
+
+			base58Addr, err := bech32.Bech32ToBase58Addr(address[0:2], address)
+			if err != nil {
+				return errors.Wrap(err, "could not convert bech32 to base58")
+			}
+
+			ColorOutput("ADDRESS: "+base58Addr, GreenColor)
+		}
+		// end of new
 	default:
-		return errors.New("command not recognized, quitting")
+		return errors.New("command not recognized")
 	}
 
 	return nil
