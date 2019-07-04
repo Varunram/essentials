@@ -82,3 +82,29 @@ func Base58ToBech32Address(addr string) (string, error) {
 
 	return SegwitAddrEncode(hrp, SegwitVersion, ByteArrToInt(byteString))
 }
+
+func PrivKeyToWIF(network string, compressed bool, privkey []byte) (string, error){
+	if len(privkey) != 32 {
+		return "", errors.New("length of private key not 32")
+	}
+
+	prefixByte := make([]byte, 1)
+	if network == "mainnet" {
+		prefixByte = []byte{0x80}
+	} else if network == "testnet" {
+		prefixByte = []byte{0xef}
+	}
+
+	var exKey []byte
+	if compressed {
+		exKey = append(prefixByte, append(privkey, byte(0x01))...)
+	} else {
+		exKey = append(prefixByte, privkey...)
+	}
+
+	doubleSha := btcutils.DoubleSha256(exKey)
+
+	checksum := doubleSha[0:4] // first 4 bytes are the checksum
+	exKey = append(exKey, checksum...)
+	return base58.Encode(exKey), nil
+}

@@ -1,6 +1,7 @@
 package bech32
 
 import (
+	"encoding/hex"
 	"log"
 	"testing"
 )
@@ -27,5 +28,17 @@ func TestAddr(t *testing.T) {
 		if bech32Conv != bech32Adr[i] {
 			t.Fatalf("converted bech32 address does not match with required bech32 address")
 		}
+	}
+
+	privkey, err := hex.DecodeString("0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D")
+	if err != nil {
+		t.Fatal(err)
+	}
+	wif, err := PrivKeyToWIF("mainnet", false, privkey)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if wif != "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ" {
+		t.Fatalf("wif doesn't match with expected value")
 	}
 }
