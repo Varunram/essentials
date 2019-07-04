@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha512"
+	"encoding/hex"
+	"github.com/pkg/errors"
 	"log"
 	"math/big"
-	"bytes"
 
 	"github.com/Varunram/essentials/crypto/btc/base58"
 	"github.com/Varunram/essentials/crypto/btc/hdwallet"
@@ -21,15 +23,30 @@ type PayNym struct {
 	Reserved   [13]byte
 }
 
-func (p *PayNym) Bytes() []byte {
+func (p *PayNym) Bytes() ([]byte, error) {
 	var x bytes.Buffer
+	if !(p.Version == 0x00 || p.Version == 0x01) {
+		return nil, errors.New("version should be zero or one")
+	}
 	_ = x.WriteByte(p.Version)
 	_ = x.WriteByte(p.BitMessage)
+	if !(p.Sign == 0x02 || p.Sign == 0x03) {
+		return nil, errors.New("sign should be 2/3")
+	}
 	_ = x.WriteByte(p.Sign)
+	if !(len(p.XValue) == 32) {
+		return nil, errors.New("length of x should be 32 bytes")
+	}
 	_, _ = x.Write(p.XValue[:])
+	if !(len(p.Chaincode) == 32) {
+		return nil, errors.New("length of Chaincode should be 32 bytes")
+	}
 	_, _ = x.Write(p.Chaincode[:])
+	if !(len(p.Reserved) == 13) {
+		return nil, errors.New("reserved byte  length must be 13")
+	}
 	_, _ = x.Write(p.Reserved[:])
-	return x.Bytes()
+	return x.Bytes(), nil
 }
 
 // while serializing to base58, version byte should be 0x47 and the payload must
@@ -47,7 +64,7 @@ var MultisigVersion = 0x02 // bloom-multisig
 
 var Curve *btcec.KoblitzCurve = btcec.S256()
 
-func setupWallets() (*hdwallet.HDWallet, *hdwallet.HDWallet, error) {
+func SetupWallets() (*hdwallet.HDWallet, *hdwallet.HDWallet, error) {
 
 	aliceSeed, err := hdwallet.GenSeed(256)
 	if err != nil {
@@ -73,64 +90,62 @@ func setupWallets() (*hdwallet.HDWallet, *hdwallet.HDWallet, error) {
 	return alicePriv3, alicePriv3.Pub(), nil
 }
 
-func main() {
-	// first let setup alice and bob's wallets
-	// log.Println("MASTER PUBKEY: ", masterpub)
-	alicePriv, alicePub, err := setupWallets()
-	if err != nil {
-		log.Fatal(err)
+func GenPaynym(alicePrivKey, bobPubkey, chaincode []byte, outpoint []byte) (string, error) {
+	if len(alicePrivKey) != 32 {
+		return "", errors.New("length of private key not 32 bytes")
+	}
+	if len(bobPubkey) != 32 {
+		return "", errors.New("length of provided public key not 32 bytes")
+	}
+	if len(chaincode) != 32 {
+		return "", errors.New("length of chaincode not 32 bytes")
+	}
+	if len(outpoint) != 36 {
+		return "", errors.New("outpoint length not 36 (32 txhash + 4 vout)")
 	}
 
-	bobPriv, bobPub, err := setupWallets()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bobNotifAddress := bobPub.Address()
-
-	aliceAddress := alicePub.Address()
-	alicePrivKey := alicePriv.Key[1:]
-
-	bobPubkey := bobPub.Key
-
+	// convert the byte arrays to big ints
 	aliceI := new(big.Int)
 	bobI := new(big.Int)
 
-	log.Println(alicePrivKey)
 	aliceI.SetBytes(alicePrivKey)
-	bobI.SetBytes(alicePrivKey)
+	bobI.SetBytes(bobPubkey)
 
+	// get the secret point coords
 	secretPointX, secretPointY := Curve.ScalarMult(aliceI, bobI, make([]byte, 33))
 
-	var outpoint [36]byte
-
+	// generate the hmac secret s
 	hmacHash := hmac.New(sha512.New, []byte(secretPointX.String()))
 	hmacHash.Write(outpoint[:])
 
-	log.Println(bobPriv, bobNotifAddress, aliceAddress, bobPubkey, secretPointY)
-
-	log.Println("size of blinding factor: ", hmacHash.Size())
+	// construct paynym
 	var paymentCode PayNym
 
 	paymentCode.Version = byte(AddressVersion)
 	paymentCode.BitMessage = 0x00
-	paymentCode.Sign = 0x02 // get the actual sign
+
+	if secretPointY.Bit(0) == 1 {
+		paymentCode.Sign = 0x03
+	} else {
+		paymentCode.Sign = 0x02
+	}
 
 	for i, val := range hmacHash.Sum(nil)[32:63] {
-		paymentCode.Chaincode[i] = byte(0x00000000) ^ val // xor b on element of random
+		paymentCode.Chaincode[i] = chaincode[i] ^ val // xor b on element of random
 	}
 
 	for i, val := range hmacHash.Sum(nil)[0:31] {
-		paymentCode.XValue[i] = byte(0x00000000) ^ val // xor b on element of random
+		paymentCode.XValue[i] = chaincode[i] ^ val // xor b on element of random
 	}
 
 	var x [13]byte
 	paymentCode.Reserved = x
 
-	log.Println("LEN OF BLAH: ", paymentCode)
-	paymentCodeBytes := paymentCode.Bytes()
-	versionByteArray := []byte{0x47}
+	paymentCodeBytes, err := paymentCode.Bytes()
+	if err != nil {
+		return "", err
+	}
 
-	log.Println("LEN OF paymentCodeBytes: ", len(paymentCodeBytes))
-	log.Println(base58.Encode(append(versionByteArray, paymentCodeBytes...)))
+	versionByte := byte(0x47)
+	return base58.CheckEncode(paymentCodeBytes, versionByte), nil
 }
