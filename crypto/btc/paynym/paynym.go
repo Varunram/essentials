@@ -1,10 +1,9 @@
-package main
+package paynym
 
 import (
 	"bytes"
 	"crypto/hmac"
 	"crypto/sha512"
-	"encoding/hex"
 	"github.com/pkg/errors"
 	"log"
 	"math/big"

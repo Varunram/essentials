@@ -2,12 +2,12 @@ package utils
 
 // utils contains utility functions that are used in packages
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"math/rand"
 	"os/user"
 	"strconv"
 	"time"
-	"encoding/binary"
 
 	"golang.org/x/crypto/sha3"
 )

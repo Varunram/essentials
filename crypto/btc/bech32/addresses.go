@@ -4,7 +4,6 @@ import (
 	"github.com/Varunram/essentials/crypto/btc/base58"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 	"github.com/btcsuite/btcd/btcec"
-	"log"
 
 	"github.com/pkg/errors"
 )
@@ -41,7 +40,6 @@ func Bech32ToBase58Addr(hrp, addr string) (string, error) {
 		return "", err
 	}
 
-	log.Println("LENDATA: ", len(data))
 	var prefix []byte
 	switch hrp {
 	case "bc":
@@ -56,12 +54,11 @@ func Bech32ToBase58Addr(hrp, addr string) (string, error) {
 		arr = append(arr, byte(vals))
 	}
 	address := append(prefix, arr...)
-	log.Println("ADDR len: ", len(address))
 	chksum := btcutils.DoubleSha256(address)
 	return base58.Encode(append(address, chksum[:4]...)), nil
 }
 
-func Base58ToBech32Address(addr string) (string, error){
+func Base58ToBech32Address(addr string) (string, error) {
 	// decode from base58 to bytetring
 	var hrp string
 	byteString := base58.Decode(addr)
@@ -78,11 +75,10 @@ func Base58ToBech32Address(addr string) (string, error){
 		// mainnet
 		hrp = "bc"
 	case 111:
-		hrp="tb"
+		hrp = "tb"
 	default:
 		return "", errors.New("prefix not recognized")
 	}
 
 	return SegwitAddrEncode(hrp, SegwitVersion, ByteArrToInt(byteString))
-
 }
