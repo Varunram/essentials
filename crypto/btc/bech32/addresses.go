@@ -83,7 +83,7 @@ func Base58ToBech32Address(addr string) (string, error) {
 	return SegwitAddrEncode(hrp, SegwitVersion, ByteArrToInt(byteString))
 }
 
-func PrivKeyToWIF(network string, compressed bool, privkey []byte) (string, error){
+func PrivKeyToWIF(network string, compressed bool, privkey []byte) (string, error) {
 	if len(privkey) != 32 {
 		return "", errors.New("length of private key not 32")
 	}
@@ -93,6 +93,8 @@ func PrivKeyToWIF(network string, compressed bool, privkey []byte) (string, erro
 		prefixByte = []byte{0x80}
 	} else if network == "testnet" {
 		prefixByte = []byte{0xef}
+	} else {
+		return "", errors.New("unknown network")
 	}
 
 	var exKey []byte
@@ -107,4 +109,37 @@ func PrivKeyToWIF(network string, compressed bool, privkey []byte) (string, erro
 	checksum := doubleSha[0:4] // first 4 bytes are the checksum
 	exKey = append(exKey, checksum...)
 	return base58.Encode(exKey), nil
+}
+
+func WIFToPrivateKey(wif string, compressed bool) ([]byte, error) {
+	decodedString := base58.Decode(wif)
+	if CheckCheckSum(wif) != nil {
+		return decodedString, errors.New("checksum doesn't match, quitting")
+	}
+
+	decodedString = decodedString[1 : len(decodedString)-4] // drop network byte and checksum
+	if compressed {
+		decodedString = decodedString[0 : len(decodedString)-1]
+	}
+
+	if len(decodedString) != 32 {
+		return decodedString, errors.New("private key length not 32")
+	}
+
+	return decodedString, nil
+}
+
+func CheckCheckSum(wif string) error {
+	decodedString := base58.Decode(wif)
+	provCheckSum := decodedString[len(decodedString)-4 : len(decodedString)]
+	decodedString = decodedString[0 : len(decodedString)-4]
+
+	doubleSha := btcutils.DoubleSha256(decodedString)
+	for i, val := range doubleSha[0:4] {
+		if val != provCheckSum[i] {
+			return errors.New("checksums don't match, quitting")
+		}
+	}
+
+	return nil
 }

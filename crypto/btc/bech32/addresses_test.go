@@ -30,7 +30,7 @@ func TestAddr(t *testing.T) {
 		}
 	}
 
-	privkey, err := hex.DecodeString("0C28FCA386C7A227600B2FE50B7CAE11EC86D3BF1FBE471BE89827E19D72AA1D")
+	privkey, err := hex.DecodeString("0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,5 +40,20 @@ func TestAddr(t *testing.T) {
 	}
 	if wif != "5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ" {
 		t.Fatalf("wif doesn't match with expected value")
+	}
+
+	privKeyCheckByte, err := WIFToPrivateKey(wif, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	privKeyCheck := hex.EncodeToString(privKeyCheckByte)
+	if privKeyCheck != "0c28fca386c7a227600b2fe50b7cae11ec86d3bf1fbe471be89827e19d72aa1d" {
+		log.Println(privKeyCheck)
+		t.Fatalf("decoded privkey not equal to one obtained from wif")
+	}
+
+	if CheckCheckSum(wif) != nil {
+		t.Fatalf("checksums don't match, quitting")
 	}
 }
