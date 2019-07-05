@@ -4,6 +4,7 @@ import (
 	"github.com/Varunram/essentials/crypto/btc/base58"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/skip2/go-qrcode"
 
 	"github.com/pkg/errors"
 )
@@ -141,5 +142,13 @@ func CheckCheckSum(wif string) error {
 		}
 	}
 
+	return nil
+}
+
+func ExportToQrCode(secret string, path string) error {
+	err := qrcode.WriteFile(secret, qrcode.High, 1024, path)
+	if err != nil {
+		return errors.Wrap(err, "failed to generte qr code, quitting")
+	}
 	return nil
 }

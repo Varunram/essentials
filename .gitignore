@@ -6,3 +6,5 @@ emulator/config.yaml
 emulator/history_emulator.txt
 emulator/emulator
 crypto/btc/rpc/rpc
+main.go
+test.png
