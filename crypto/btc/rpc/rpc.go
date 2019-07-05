@@ -243,7 +243,7 @@ func PruneBlockchain(username string, password string, height string) ([]byte, e
 
 func SaveMempool(username string, password string) ([]byte, error) {
 	var payload RPCReq
-	payload.Method = "SaveMempool"
+	payload.Method = "savemempool"
 	payload.ID = "curltext"
 	payload.JsonRPC = "1.0"
 
@@ -279,8 +279,229 @@ func VerifyTxOutProof(username string, password string, txproof string) ([]byte,
 	return nil, nil
 }
 
+func GetMemoryInfo(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getmemoryinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetRPCInfo(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getrpcinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func Help(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "help"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func Logging(username string, password string, params ...string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "logging"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	var arr []string
+	for _, param := range params {
+		arr = append(arr, param)
+	}
+	payload.Params = arr
+
+	return PostReq(username, password, payload)
+}
+
+func Stop(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "stop"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func Uptime(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "uptime"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func Generate(username string, password string, nBlocks string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "generate"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	nBlocksInt, err := utils.StoICheck(nBlocks)
+	if err == nil {
+		payload.Params = []int{nBlocksInt}
+	}
+
+	return PostReq(username, password, payload)
+}
+
+func GenerateToAddress(username string, password string, nBlocks string, address string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "generatetoaddress"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	nBlocksInt, err := utils.StoICheck(nBlocks)
+	if err == nil {
+		payload.Params = [2]interface{}{nBlocksInt, address}
+	}
+
+	return PostReq(username, password, payload)
+}
+
+func SubmitBlock(username string, password string, hexdata string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "submitblock"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{hexdata}
+
+	return PostReq(username, password, payload)
+}
+
+func SubmitHeader(username string, password string, hexdata string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "submitheader"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{hexdata}
+
+	return PostReq(username, password, payload)
+}
+
+func AddNode(username string, password string, node string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "addnode"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{node}
+
+	return PostReq(username, password, payload)
+}
+
+func ClearBanned(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "clearbanned"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func DisconnectNode(username string, password string, address string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "disconnectnode"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{address}
+
+	return PostReq(username, password, payload)
+}
+
+func GetAddedNodeInfo(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getaddednodeinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetConnectionCount(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getconnectioncount"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetNetTotals(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getnettotals"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetNetworkInfo(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getnetworkinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetNodeAddresses(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getnodeaddresses"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetPeerInfo(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getpeerinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func ListBanned(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "listbanned"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func Ping(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "ping"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: SetBan
+
+func SetNetworkActive(username string, password string, state bool) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "setnetworkactive"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []interface{}{state}
+
+	return PostReq(username, password, payload)
+}
+
 func main() {
-	data, err := VerifyChain("user", "password", "1", "1")
+	data, err := SetNetworkActive("user", "password", true)
 	if err != nil {
 		log.Fatal(err)
 	}
