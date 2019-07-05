@@ -500,8 +500,242 @@ func SetNetworkActive(username string, password string, state bool) ([]byte, err
 	return PostReq(username, password, payload)
 }
 
+func AnalyzePSBT(username string, password string, psbt string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "analyzepsbt"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{psbt}
+
+	return PostReq(username, password, payload)
+}
+
+func CombinePSBT(username string, password string, psbts ...string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "analyzepsbt"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	var arr []string
+	for _, psbt := range psbts {
+		arr = append(arr, psbt)
+	}
+	payload.Params = arr
+
+	return PostReq(username, password, payload)
+}
+
+func CombineRawTransaction(username string, password string, psbts ...string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "combinerawtransaction"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	var arr []string
+	for _, psbt := range psbts {
+		arr = append(arr, psbt)
+	}
+	payload.Params = arr
+
+	return PostReq(username, password, payload)
+}
+
+func ConvertToPsbt(username string, password string, psbt string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "converttopsbt"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{psbt}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: Implement CreatePSBT, CreateRawTransaction routes here
+
+func DecodePsbt(username string, password string, psbt string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "decodepsbt"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{psbt}
+
+	return PostReq(username, password, payload)
+}
+
+func DecodeRawTransaction(username string, password string, rawtx string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "decoderawtransaction"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{rawtx}
+
+	return PostReq(username, password, payload)
+}
+
+func DecodeScript(username string, password string, hexString string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "decodescript"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{hexString}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add optional param here
+func FinalizePSBT(username string, password string, psbt string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "finalizepsbt"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{psbt}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add optional param here
+func FundRawTransaction(username string, password string, hexString string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "fundrawtransaction"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{hexString}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add optional param here
+func GetRawTransaction(username string, password string, txid string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getrawtransaction"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{txid}
+
+	return PostReq(username, password, payload)
+}
+
+func JoinPSBTs(username string, password string, psbts ...string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getrawtransaction"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	var arr []string
+	for _, psbt := range psbts {
+		arr = append(arr, psbt)
+	}
+	payload.Params = arr
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add optional param here
+func SendRawTransaction(username string, password string, hexString string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "sendrawtransaction"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{hexString}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add signrawtransactionwithkey, testmempoolaccept methods
+
+func UtxoUpdatePSBT(username string, password string, psbt string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "utxoupdatepsbt"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{psbt}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add checks here
+func CreateMultisig(username string, password string, n int, pubkeys ...string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "createmultisig"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	var arr []string
+	for _, pubkey := range pubkeys {
+		arr = append(arr, pubkey)
+	}
+	payload.Params = []interface{}{n, arr}
+
+	return PostReq(username, password, payload)
+}
+
+func DeriveAddresses(username string, password string, descriptor string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "deriveaddresses"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{descriptor}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add optional param
+func EstimateSmartFee(username string, password string, confTarget string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "estimatesmartfee"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	confTargetInt, err := utils.StoICheck(confTarget)
+	if err != nil {
+		return nil, errors.New("input block height not integer")
+	}
+	payload.Params = []int{confTargetInt}
+
+	return PostReq(username, password, payload)
+}
+
+func GetDescriptorInfo(username string, password string, descriptor string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getdescriptorinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{descriptor}
+
+	return PostReq(username, password, payload)
+}
+
+func SignMessageWithPrivkey(username string, password string, privkey string, message string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "signmessagewithprivkey"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{privkey, message}
+
+	return PostReq(username, password, payload)
+}
+
+func ValidateAddress(username string, password string, address string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "validateaddress"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{address}
+
+	return PostReq(username, password, payload)
+}
+
+func VerifyMessage(username string, password string, address string, signature string, message string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "verifymessage"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{address, signature, message}
+
+	return PostReq(username, password, payload)
+}
+
 func main() {
-	data, err := SetNetworkActive("user", "password", true)
+	data, err := VerifyMessage("user", "password", "2NBQSuT8Bg4wH6SMpz9Q97Vr28z6Asjav2E", "IISs74Tx7CE1afX8dPuSocPp9ATttBWZXbhBRH+tnG9QCTd9AiZyGy/hIA0E0bfk7joat/dBLD/WNGrioDya4DI=", "I am satoshi")
 	if err != nil {
 		log.Fatal(err)
 	}
