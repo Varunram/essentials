@@ -136,8 +136,151 @@ func GetChainTxStats(username string, password string, nBlocks string) ([]byte, 
 	return PostReq(username, password, payload)
 }
 
+func GetDifficulty(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getdifficulty"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetMempoolAncestors(username string, password string, txid string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getmempoolancestors"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{txid}
+
+	return PostReq(username, password, payload)
+}
+
+func GetMempoolEntry(username string, password string, txid string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getmempoolentry"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{txid}
+
+	return PostReq(username, password, payload)
+}
+
+func GetMempoolInfo(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getmempoolinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetRawMempool(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getrawmempool"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func GetTxOut(username string, password string, txid string, n int) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "gettxout"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = [2]interface{}{txid, n}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: fix this route
+func GetTxOutProof(username string, password string, txid string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "gettxoutproof"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	temp := make(map[string]interface{})
+	temp["txids"] = txid
+	payload.Params = temp
+
+	return PostReq(username, password, payload)
+}
+
+func GetTxOutSetInfo(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "gettxoutsetinfo"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func PreciousBlock(username string, password string, blockhash string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "preciousblock"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []string{blockhash}
+
+	return PostReq(username, password, payload)
+}
+
+func PruneBlockchain(username string, password string, height string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getchaintxstats"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	heightI, err := utils.StoICheck(height)
+	if err != nil {
+		return nil, errors.New("input block height not integer")
+	}
+	payload.Params = []int{heightI}
+
+	return PostReq(username, password, payload)
+}
+
+func SaveMempool(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "SaveMempool"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: implement this route
+func ScanTxOutset(username string, password string) ([]byte, error) {
+	return nil, nil
+}
+
+func VerifyChain(username string, password string, nBlocks string, checkLevel string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "verifychain"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	nBlocksInt, err := utils.StoICheck(nBlocks)
+	if err == nil {
+		payload.Params = []int{nBlocksInt}
+	}
+
+	checkLevelInt, err := utils.StoICheck(checkLevel)
+	if err == nil {
+		payload.Params = []int{checkLevelInt}
+	}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: implement this route
+func VerifyTxOutProof(username string, password string, txproof string) ([]byte, error) {
+	return nil, nil
+}
+
 func main() {
-	data, err := GetChainTxStats("user", "password", "1")
+	data, err := VerifyChain("user", "password", "1", "1")
 	if err != nil {
 		log.Fatal(err)
 	}
