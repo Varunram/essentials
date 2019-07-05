@@ -26,7 +26,7 @@ var RPCPass = "password"
 
 func SetBitcoindURL(url, rpcuser, rpcpass string) {
 	BitcoindURL = url
-	RPCUser = user
+	RPCUser = rpcuser
 	RPCPass = rpcpass
 }
 
@@ -69,6 +69,9 @@ func GetBestBlockHash() ([]byte, error) {
 }
 
 func GetBlock(blockhash string) ([]byte, error) {
+	if len(blockhash) != 64 {
+		return nil, errors.New("length of blockhash not 32 bytes")
+	}
 	var payload RPCReq
 	payload.Method = "getblock"
 	payload.Params = []string{blockhash}
@@ -92,6 +95,9 @@ func GetBlockHash(blockNumber uint32) ([]byte, error) {
 }
 
 func GetBlockHeader(blockhash string) ([]byte, error) {
+	if len(blockhash) != 64 {
+		return nil, errors.New("length of blockhash not 32 bytes")
+	}
 	var payload RPCReq
 	payload.Method = "getblockheader"
 	payload.Params = []string{blockhash}
@@ -104,8 +110,13 @@ func GetBlockStats(hashOrHeight string) ([]byte, error) {
 	payload.Method = "getblockstats"
 	height, err := utils.StoICheck(hashOrHeight)
 	if err != nil {
+		// hash and not height
+		if len(hashOrHeight) != 64 {
+			return nil, errors.New("length of blockhash not 32 bytes")
+		}
 		payload.Params = []string{hashOrHeight}
 	} else {
+		// blockheight
 		payload.Params = []int{height}
 	}
 
@@ -140,6 +151,9 @@ func GetDifficulty() ([]byte, error) {
 }
 
 func GetMempoolAncestors(txid string) ([]byte, error) {
+	if len(txid) != 64 {
+		return nil, errors.New("length of txid not 32 bytes")
+	}
 	var payload RPCReq
 	payload.Method = "getmempoolancestors"
 	payload.Params = []string{txid}
@@ -148,6 +162,9 @@ func GetMempoolAncestors(txid string) ([]byte, error) {
 }
 
 func GetMempoolEntry(txid string) ([]byte, error) {
+	if len(txid) != 64 {
+		return nil, errors.New("length of txid not 32 bytes")
+	}
 	var payload RPCReq
 	payload.Method = "getmempoolentry"
 	payload.Params = []string{txid}
@@ -170,6 +187,9 @@ func GetRawMempool() ([]byte, error) {
 }
 
 func GetTxOut(txid string, n int) ([]byte, error) {
+	if len(txid) != 64 {
+		return nil, errors.New("length of txid not 32 bytes")
+	}
 	var payload RPCReq
 	payload.Method = "gettxout"
 	payload.Params = [2]interface{}{txid, n}
@@ -179,6 +199,9 @@ func GetTxOut(txid string, n int) ([]byte, error) {
 
 // TODO: fix this route
 func GetTxOutProof(txid string) ([]byte, error) {
+	if len(txid) != 64 {
+		return nil, errors.New("length of txid not 32 bytes")
+	}
 	var payload RPCReq
 	payload.Method = "gettxoutproof"
 
@@ -197,6 +220,9 @@ func GetTxOutSetInfo() ([]byte, error) {
 }
 
 func PreciousBlock(blockhash string) ([]byte, error) {
+	if len(blockhash) != 64 {
+		return nil, errors.New("length of blockhash not 32 bytes")
+	}
 	var payload RPCReq
 	payload.Method = "preciousblock"
 	payload.Params = []string{blockhash}
@@ -233,14 +259,20 @@ func VerifyChain(nBlocks string, checkLevel string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "verifychain"
 
-	nBlocksInt, err := utils.StoICheck(nBlocks)
-	if err == nil {
-		payload.Params = []int{nBlocksInt}
+	var temp []interface{}
+	if nBlocks != "" {
+		nBlocksInt, err := utils.StoICheck(nBlocks)
+		if err != nil {
+			return nil, errors.New("nblocks not int")
+		}
+		temp = append(temp, nBlocksInt)
 	}
-
-	checkLevelInt, err := utils.StoICheck(checkLevel)
-	if err == nil {
-		payload.Params = []int{checkLevelInt}
+	if checkLevel != "" {
+		checkLevelInt, err := utils.StoICheck(checkLevel)
+		if err != nil {
+			return nil, errors.New("checklevel not int")
+		}
+		temp = append(temp, checkLevelInt)
 	}
 
 	return PostReq(payload)
@@ -299,15 +331,25 @@ func Uptime() ([]byte, error) {
 	return PostReq(payload)
 }
 
-func Generate(nBlocks string) ([]byte, error) {
+func Generate(nBlocks string, maxtries string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "generate"
 
+	var temp []interface{}
 	nBlocksInt, err := utils.StoICheck(nBlocks)
-	if err == nil {
-		payload.Params = []int{nBlocksInt}
+	if err != nil {
+		return nil, errors.New("nblocks not int")
 	}
 
+	temp = append(temp, nBlocksInt)
+	if maxtries != "" {
+		maxTriesInt, err := utils.StoICheck(maxtries)
+		if err != nil {
+			return nil, errors.New("maxtries not int")
+		}
+		temp = append(temp, maxTriesInt)
+	}
+	payload.Params = temp
 	return PostReq(payload)
 }
 
@@ -316,9 +358,11 @@ func GenerateToAddress(nBlocks string, address string) ([]byte, error) {
 	payload.Method = "generatetoaddress"
 
 	nBlocksInt, err := utils.StoICheck(nBlocks)
-	if err == nil {
-		payload.Params = [2]interface{}{nBlocksInt, address}
+	if err != nil {
+		return nil, errors.New("nblocks not int")
 	}
+
+	payload.Params = [2]interface{}{nBlocksInt, address}
 
 	return PostReq(payload)
 }
@@ -418,7 +462,25 @@ func Ping() ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: SetBan
+func SetBan(subnet string, command string, bantime string, absolute bool) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "setnetworkactive"
+	var temp []interface{}
+
+	temp = append(temp, subnet, command)
+	if bantime != "" {
+		bantimeInt, err := utils.StoICheck(bantime)
+		if err != nil {
+			return nil, errors.New("ban time not int")
+		}
+		temp = append(temp, bantimeInt)
+	}
+	if absolute {
+		temp = append(temp, absolute)
+	}
+	payload.Params = temp
+	return PostReq(payload)
+}
 
 func SetNetworkActive(state bool) ([]byte, error) {
 	var payload RPCReq
@@ -496,30 +558,54 @@ func DecodeScript(hexString string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add optional param here
-func FinalizePSBT(psbt string) ([]byte, error) {
+func FinalizePSBT(psbt string, extract bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "finalizepsbt"
-	payload.Params = []string{psbt}
+
+	var temp []interface{}
+	temp = append(temp, psbt)
+
+	if extract {
+		temp = append(temp, extract)
+	}
+	payload.Params = temp
 
 	return PostReq(payload)
 }
 
-// TODO: add optional param here
-func FundRawTransaction(hexString string) ([]byte, error) {
+func FundRawTransaction(hexString string, includeWatching bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "fundrawtransaction"
-	payload.Params = []string{hexString}
+
+	var temp []interface{}
+	temp = append(temp, hexString)
+
+	if includeWatching {
+		temp = append(temp, includeWatching)
+	}
+	payload.Params = temp
 
 	return PostReq(payload)
 }
 
-// TODO: add optional param here
-func GetRawTransaction(txid string) ([]byte, error) {
+func GetRawTransaction(txid string, verbose bool, blockhash string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "getrawtransaction"
-	payload.Params = []string{txid}
 
+	var temp []interface{}
+	temp = append(temp, txid)
+
+	if verbose {
+		temp = append(temp, true)
+	}
+	payload.Params = temp
+
+	if blockhash != "" {
+		if len(blockhash) != 32 {
+			return nil, errors.New("length of blockhash not 32")
+		}
+		temp = append(temp, blockhash)
+	}
 	return PostReq(payload)
 }
 
@@ -535,12 +621,17 @@ func JoinPSBTs(psbts ...string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add optional param here
-func SendRawTransaction(hexString string) ([]byte, error) {
+func SendRawTransaction(hexString string, allowHighFees bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "sendrawtransaction"
-	payload.Params = []string{hexString}
 
+	var temp []interface{}
+	temp = append(temp, hexString)
+
+	if allowHighFees {
+		temp = append(temp, allowHighFees)
+	}
+	payload.Params = temp
 	return PostReq(payload)
 }
 
@@ -554,12 +645,14 @@ func UtxoUpdatePSBT(psbt string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add checks here
 func CreateMultisig(n int, pubkeys ...string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "createmultisig"
 	var arr []string
 	for _, pubkey := range pubkeys {
+		if len(pubkey) != 64 {
+			return nil, errors.New("length of pubkey not 32 bytes")
+		}
 		arr = append(arr, pubkey)
 	}
 	payload.Params = []interface{}{n, arr}
@@ -575,15 +668,21 @@ func DeriveAddresses(descriptor string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add optional param
-func EstimateSmartFee(confTarget string) ([]byte, error) {
+func EstimateSmartFee(confTarget string, estimateMode string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "estimatesmartfee"
 	confTargetInt, err := utils.StoICheck(confTarget)
 	if err != nil {
 		return nil, errors.New("input block height not integer")
 	}
-	payload.Params = []int{confTargetInt}
+
+	var temp []interface{}
+	temp = append(temp, confTargetInt)
+
+	if estimateMode != "" {
+		temp = append(temp, estimateMode)
+	}
+	payload.Params = temp
 
 	return PostReq(payload)
 }
@@ -660,7 +759,7 @@ func BackupWallet(destination string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add options here
+// TODO: add json options here
 func BumpFee(txid string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "bumpfee"
@@ -669,11 +768,22 @@ func BumpFee(txid string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add optional params
-func CreateWallet(walletName string) ([]byte, error) {
+func CreateWallet(walletName string, disablePrivkey bool, blank bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "createwallet"
-	payload.Params = []string{walletName}
+
+	var temp []interface{}
+	temp = append(temp, walletName)
+
+	if disablePrivkey {
+		temp = append(temp, disablePrivkey)
+	}
+
+	if blank {
+		temp = append(temp, blank)
+	}
+
+	payload.Params = temp
 
 	return PostReq(payload)
 }
@@ -710,17 +820,46 @@ func GetAddressesInfo(address string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: optional params
-func GetBalance() ([]byte, error) {
+func GetBalance(dummy string, minConf string, watchOnly bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "getbalance"
+
+	var temp []interface{}
+	temp = append(temp, dummy)
+
+	if minConf != "" {
+		minConfInt, err := utils.StoICheck(minConf)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, minConfInt)
+	}
+
+	if watchOnly {
+		temp = append(temp, watchOnly)
+	}
+
+	payload.Params = temp
+
 	return PostReq(payload)
 }
 
-// TODO: optional params
-func GetNewAddress() ([]byte, error) {
+func GetNewAddress(label string, addressType string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "getnewaddress"
+
+	var temp []interface{}
+
+	if label != "" {
+		temp = append(temp, label)
+	}
+
+	if addressType != "" {
+		temp = append(temp, addressType)
+	}
+
+	payload.Params = temp
+
 	return PostReq(payload)
 }
 
@@ -738,11 +877,18 @@ func GetReceivedByLabel(label string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add options here
-func GetTransaction(txid string) ([]byte, error) {
+func GetTransaction(txid string, watchOnly bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "gettransaction"
-	payload.Params = []string{txid}
+
+	var temp []interface{}
+
+	temp = append(temp, txid)
+	if watchOnly {
+		temp = append(temp, watchOnly)
+	}
+
+	payload.Params = temp
 
 	return PostReq(payload)
 }
@@ -759,18 +905,29 @@ func GetWalletInfo() ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add options here
-func ImportAddress(address string) ([]byte, error) {
+func ImportAddress(address string, label string, rescan bool, p2sh bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "importaddress"
-	payload.Params = []string{address}
+
+	var temp []interface{}
+	temp = append(temp, address)
+	if label != "" {
+		temp = append(temp, label)
+	}
+	if rescan {
+		temp = append(temp, rescan)
+	}
+	if p2sh {
+		temp = append(temp, p2sh)
+	}
+
+	payload.Params = temp
 
 	return PostReq(payload)
 }
 
 // TODO: implement importmulti
 
-// TODO: add options here
 func ImportPrunedFunds(rawtx string, txoutproof string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "importprunedfunds"
@@ -779,12 +936,20 @@ func ImportPrunedFunds(rawtx string, txoutproof string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add options here
-func ImportPubkey(pubkey string) ([]byte, error) {
+func ImportPubkey(pubkey string, label string, rescan bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "importpubkey"
-	payload.Params = []string{pubkey}
 
+	var temp []interface{}
+	temp = append(temp, pubkey)
+	if label != "" {
+		temp = append(temp, label)
+	}
+	if rescan {
+		temp = append(temp, rescan)
+	}
+
+	payload.Params = temp
 	return PostReq(payload)
 }
 
@@ -796,10 +961,17 @@ func ImportWallet(name string) ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO: add options here
-func KeypoolRefill() ([]byte, error) {
+func KeypoolRefill(newSize string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "keypoolrefill"
+
+	if newSize != "" {
+		newSizeInt, err := utils.StoICheck(newSize)
+		if err != nil {
+			return nil, errors.Wrap(err, "new size not int")
+		}
+		payload.Params = []int{newSizeInt}
+	}
 	return PostReq(payload)
 }
 
@@ -809,10 +981,14 @@ func ListAddressGroupings() ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO option
-func ListLabels() ([]byte, error) {
+func ListLabels(purpose string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "listlabels"
+
+	if purpose != "" {
+		payload.Params = []string{purpose}
+	}
+
 	return PostReq(payload)
 }
 
@@ -822,40 +998,142 @@ func ListLockUnspent() ([]byte, error) {
 	return PostReq(payload)
 }
 
-// TODO option
-func ListReceivedByAddress() ([]byte, error) {
+func ListReceivedByAddress(minConf string, includeEmpty bool, watchOnly bool, addressFilter string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "listreceivedbyaddress"
+
+	var temp []interface{}
+	if minConf != "" {
+		minConfInt, err := utils.StoICheck(minConf)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, minConfInt)
+	}
+	if includeEmpty {
+		temp = append(temp, includeEmpty)
+	}
+	if watchOnly {
+		temp = append(temp, watchOnly)
+	}
+	if addressFilter != "" {
+		temp = append(temp, addressFilter)
+	}
+
+	payload.Params = temp
+
 	return PostReq(payload)
 }
 
-// TODO option
-func ListReceivedByLabel() ([]byte, error) {
+func ListReceivedByLabel(minConf string, includeEmpty bool, watchOnly bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "listreceivedbylabel"
+
+	var temp []interface{}
+	if minConf != "" {
+		minConfInt, err := utils.StoICheck(minConf)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, minConfInt)
+	}
+	if includeEmpty {
+		temp = append(temp, includeEmpty)
+	}
+	if watchOnly {
+		temp = append(temp, watchOnly)
+	}
+
+	payload.Params = temp
+
 	return PostReq(payload)
 }
 
-// TODO option
-func ListSinceBlock(blockhash string) ([]byte, error) {
+func ListSinceBlock(blockhash string, targetConf string, watchOnly bool, includeRemoved bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "listsinceblock"
-	payload.Params = []string{blockhash}
+
+	var temp []interface{}
+	if blockhash != "" {
+		if len(blockhash) != 64 {
+			return nil, errors.New("length of blockhash not 32 bytes")
+		}
+		temp = append(temp, blockhash)
+	}
+	if targetConf != "" {
+		targetConfInt, err := utils.StoICheck(targetConf)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, targetConfInt)
+	}
+	if watchOnly {
+		temp = append(temp, watchOnly)
+	}
+	if includeRemoved {
+		temp = append(temp, includeRemoved)
+	}
+
+	payload.Params = temp
 
 	return PostReq(payload)
 }
 
-// TODO option
-func ListTransactions() ([]byte, error) {
+func ListTransactions(label string, count string, skip string, watchOnly bool) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "listtranscations"
+
+	var temp []interface{}
+	if label != "" {
+		temp = append(temp, label)
+	}
+	if count != "" {
+		countInt, err := utils.StoICheck(count)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, countInt)
+	}
+	if skip != "" {
+		skipInt, err := utils.StoICheck(skip)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, skipInt)
+	}
+	if watchOnly {
+		temp = append(temp, watchOnly)
+	}
+
+	payload.Params = temp
+
 	return PostReq(payload)
 }
 
-// TODO option
-func ListUnspent() ([]byte, error) {
+func ListUnspent(minConf string, maxConf string, addresses []string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "listunspent"
+
+	var temp []interface{}
+
+	if minConf != "" {
+		minConfInt, err := utils.StoICheck(minConf)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, minConfInt)
+	}
+	if maxConf != "" {
+		maxConfInt, err := utils.StoICheck(maxConf)
+		if err != nil {
+			return nil, errors.Wrap(err, "minconf not int")
+		}
+		temp = append(temp, maxConfInt)
+	}
+	if len(addresses) != 0 {
+		temp = append(temp, addresses)
+	}
+	payload.Params = temp
 
 	return PostReq(payload)
 }
@@ -1068,7 +1346,7 @@ func GetZmqNotifications() ([]byte, error) {
 }
 
 func main() {
-	data, err := SendToAddress("2NEAqziQsJnLRNq9cNG9KFfp7zrJb9jb6yg", "1", "test", "test2", false, false, 0, "")
+	data, err := GetTransaction("2c27b39ca82b38b15402472feedd7aa3df4dceb831c327d519e888d93bbe608a", false)
 	if err != nil {
 		log.Fatal(err)
 	}
