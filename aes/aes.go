@@ -4,9 +4,7 @@ package aes
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"github.com/pkg/errors"
-	"io"
 	"io/ioutil"
 	"os"
 
@@ -15,17 +13,19 @@ import (
 
 // Encrypt encrypts a given data stream with a given passphrase
 func Encrypt(data []byte, passphrase string) ([]byte, error) {
-	key := []byte(utils.SHA3hash(passphrase)[96:128]) // last 32 characters in hash
+	sha3Hash := utils.SHA3hash(passphrase)
+	key := []byte(sha3Hash[0:32])
+
 	block, _ := aes.NewCipher(key)
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return data, errors.Wrap(err, "Error while opening new GCM block")
+		return nil, errors.Wrap(err, "Error while opening new GCM block")
 	}
+
 	nonce := make([]byte, gcm.NonceSize())
-	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return data, err
-	}
-	ciphertext := gcm.Seal(nonce, nonce, data, nil)
+	nonce = []byte(utils.SHA3hash(sha3Hash))[0:gcm.NonceSize()]
+
+	ciphertext := gcm.Seal(nil, nonce, data, nil)
 	return ciphertext, nil
 }
 
@@ -34,22 +34,27 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 	if len(data) == 0 || len(passphrase) == 0 {
 		return data, errors.New("Length of data is zero, can't decrpyt!")
 	}
-	tempParam := utils.SHA3hash(passphrase)
-	key := []byte(tempParam[96:128]) // last 32 characters in hash
+
+	sha3Hash := utils.SHA3hash(passphrase)
+	key := []byte(sha3Hash[0:32])
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return data, errors.Wrap(err, "Error while initializing new cipher")
 	}
+
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return data, errors.Wrap(err, "failed to initialize new gcm block")
 	}
-	nonceSize := gcm.NonceSize()
-	nonce, ciphertext := data[:nonceSize], data[nonceSize:]
-	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
+
+	nonce := make([]byte, gcm.NonceSize())
+	nonce = []byte(utils.SHA3hash(sha3Hash))[0:gcm.NonceSize()]
+
+	plaintext, err := gcm.Open(nil, nonce, data, nil)
 	if err != nil {
 		return plaintext, errors.Wrap(err, "Error while opening gcm mode")
 	}
+
 	return plaintext, nil
 }
 
