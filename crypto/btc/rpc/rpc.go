@@ -1,11 +1,10 @@
-package main
+package bitcoinrpc
 
 import (
 	"bytes"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	utils "github.com/Varunram/essentials/utils"
@@ -1343,12 +1342,4 @@ func GetZmqNotifications() ([]byte, error) {
 	payload.Method = "getzmqnotifications"
 
 	return PostReq(payload)
-}
-
-func main() {
-	data, err := GetTransaction("2c27b39ca82b38b15402472feedd7aa3df4dceb831c327d519e888d93bbe608a", false)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(string(data))
 }
