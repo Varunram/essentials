@@ -734,15 +734,6 @@ func VerifyMessage(username string, password string, address string, signature s
 	return PostReq(username, password, payload)
 }
 
-func GetZmqNotifications(username string, password string) ([]byte, error) {
-	var payload RPCReq
-	payload.Method = "getzmqnotifications"
-	payload.ID = "curltext"
-	payload.JsonRPC = "1.0"
-
-	return PostReq(username, password, payload)
-}
-
 func AbandonTransaction(username string, password string, txid string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "abandontransaction"
@@ -1108,8 +1099,196 @@ func RescanBlockchain(username string, password string, startHeight string, stop
 	return PostReq(username, password, payload)
 }
 
+// TODO: impelemnt sendmany endpoint here
+
+func SendToAddress(username string, password string, address string, amount string,
+	comment string, commentTo string, subtractFee bool, replaceAble bool, confTarget int,
+	estimateMode string) ([]byte, error) {
+
+	var payload RPCReq
+	payload.Method = "sendtoaddress"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	amountI, err := utils.StoICheck(amount)
+	if err != nil {
+		return nil, errors.New("could not convert string to int, quitting")
+	}
+
+	var temp []interface{}
+	temp = append(temp, address, amountI)
+
+	if comment != "" {
+		temp = append(temp, comment)
+	}
+	if commentTo != "" {
+		temp = append(temp, commentTo)
+	}
+	if subtractFee {
+		temp = append(temp, true)
+	}
+	if replaceAble {
+		temp = append(temp, true)
+	}
+	if estimateMode != "" {
+		temp = append(temp, estimateMode)
+	}
+	if confTarget != 0 {
+		temp = append(temp, confTarget)
+	}
+
+	payload.Params = temp
+	return PostReq(username, password, payload)
+}
+
+func SetHdSeed(username string, password string, newkeypool bool, seed string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "sethdseed"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	var temp []interface{}
+	if newkeypool {
+		temp = append(temp, true)
+	}
+	if seed != "" {
+		temp = append(temp, seed)
+	}
+
+	payload.Params = temp
+	return PostReq(username, password, payload)
+}
+
+func SetLabel(username string, password string, address string, label string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "setlabel"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+	payload.Params = []interface{}{address, label}
+
+	return PostReq(username, password, payload)
+}
+
+func SetTxFee(username string, password string, amount string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "settxfee"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	amountI, err := utils.StoICheck(amount)
+	if err != nil {
+		return nil, errors.New("could not convert string to int, quitting")
+	}
+
+	payload.Params = []interface{}{amountI}
+
+	return PostReq(username, password, payload)
+}
+
+func SignMessage(username string, password string, address string, message string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "signmessage"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	payload.Params = []interface{}{address, message}
+
+	return PostReq(username, password, payload)
+}
+
+func SignRawTransactionWithWallet(username string, password string, hexString string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "signrawtransactionwithwallet"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	payload.Params = []interface{}{hexString}
+
+	return PostReq(username, password, payload)
+}
+
+func UnloadWallet(username string, password string, walletName string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "unloadwallet"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	payload.Params = []interface{}{walletName}
+
+	return PostReq(username, password, payload)
+}
+
+// TODO: add walletcreatefundedpsbt method
+
+func WalletLock(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "walletlock"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
+func WalletPassphrase(username string, password string, passphrase string, timeout string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "walletpassphrase"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	timeoutI, err := utils.StoICheck(timeout)
+	if err != nil {
+		return nil, errors.New("timeout not integer")
+	}
+
+	payload.Params = []interface{}{passphrase, timeoutI}
+	return PostReq(username, password, payload)
+}
+
+func WalletPassphraseChange(username string, password string, old string, new string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "walletpassphrasechange"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	payload.Params = []interface{}{old, new}
+	return PostReq(username, password, payload)
+}
+
+func WalletProcessPSBT(username string, password string, psbt string, sign bool,
+	sighashType string, bip32derivs bool) ([]byte, error) {
+
+	var payload RPCReq
+	payload.Method = "walletprocesspsbt"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	var temp []interface{}
+	temp = append(temp, psbt)
+
+	if sign {
+		temp = append(temp, true)
+	}
+	if sighashType != "" {
+		temp = append(temp, sighashType)
+	}
+	if bip32derivs {
+		temp = append(temp, true)
+	}
+
+	payload.Params = temp
+	return PostReq(username, password, payload)
+}
+
+func GetZmqNotifications(username string, password string) ([]byte, error) {
+	var payload RPCReq
+	payload.Method = "getzmqnotifications"
+	payload.ID = "curltext"
+	payload.JsonRPC = "1.0"
+
+	return PostReq(username, password, payload)
+}
+
 func main() {
-	data, err := ListWallets("user", "password")
+	data, err := SendToAddress("user", "password", "2NEAqziQsJnLRNq9cNG9KFfp7zrJb9jb6yg", "1", "test", "test2", false, false, 0, "")
 	if err != nil {
 		log.Fatal(err)
 	}
