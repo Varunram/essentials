@@ -11,7 +11,7 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 )
 
-var Storage map[string][]byte
+var Storage map[string][]*big.Int
 var Curve *btcec.KoblitzCurve = btcec.S256() // take only the curve, can't use other stuff
 
 func NewPrivateKey() (*big.Int, error) {
@@ -76,12 +76,9 @@ func SchnorrVerify(sig []byte, Rx, Ry *big.Int, Px, Py *big.Int, m string) bool 
 	// e is a scalar, multiple the scalar with the point P
 
 	ePx, ePy := Curve.ScalarMult(Px, Py, eByte) // H(R,P,m) * P
-
-	rightX, rightY := Curve.Add(Rx, Ry, ePx, ePy)
-	log.Println("VerifyServer=", rightX, rightY)
+	cX, cY := Curve.Add(Rx, Ry, ePx, ePy)
 	sx, sy := Curve.ScalarBaseMult(sig) // s*G
-	log.Println("SIGX, SIGY", sx, sy)
-	if sx.Cmp(rightX) == 0 && sy.Cmp(rightY) == 0 {
+	if sx.Cmp(cX) == 0 && sy.Cmp(cY) == 0 {
 		return true
 	}
 	return false
@@ -114,11 +111,6 @@ func BlindClientBlind(Rx *big.Int, Ry *big.Int, m string, Px, Py *big.Int, privk
 	P := append(Px.Bytes(), Py.Bytes()...)
 
 	cpr := btcutils.Sha256(append(append(Rpr, P...), []byte(m)...))
-
-	ePx, ePy := Curve.ScalarMult(Px, Py, cpr) // H(R,P,m) * P
-	rightX, rightY := Curve.Add(RprX, RprY, ePx, ePy)
-	log.Println("CLIENTVERIFY=", rightX, rightY)
-
 	c := new(big.Int).Add(BytesToNum(cpr), BytesToNum(beta))
 
 	return alpha, beta, RprX, RprY, cpr, c.Bytes()
@@ -127,10 +119,7 @@ func BlindClientBlind(Rx *big.Int, Ry *big.Int, m string, Px, Py *big.Int, privk
 func BlindServerSign(kByte []byte, cByte []byte, privkey *big.Int) []byte {
 	k := BytesToNum(kByte)
 	c := BytesToNum(cByte)
-
 	cx := new(big.Int).Mul(c, privkey)
-	ePx, ePy := Curve.ScalarBaseMult(cx.Bytes())
-	log.Println("cP server ", ePx, ePy)
 
 	sig := new(big.Int).Add(k, cx)
 	return sig.Bytes()
@@ -155,10 +144,10 @@ func SerializeCompressed(pkx *big.Int, pky *big.Int) []byte {
 }
 
 func InitStorage() {
-	Storage = make(map[string][]byte)
+	Storage = make(map[string][]*big.Int)
 }
 
-func GetNewKeys() ([]byte, *big.Int, *big.Int, error) {
+func GetNewKeys() (*big.Int, *big.Int, *big.Int, error) {
 
 	x, err := NewPrivateKey()
 	if err != nil {
@@ -166,28 +155,32 @@ func GetNewKeys() ([]byte, *big.Int, *big.Int, error) {
 	}
 
 	pkx, pky := PubkeyPointsFromPrivkey(x)
-	return x.Bytes(), pkx, pky, nil
+	return x, pkx, pky, nil
 }
 
-func requestNewPubkey(userPubkey string) ([]byte, error) {
+func StateServerRequestNewPubkey(userPubkey string) ([]byte, error) {
 	log.Println("USER: ", userPubkey, "is requesting a new server pubkey")
 	var serverPubkey []byte
 	var err error
 
-	_, serverPx, serverPy, err := GetNewKeys()
+	privkey, pkX, pkY, err := GetNewKeys()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not generate new pubkey, quitting")
 	}
 
-	Storage[userPubkey] = SerializeCompressed(serverPx, serverPy)
+	// store private key, pkX, pkY for blind signing later when requested
+	Storage[userPubkey][0] = privkey
+	Storage[userPubkey][1] = pkX
+	Storage[userPubkey][2] = pkY
+
 	return serverPubkey, nil
 }
 
-func requestBlingSig(userSig string, blindedMsg string, nextUserPubkey string) (string, error) {
+func requestBlindSig(userSig string, blindedMsg string, nextUserPubkey string) (string, error) {
 	var blindSig string
 
-	var serverPubkey []byte
-	Storage[nextUserPubkey] = serverPubkey
+	//var serverPubkey []byte
+	//Storage[nextUserPubkey] = serverPubkey
 	return blindSig, nil
 }
 
@@ -226,7 +219,7 @@ func testSchnorr() {
 	}
 	//log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
 	k := GetRandomness()
-	sig, Rx, Ry := SchnorrSign(k, Px, Py, "hello world", BytesToNum(privkey))
+	sig, Rx, Ry := SchnorrSign(k, Px, Py, "hello world", privkey)
 	// log.Println("SCHNORR SIG: ", sig)
 
 	if !SchnorrVerify(sig, Rx, Ry, Px, Py, "hello world") {
@@ -244,13 +237,10 @@ func main() {
 	//log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
 	k, Rx, Ry := BlindServerNonce()
 
-	alpha, _, RprX, RprY, _, c := BlindClientBlind(Rx, Ry, "hello world", Px, Py, BytesToNum(privkey))
+	alpha, _, RprX, RprY, _, c := BlindClientBlind(Rx, Ry, "hello world", Px, Py, privkey)
 	//log.Println("ALPHA: ", alpha, "BETA: ", beta, "RprX: ", RprX, "RprY: ", RprY, "cpr: ", cpr, "c: ", c)
 
-	cPx, cPy := Curve.ScalarBaseMult(c)
-	log.Println("cP client: ", cPx, cPy)
-
-	blindSig := BlindServerSign(k, c, BytesToNum(privkey))
+	blindSig := BlindServerSign(k, c, privkey)
 	spr := BlindClientUnblind(alpha, blindSig)
 
 	if !SchnorrVerify(spr, RprX, RprY, Px, Py, "hello world") {
