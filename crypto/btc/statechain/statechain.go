@@ -8,7 +8,7 @@ import (
 	"math/big"
 
 	"github.com/btcsuite/btcd/btcec"
-	//"github.com/ethereum/go-ethereum/crypto/secp256k1"
+	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 )
 
 var Storage map[string][]byte
@@ -33,6 +33,33 @@ func NewPrivateKey() (*big.Int, error) {
 func PubkeyPointsFromPrivkey(privkey *big.Int) (*big.Int, *big.Int) {
 	x, y := Curve.ScalarBaseMult(privkey.Bytes())
 	return x, y
+}
+
+func BytesToNum(byteString []byte) *big.Int {
+	return new(big.Int).SetBytes(byteString)
+}
+
+func SchnorrGetR() ([]byte, *big.Int, *big.Int) {
+	k := make([]byte, 32)
+	_, err := io.ReadFull(rand.Reader, k)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	x, y := Curve.ScalarBaseMult(k) // R = k*G
+	return k, x, y
+}
+
+func SchnorrSign(k []byte, Rx, Ry *big.Int, P []byte, m string, privkey *big.Int) {
+	R := append(Rx.Bytes(), Ry.Bytes()...)
+
+	e := btcutils.Sha256(append(append(R, P...), []byte(m)...))
+
+	eNum := new(big.Int).SetBytes(e)
+	kNum := new(big.Int).SetBytes(k)
+
+	sig := new(big.Int).Add(kNum, new(big.Int).Mul(eNum, privkey)) // k + hash(R,P,m) * privkey
+	log.Println("SIG: ", sig.Bytes(), len(sig.Bytes()))
 }
 
 // SerializeCompressed serializes a public key in a 33-byte compressed format.
@@ -117,4 +144,9 @@ func main() {
 		log.Fatal(err)
 	}
 	log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
+
+	k, Rx, Ry := SchnorrGetR()
+
+	SchnorrSign(k, Rx, Ry, pubkey, "hello world", BytesToNum(privkey))
+
 }
