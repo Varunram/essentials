@@ -19,7 +19,7 @@ func Encrypt(input []byte, passphrase string) ([]byte, error) {
 	nonce := make([]byte, cc20.NonceSizeX)
 	nonce = []byte(utils.SHA3hash(sha3Hash))[0:24]
 
-	ciphertext := aead.Seal(nonce, nonce, input, nil) // prepend nonce to the ciphertext
+	ciphertext := aead.Seal(nil, nonce, input, nil) // prepend nonce to the ciphertext
 	return ciphertext, nil
 }
 
@@ -35,10 +35,7 @@ func Decrypt(input []byte, passphrase string) ([]byte, error) {
 	nonce := make([]byte, cc20.NonceSizeX)
 	nonce = []byte(utils.SHA3hash(sha3Hash))[0:24]
 
-	copy(nonce, []byte(utils.SHA3hash(passphrase)[73:96]))
-
-	nonce, ciphertext := input[:cc20.NonceSizeX], input[cc20.NonceSizeX:]
-	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
+	plaintext, err := aead.Open(nil, nonce, input, nil)
 	if err != nil {
 		log.Fatal("Failed to decrypt or authenticate message:", err)
 	}
