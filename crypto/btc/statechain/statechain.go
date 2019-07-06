@@ -7,8 +7,8 @@ import (
 	"log"
 	"math/big"
 
-	"github.com/btcsuite/btcd/btcec"
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
+	"github.com/btcsuite/btcd/btcec"
 )
 
 var Storage map[string][]byte
@@ -39,27 +39,52 @@ func BytesToNum(byteString []byte) *big.Int {
 	return new(big.Int).SetBytes(byteString)
 }
 
-func SchnorrGetR() ([]byte, *big.Int, *big.Int) {
+func SchnorrGetK() []byte {
 	k := make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, k)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	x, y := Curve.ScalarBaseMult(k) // R = k*G
-	return k, x, y
+	return k
 }
 
-func SchnorrSign(k []byte, Rx, Ry *big.Int, P []byte, m string, privkey *big.Int) {
+func SchnorrSign(kByte []byte, Px, Py *big.Int, m string, privkey *big.Int) ([]byte, *big.Int, *big.Int) {
+
+	P := append(Px.Bytes(), Py.Bytes()...)
+
+	Rx, Ry := Curve.ScalarBaseMult(kByte) // R = k*G
 	R := append(Rx.Bytes(), Ry.Bytes()...)
 
-	e := btcutils.Sha256(append(append(R, P...), []byte(m)...))
+	eByte := btcutils.Sha256(append(append(R, P...), []byte(m)...))
+	e := new(big.Int).SetBytes(eByte)
 
-	eNum := new(big.Int).SetBytes(e)
-	kNum := new(big.Int).SetBytes(k)
+	k := new(big.Int).SetBytes(kByte) // hash(R,P,m)
 
-	sig := new(big.Int).Add(kNum, new(big.Int).Mul(eNum, privkey)) // k + hash(R,P,m) * privkey
-	log.Println("SIG: ", sig.Bytes(), len(sig.Bytes()))
+	sig := new(big.Int).Add(k, new(big.Int).Mul(e, privkey)) // k + hash(R,P,m) * privkey
+	return sig.Bytes(), Rx, Ry
+}
+
+func SchnorrVerify(sig []byte, Rx, Ry *big.Int, Px, Py *big.Int, m string) bool {
+
+	P := append(Px.Bytes(), Py.Bytes()...)
+	R := append(Rx.Bytes(), Ry.Bytes()...)
+
+	eByte := btcutils.Sha256(append(append(R, P...), []byte(m)...))
+	//e := new(big.Int).SetBytes(eByte)
+
+	// e is a scalar, multiple the scalar with the point P
+
+	ePx, ePy := Curve.ScalarMult(Px, Py, eByte) // H(R,P,m) * P
+
+	rightX, rightY := Curve.Add(Rx, Ry, ePx, ePy)
+
+	sx, sy := Curve.ScalarBaseMult(sig) // s*G
+
+	if sx.Cmp(rightX) == 0 && sy.Cmp(rightY) == 0 {
+		return true
+	}
+	return false
 }
 
 // SerializeCompressed serializes a public key in a 33-byte compressed format.
@@ -77,15 +102,15 @@ func InitStorage() {
 	Storage = make(map[string][]byte)
 }
 
-func GetNewKeys() ([]byte, []byte, error) {
+func GetNewKeys() ([]byte, *big.Int, *big.Int, error) {
 
 	x, err := NewPrivateKey()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	pkx, pky := PubkeyPointsFromPrivkey(x)
-	return x.Bytes(), SerializeCompressed(pkx, pky), nil
+	return x.Bytes(), pkx, pky, nil
 }
 
 func requestNewPubkey(userPubkey string) ([]byte, error) {
@@ -93,12 +118,12 @@ func requestNewPubkey(userPubkey string) ([]byte, error) {
 	var serverPubkey []byte
 	var err error
 
-	_, serverPubkey, err = GetNewKeys()
+	_, serverPubkeyX, serverPubkeyY, err := GetNewKeys()
 	if err != nil {
 		return nil, errors.Wrap(err, "could not generate new pubkey, quitting")
 	}
 
-	Storage[userPubkey] = serverPubkey
+	Storage[userPubkey] = SerializeCompressed(serverPubkeyX, serverPubkeyY)
 	return serverPubkey, nil
 }
 
@@ -139,14 +164,18 @@ func broadcastTx(tx string) error {
 }
 
 func main() {
-	privkey, pubkey, err := GetNewKeys()
+	privkey, pubkeyX, pubkeyY, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
+	//log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
+	k := SchnorrGetK()
+	sig, Rx, Ry := SchnorrSign(k, pubkeyX, pubkeyY, "hello world", BytesToNum(privkey))
+	log.Println("SCHNORR SIG: ", sig)
 
-	k, Rx, Ry := SchnorrGetR()
-
-	SchnorrSign(k, Rx, Ry, pubkey, "hello world", BytesToNum(privkey))
-
+	if !SchnorrVerify(sig, Rx, Ry, pubkeyX, pubkeyY, "hello world") {
+		log.Fatal(errors.New("schnorr sigs don't match"))
+	} else {
+		log.Println("Schnorr signatures work")
+	}
 }
