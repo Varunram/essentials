@@ -15,6 +15,7 @@ func TestWallet(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	filepath := pwd + "/files/testseed.hex"
 	filepathdup := pwd + "/files/testseed2.hex"
 	// testseed1 already has a seed, we need to test if decrypted seeds and stored seeds match

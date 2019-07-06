@@ -2,7 +2,6 @@ package cc20
 
 import (
 	"github.com/pkg/errors"
-	"log"
 
 	utils "github.com/Varunram/essentials/utils"
 	cc20 "golang.org/x/crypto/chacha20poly1305"
@@ -37,7 +36,7 @@ func Decrypt(input []byte, passphrase string) ([]byte, error) {
 
 	plaintext, err := aead.Open(nil, nonce, input, nil)
 	if err != nil {
-		log.Fatal("Failed to decrypt or authenticate message:", err)
+		return nil, errors.Wrap(err, "failed to decrypt or authenticate  message")
 	}
 
 	return plaintext, nil

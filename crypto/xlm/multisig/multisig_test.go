@@ -6,8 +6,7 @@ import (
 	"log"
 	"testing"
 
-	consts "github.com/Varunram/essentials/crypto/consts"
-	xlm "github.com/Varunram/essentials/xlm"
+	xlm "github.com/Varunram/essentials/crypto/xlm"
 )
 
 func TestMultisig2of2(t *testing.T) {
@@ -50,7 +49,7 @@ func TestMultisig2of2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = TrustAssetTx("STABLEUSD", consts.StableCoinAddress, "10000", pubkey1, seed1, seed2)
+	err = TrustAssetTx("STABLEUSD", "GDJE64WOXDXLEK7RDURVYEJ5Y5XFHS6OQZCS3SHO4EEMTABEIJXF6SZ5", "10000", pubkey1, seed1, seed2)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -4,13 +4,19 @@ package issuer
 
 import (
 	"testing"
+	"os"
 
-	consts "github.com/Varunram/essentials/crypto/consts"
 	xlm "github.com/Varunram/essentials/crypto/xlm"
 )
 
 func TestIssuer(t *testing.T) {
 	var err error
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	TestDir := wd + "/test"
+	os.MkdirAll(TestDir, 0775)
 	platformSeed, platformPubkey, err := xlm.GetKeyPair()
 	if err != nil {
 		t.Fatal(err)
@@ -19,24 +25,25 @@ func TestIssuer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = InitIssuer(consts.OpenSolarIssuerDir, 1, "blah")
+	err = InitIssuer(TestDir, 1, "blah")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = FundIssuer(consts.OpenSolarIssuerDir, 1, "blah", platformSeed)
+	err = FundIssuer(TestDir, 1, "blah", platformSeed)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = FundIssuer(consts.OpenSolarIssuerDir, 1, "cool", platformSeed)
+	err = FundIssuer(TestDir, 1, "cool", platformSeed)
 	if err == nil {
 		t.Fatalf("not able to catch invalid seed error, quitting!")
 	}
-	_, err = FreezeIssuer(consts.OpenSolarIssuerDir, 1, "blah")
+	_, err = FreezeIssuer(TestDir, 1, "blah")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = DeleteIssuer(consts.OpenSolarIssuerDir, 1)
+	err = DeleteIssuer(TestDir, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
+	os.RemoveAll(TestDir)
 }

@@ -1,6 +1,6 @@
 // +build all
 
-package recovery
+package sss
 
 import (
 	"testing"

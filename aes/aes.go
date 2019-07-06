@@ -52,7 +52,7 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 
 	plaintext, err := gcm.Open(nil, nonce, data, nil)
 	if err != nil {
-		return plaintext, errors.Wrap(err, "Error while opening gcm mode")
+		return plaintext, errors.Wrap(err, "failed to decrypt data")
 	}
 
 	return plaintext, nil
