@@ -84,7 +84,7 @@ func SchnorrVerify(sig []byte, Rx, Ry *big.Int, Px, Py *big.Int, m string) bool 
 	return false
 }
 
-func BlindServerNonce() ([]byte, *big.Int, *big.Int) {
+func BlindServerNonce() (*big.Int, *big.Int, *big.Int) {
 	k := make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, k)
 	if err != nil {
@@ -92,7 +92,7 @@ func BlindServerNonce() ([]byte, *big.Int, *big.Int) {
 	}
 
 	Rx, Ry := Curve.ScalarBaseMult(k) // R = k*G
-	return k, Rx, Ry
+	return BytesToNum(k), Rx, Ry
 }
 
 func BlindClientBlind(Rx *big.Int, Ry *big.Int, m string, Px, Py *big.Int, privkey *big.Int) (
@@ -104,7 +104,7 @@ func BlindClientBlind(Rx *big.Int, Ry *big.Int, m string, Px, Py *big.Int, privk
 	betaPX, betaPY := Curve.ScalarMult(Px, Py, beta)
 
 	// need to add Rx, alphax, betapx
-	tempX, tempY := Curve.Add(Rx, Ry, alphaGX, alphaGY) // R + alpha*G
+	tempX, tempY := Curve.Add(Rx, Ry, alphaGX, alphaGY)   // R + alpha*G
 	RprX, RprY := Curve.Add(tempX, tempY, betaPX, betaPY) // R + alpha*G + beta*P
 
 	Rpr := append(RprX.Bytes(), RprY.Bytes()...)
@@ -116,8 +116,7 @@ func BlindClientBlind(Rx *big.Int, Ry *big.Int, m string, Px, Py *big.Int, privk
 	return alpha, beta, RprX, RprY, cpr, c.Bytes()
 }
 
-func BlindServerSign(kByte []byte, cByte []byte, privkey *big.Int) []byte {
-	k := BytesToNum(kByte)
+func BlindServerSign(k *big.Int, cByte []byte, privkey *big.Int) []byte {
 	c := BytesToNum(cByte)
 	cx := new(big.Int).Mul(c, privkey)
 
@@ -130,6 +129,58 @@ func BlindClientUnblind(alphaByte []byte, sigByte []byte) []byte {
 	s := BytesToNum(sigByte)
 	spr := new(big.Int).Add(s, alpha)
 	return spr.Bytes()
+}
+
+func MuSig2Create(X1x, X1y, X2x, X2y, r2, R2x, R2y, x1,
+	x2 *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
+
+	L := btcutils.Sha256(append(X1x.Bytes(), append(X1y.Bytes(), append(X2x.Bytes(), X2y.Bytes()...)...)...))
+
+	hash1 := btcutils.Sha256(append(L, append(X1x.Bytes(), X1y.Bytes()...)...))
+	hash2 := btcutils.Sha256(append(L, append(X2x.Bytes(), X2y.Bytes()...)...))
+
+	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1)
+	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2)
+
+	Xx, Xy := Curve.Add(Xx1, Xy1, Xx2, Xy2) // X
+
+	r1, R1x, R1y := BlindServerNonce()
+	Rx, Ry := Curve.Add(R1x, R1y, R2x, R2y) // R
+
+	X := append(Xx.Bytes(), Xy.Bytes()...)
+	X1 := append(X1x.Bytes(), X1y.Bytes()...)
+	X2 := append(X2x.Bytes(), X2y.Bytes()...)
+	R := append(Rx.Bytes(), Ry.Bytes()...)
+	m := []byte("hello world")
+
+	HXRm := btcutils.Sha256(append(X, append(R, m...)...))
+	HLX1 := btcutils.Sha256(append(L, X1...))
+	HLX2 := btcutils.Sha256(append(L, X2...))
+
+	s1 := new(big.Int).Add(r1, new(big.Int).Mul(new(big.Int).Mul(BytesToNum(HXRm), BytesToNum(HLX1)), x1))
+	s2 := new(big.Int).Add(r2, new(big.Int).Mul(new(big.Int).Mul(BytesToNum(HXRm), BytesToNum(HLX2)), x2))
+	s := new(big.Int).Add(s1, s2)
+
+	return Rx, Ry, Xx, Xy, s
+}
+
+func MuSig2Verify(Rx, Ry, Xx, Xy, s *big.Int) bool {
+
+	sGx, sGy := Curve.ScalarBaseMult(s.Bytes())
+
+	X := append(Xx.Bytes(), Xy.Bytes()...)
+	R := append(Rx.Bytes(), Ry.Bytes()...)
+	m := []byte("hello world")
+	HXRm := btcutils.Sha256(append(X, append(R, m...)...))
+
+	Cx, Cy := Curve.ScalarMult(Xx, Xy, HXRm)
+
+	rightX, rightY := Curve.Add(Rx, Ry, Cx, Cy)
+
+	if sGx.Cmp(rightX) == 0 && sGy.Cmp(rightY) == 0 {
+		return true
+	}
+	return false
 }
 
 // SerializeCompressed serializes a public key in a 33-byte compressed format.
@@ -184,25 +235,6 @@ func requestBlindSig(userSig string, blindedMsg string, nextUserPubkey string) (
 	return blindSig, nil
 }
 
-func genTransitoryKey() ([]byte, []byte, error) {
-	privkey, err := btcec.NewPrivateKey(Curve)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "could not get new privkey, quitting")
-	}
-
-	pubkey := privkey.PubKey().SerializeCompressed()
-	return nil, pubkey, nil
-}
-
-func getMuSigKey(a, A, x, X string) (string, error) {
-	return a + x, nil
-}
-
-func constructMusigTx(amount string, address string, privkey string) (string, error) {
-	var tx string
-	return tx, nil
-}
-
 func constructEltooTx(address string, privkey string) (string, error) {
 	var tx string
 	return tx, nil
@@ -229,7 +261,7 @@ func testSchnorr() {
 	}
 }
 
-func main() {
+func testBlindSchnorr() {
 	privkey, Px, Py, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
@@ -249,4 +281,26 @@ func main() {
 		log.Println("Blind Schnorr signatures work")
 	}
 
+}
+
+func main() {
+
+	privkeyServer, PSx, PSy, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	privkeyClient, PCx, PCy, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r2, R2x, R2y := BlindServerNonce()
+
+	Rx, Ry, Xx, Xy, s := MuSig2Create(PCx, PCy, PSx, PSy, r2, R2x, R2y, privkeyClient, privkeyServer)
+	if MuSig2Verify(Rx, Ry, Xx, Xy, s) {
+		log.Println("musig verify works")
+	} else {
+		log.Println("musig verify doesn't work")
+	}
 }
