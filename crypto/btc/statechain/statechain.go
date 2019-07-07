@@ -269,6 +269,46 @@ func StatechainRequestBlindSig(userSig []byte, blindedMsg []byte, k *big.Int,
 	return serverSig, nil
 }
 
+func ConstructAdaptorSig(x, Px, Py *big.Int, m []byte) (*big.Int,
+	*big.Int, *big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
+	t := GetRandomness()
+	r := GetRandomness()
+
+	Tx, Ty := Curve.ScalarBaseMult(t)
+	Rx, Ry := Curve.ScalarBaseMult(r)
+
+	P := append(Px.Bytes(), Py.Bytes()...)
+	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
+	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...)
+
+	HPRTm := btcutils.Sha256(append(P, append(RplusT, m...)...))
+	HPRTmx := new(big.Int).Mul(BytesToNum(HPRTm), x)
+	s := new(big.Int).Add(BytesToNum(r), new(big.Int).Add(BytesToNum(t), HPRTmx))
+
+	spr := new(big.Int).Sub(s, BytesToNum(t))
+	return spr, BytesToNum(r), Rx, Ry, BytesToNum(t), Tx, Ty
+}
+
+func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
+
+	sGx, sGy := Curve.ScalarBaseMult(spr.Bytes())
+
+	P := append(Px.Bytes(), Py.Bytes()...)
+
+	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
+	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...)
+
+	HPRTm := btcutils.Sha256(append(P, append(RplusT, m...)...))
+
+	HPRTmPx, HPRTmPy := Curve.ScalarMult(Px, Py, HPRTm)
+
+	RplusHPRTmPx, RplusHPRTmPy := Curve.Add(Rx, Ry, HPRTmPx, HPRTmPy)
+	if sGx.Cmp(RplusHPRTmPx) == 0 && sGy.Cmp(RplusHPRTmPy) == 0 {
+		return true
+	}
+	return false
+}
+
 func constructEltooTx(address string, privkey string) (string, error) {
 	var tx string
 	return tx, nil
@@ -278,130 +318,19 @@ func broadcastTx(tx []byte) error {
 	return nil
 }
 
-func testSchnorr() {
-	privkey, Px, Py, err := GetNewKeys()
+// https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/
+func main() {
+	x, Px, Py, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
 	}
-	//log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
-	k := GetRandomness()
-	sig, Rx, Ry := SchnorrSign(k, Px, Py, "hello world", privkey)
-	// log.Println("SCHNORR SIG: ", sig)
 
-	if !SchnorrVerify(sig, Rx, Ry, Px, Py, []byte("hello world")) {
-		log.Fatal(errors.New("schnorr sigs don't match"))
+	m := []byte("hello world")
+	spr, r, Rx, Ry, t, Tx, Ty := ConstructAdaptorSig(x, Px, Py, m)
+	log.Println("r=", r, "t=", t)
+	if !VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py, m) {
+		log.Println("adaptor sigs don't work")
 	} else {
-		log.Println("Schnorr signatures work")
+		log.Println("adaptor sigs work")
 	}
-}
-
-func testBlindSchnorr() {
-	privkey, Px, Py, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-	//log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
-	k, Rx, Ry := BlindServerNonce()
-
-	alpha, _, RprX, RprY, _, c := BlindClientBlind(Rx, Ry, []byte("hello world"), Px, Py)
-	//log.Println("ALPHA: ", alpha, "BETA: ", beta, "RprX: ", RprX, "RprY: ", RprY, "cpr: ", cpr, "c: ", c)
-
-	blindSig := BlindServerSign(k, c, privkey)
-	spr := BlindClientUnblind(alpha, blindSig)
-
-	if !SchnorrVerify(spr, RprX, RprY, Px, Py, []byte("hello world")) {
-		log.Fatal(errors.New("blind schnorr sigs don't match"))
-	} else {
-		log.Println("Blind Schnorr signatures work")
-	}
-
-}
-
-func testmusig() {
-	p1, P1x, P1y, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	p2, P2x, P2y, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	r1, R1x, R1y := BlindServerNonce() // craete random ri
-	r2, R2x, R2y := BlindServerNonce() // craete random ri
-
-	message := []byte("hello world")
-
-	Rx, Ry, Xx, Xy, s := MuSig2CreateSign(p1, P1x, P1y, p2, P2x, P2y, r1, R1x, R1y, r2, R2x, R2y, message)
-	if MuSig2Verify(Rx, Ry, Xx, Xy, s, message) {
-		log.Println("musig verify works")
-	} else {
-		log.Println("musig verify doesn't work")
-	}
-}
-
-func teststatechain() {
-	InitStorage()
-	b, Bx, By, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	B := SerializeCompressed(Bx, By)
-	Ax, Ay, err := StateServerRequestNewPubkey(B) // request A = a*G from the server, A is the server pubkey
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	x, Xx, Xy, err := GetNewKeys() // generate transitory keypair X (x, Xx, Xy)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	L, AXx, AXy := StatechainGenMuSigKey(Ax, Ay, Xx, Xy)
-	// log.Println("L=", L, "AX=", len(AXx.Bytes()), len(AXy.Bytes()))
-	tx1 := []byte("") // 1 BTC to AX - this stuff must come from the client
-	tx2 := []byte("") // eltoo tx assigning 1 btc back to B - this stuff must come from the client
-	m := tx2
-
-	c, Cx, Cy, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	C := SerializeCompressed(Cx, Cy)
-	AX := SerializeCompressed(AXx, AXy)
-	nextUserPubkey := C
-
-	k, Rx, Ry := BlindServerNonce() // generate nonce for signing
-
-	alpha, _, RprX, RprY, _, challenge := BlindClientBlind(Rx, Ry, m, Bx, By) // blind the message and generate challenge
-	userSig := BlindServerSign(k, challenge, b)                               // user has signed over the blind message tx2,
-	userSig = BlindClientUnblind(alpha, userSig)
-	// pass to server the challenge and the userSig so it can add userSig to its sign and return
-	// final MuSig tx
-	log.Println("USERSIG: ", userSig)
-	if !SchnorrVerify(userSig, RprX, RprY, Bx, By, m) {
-		log.Fatal("user signature not verified, quitting")
-	}
-
-	alpha, _, RprX, RprY, _, challenge = BlindClientBlind(Rx, Ry, m, Ax, Ay) // blind the message and generate challenge
-	sig, err := StatechainRequestBlindSig(userSig, challenge, k, B, Bx, By, nextUserPubkey)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	sig = BlindClientUnblind(alpha, sig)
-	log.Println("SERVERSIG:", sig)
-	if !SchnorrVerify(sig, RprX, RprY, Ax, Ay, m) {
-		log.Fatal("server sig doesn't match, quitting")
-	}
-
-	broadcastTx(tx1)
-
-	userSig = BlindClientUnblind(alpha, userSig)
-	sig = BlindClientUnblind(alpha, sig)
-
-	log.Println("Passing transitory key: ", x, " to C: ", c, "MUSIG PUBKEY: ", AX, "L=", L)
 }
