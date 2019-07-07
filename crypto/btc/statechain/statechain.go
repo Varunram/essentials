@@ -309,7 +309,8 @@ func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
 	return false
 }
 
-func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int,
+	*big.Int, *big.Int, *big.Int, *big.Int) {
 	A := append(Ax.Bytes(), Ay.Bytes()...)
 	B := append(Bx.Bytes(), By.Bytes()...)
 
@@ -326,10 +327,10 @@ func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int
 	apr := new(big.Int).Mul(BytesToNum(HHABA), a)
 	bpr := new(big.Int).Mul(BytesToNum(HHABB), b)
 
-	return Jx, Jy, apr, bpr
+	return Jx, Jy, apr, bpr, Aprx, Apry, Bprx, Bpry
 }
 
-func GenerateSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) []byte {
+func Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) []byte {
 	J := append(Jx.Bytes(), Jy.Bytes()...)
 
 	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
@@ -338,6 +339,20 @@ func GenerateSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) []b
 	JRARBm := append(JRARB, m...)
 	HJRARBm := btcutils.Sha256(JRARBm)
 	challenge := HJRARBm
+	return challenge
+}
+
+func Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty *big.Int, m []byte) []byte {
+	J := append(Jx.Bytes(), Jy.Bytes()...)
+	T := append(Tx.Bytes(), Ty.Bytes()...)
+
+	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
+	RARB := append(RARBx.Bytes(), RARBy.Bytes()...)
+	RARBT := append(RARB, T...)
+	JRARBT := append(J, RARBT...)
+	JRARBTm := append(JRARBT, m...)
+	HJRARBTm := btcutils.Sha256(JRARBTm)
+	challenge := HJRARBTm
 	return challenge
 }
 
@@ -358,7 +373,7 @@ func testadaptorsig() {
 	}
 }
 
-func main() {
+func test22Schnorr() {
 	a, Ax, Ay, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
@@ -379,9 +394,9 @@ func main() {
 
 	m := []byte("hello world")
 
-	Jx, Jy, apr, bpr := Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By)
+	Jx, Jy, apr, bpr, _, _, _, _ := Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By)
 
-	challenge := GenerateSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, m)
+	challenge := Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, m)
 
 	sig1 := BlindServerSign(ra, challenge, apr)
 	sig2 := BlindServerSign(rb, challenge, bpr)
@@ -394,4 +409,71 @@ func main() {
 	RHSx, RHSy := Curve.Add(RARBx, RARBy, eJx, eJy)
 
 	log.Println(saggx, RHSx, saggy, RHSy)
+}
+
+func main() {
+	a, Ax, Ay, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ra, Rax, Ray, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rb, Rbx, Rby, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+	b, Bx, By, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+	t, Tx, Ty, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m := []byte("hello world")
+	Jx, Jy, apr, bpr, Aprx, Apry, Bprx, Bpry := Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By)
+	challenge := Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty, m)
+
+	sig1 := BytesToNum(BlindServerSign(rb, challenge, bpr))
+
+	sprGx, sprGy := Curve.ScalarBaseMult(sig1.Bytes())
+
+	eBx, eBy := Curve.ScalarMult(Bprx, Bpry, challenge)
+	RHSx, RHSy := Curve.Add(Rbx, Rby, eBx, eBy)
+
+	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 {
+		log.Println("can verify Bob's adaptor sig")
+	} else {
+		log.Fatal("can't verify Bob's adaptor sig")
+	}
+
+	sig2 := BytesToNum(BlindServerSign(ra, challenge, apr))
+
+	sprGx, sprGy = Curve.ScalarBaseMult(sig2.Bytes())
+
+	eAx, eAy := Curve.ScalarMult(Aprx, Apry, challenge)
+	RHSx, RHSy = Curve.Add(Rax, Ray, eAx, eAy)
+
+	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 {
+		log.Println("can verify Alice's adaptor sig")
+	} else {
+		log.Fatal("can't verify Alice's adaptor sig")
+	}
+
+	rbt := new(big.Int).Add(rb, t)
+	ebpr := new(big.Int).Mul(BytesToNum(challenge), bpr)
+
+	sagg := new(big.Int).Add(sig2, new(big.Int).Add(rbt, ebpr))
+
+	check := new(big.Int).Sub(new(big.Int).Sub(sagg, sig2), sig1)
+
+	if check.Cmp(t) == 0 {
+		log.Println("22 Adaptor Schnorr works")
+	} else {
+		log.Fatal("22 Adaptor Schnorr doesn't work")
+	}
 }
