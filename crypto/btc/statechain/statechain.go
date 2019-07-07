@@ -49,7 +49,7 @@ func GetRandomness() []byte {
 	return k
 }
 
-func SchnorrSign(kByte []byte, Px, Py *big.Int, m string, privkey *big.Int) ([]byte, *big.Int, *big.Int) {
+func SchnorrSign(kByte []byte, Px, Py *big.Int, m string, privkey *big.Int) (*big.Int, *big.Int, *big.Int) {
 
 	P := append(Px.Bytes(), Py.Bytes()...)
 
@@ -62,10 +62,10 @@ func SchnorrSign(kByte []byte, Px, Py *big.Int, m string, privkey *big.Int) ([]b
 	k := new(big.Int).SetBytes(kByte) // hash(R,P,m)
 
 	sig := new(big.Int).Add(k, new(big.Int).Mul(e, privkey)) // k + hash(R,P,m) * privkey
-	return sig.Bytes(), Rx, Ry
+	return sig, Rx, Ry
 }
 
-func SchnorrVerify(sig []byte, Rx, Ry *big.Int, Px, Py *big.Int, m []byte) bool {
+func SchnorrVerify(sig *big.Int, Rx, Ry *big.Int, Px, Py *big.Int, m []byte) bool {
 
 	P := append(Px.Bytes(), Py.Bytes()...)
 	R := append(Rx.Bytes(), Ry.Bytes()...)
@@ -77,7 +77,7 @@ func SchnorrVerify(sig []byte, Rx, Ry *big.Int, Px, Py *big.Int, m []byte) bool 
 
 	ePx, ePy := Curve.ScalarMult(Px, Py, eByte) // H(R,P,m) * P
 	cX, cY := Curve.Add(Rx, Ry, ePx, ePy)
-	sx, sy := Curve.ScalarBaseMult(sig) // s*G
+	sx, sy := Curve.ScalarBaseMult(sig.Bytes()) // s*G
 	if sx.Cmp(cX) == 0 && sy.Cmp(cY) == 0 {
 		return true
 	}
@@ -117,17 +117,17 @@ func BlindClientBlind(Rx *big.Int, Ry *big.Int, m []byte, Px, Py *big.Int) (
 	return alpha, beta, RprX, RprY, cpr, c.Bytes()
 }
 
-func BlindServerSign(k *big.Int, cByte []byte, privkey *big.Int) []byte {
+func BlindServerSign(k *big.Int, cByte []byte, privkey *big.Int) *big.Int {
 	c := BytesToNum(cByte)
 	cx := new(big.Int).Mul(c, privkey) // c*x
 	sig := new(big.Int).Add(k, cx)     // s = k + c*x
-	return sig.Bytes()
+	return sig
 }
 
-func BlindClientUnblind(alphaByte []byte, sigByte []byte) []byte {
+func BlindClientUnblind(alphaByte []byte, sig *big.Int) *big.Int {
 	alpha := BytesToNum(alphaByte)
-	spr := new(big.Int).Add(BytesToNum(sigByte), alpha) // s' = s + alpha
-	return spr.Bytes()
+	spr := new(big.Int).Add(sig, alpha) // s' = s + alpha
+	return spr
 }
 
 func MuSig2CreateSign(x1, X1x, X1y, x2, X2x, X2y, r1, R1x, R1y, r2, R2x, R2y *big.Int,
@@ -240,8 +240,8 @@ func StateServerRequestNewPubkey(userPubkey []byte) (*big.Int, *big.Int, error) 
 	return pkX, pkY, nil
 }
 
-func StatechainRequestBlindSig(userSig []byte, blindedMsg []byte, k *big.Int,
-	userPubkey []byte, Bx, By *big.Int, nextUserPubkey []byte) ([]byte, error) {
+func StatechainRequestBlindSig(userSig *big.Int, blindedMsg []byte, k *big.Int,
+	userPubkey []byte, Bx, By *big.Int, nextUserPubkey []byte) (*big.Int, error) {
 	//var serverPubkey []byte
 	//Storage[nextUserPubkey] = serverPubkey
 
@@ -266,6 +266,7 @@ func StatechainRequestBlindSig(userSig []byte, blindedMsg []byte, k *big.Int,
 	Storage[string(userPubkey)][1] = new(big.Int)
 	Storage[string(userPubkey)][2] = new(big.Int)
 
+	log.Println("USER SIG: ", userSig)
 	return serverSig, nil
 }
 
@@ -400,7 +401,7 @@ func test22Schnorr() {
 
 	sig1 := BlindServerSign(ra, challenge, apr)
 	sig2 := BlindServerSign(rb, challenge, bpr)
-	sagg := new(big.Int).Add(BytesToNum(sig1), BytesToNum(sig2))
+	sagg := new(big.Int).Add(sig1, sig2)
 
 	saggx, saggy := Curve.ScalarBaseMult(sagg.Bytes())
 
@@ -438,7 +439,7 @@ func main() {
 	Jx, Jy, apr, bpr, Aprx, Apry, Bprx, Bpry := Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By)
 	challenge := Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty, m)
 
-	sig1 := BytesToNum(BlindServerSign(rb, challenge, bpr))
+	sig1 := BlindServerSign(rb, challenge, bpr)
 
 	sprGx, sprGy := Curve.ScalarBaseMult(sig1.Bytes())
 
@@ -451,7 +452,7 @@ func main() {
 		log.Fatal("can't verify Bob's adaptor sig")
 	}
 
-	sig2 := BytesToNum(BlindServerSign(ra, challenge, apr))
+	sig2 := BlindServerSign(ra, challenge, apr)
 
 	sprGx, sprGy = Curve.ScalarBaseMult(sig2.Bytes())
 
