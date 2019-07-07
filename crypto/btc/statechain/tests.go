@@ -93,7 +93,7 @@ func teststatechain() {
 
 	L, AXx, AXy := StatechainGenMuSigKey(Ax, Ay, Xx, Xy)
 	// log.Println("L=", L, "AX=", len(AXx.Bytes()), len(AXy.Bytes()))
-	tx1 := []byte("") // 1 BTC to AX - this stuff must come from the client
+	// 	tx1 := []byte("") // 1 BTC to AX - this stuff must come from the client
 	tx2 := []byte("") // eltoo tx assigning 1 btc back to B - this stuff must come from the client
 	m := tx2
 
@@ -130,7 +130,7 @@ func teststatechain() {
 		log.Fatal("server sig doesn't match, quitting")
 	}
 
-	broadcastTx(tx1)
+	//broadcastTx(tx1)
 
 	userSig = BlindClientUnblind(alpha, userSig)
 	sig = BlindClientUnblind(alpha, sig)

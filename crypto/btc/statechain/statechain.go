@@ -309,17 +309,40 @@ func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
 	return false
 }
 
-func constructEltooTx(address string, privkey string) (string, error) {
-	var tx string
-	return tx, nil
+func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int) {
+	A := append(Ax.Bytes(), Ay.Bytes()...)
+	B := append(Bx.Bytes(), By.Bytes()...)
+
+	HAB := btcutils.Sha256(append(A, B...))
+
+	HHABA := btcutils.Sha256(append(HAB, A...))
+	HHABB := btcutils.Sha256(append(HAB, B...))
+
+	Aprx, Apry := Curve.ScalarMult(Ax, Ay, HHABA)
+	Bprx, Bpry := Curve.ScalarMult(Bx, By, HHABB)
+
+	Jx, Jy := Curve.Add(Aprx, Apry, Bprx, Bpry)
+
+	apr := new(big.Int).Mul(BytesToNum(HHABA), a)
+	bpr := new(big.Int).Mul(BytesToNum(HHABB), b)
+
+	return Jx, Jy, apr, bpr
 }
 
-func broadcastTx(tx []byte) error {
-	return nil
+func GenerateSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) []byte {
+	J := append(Jx.Bytes(), Jy.Bytes()...)
+
+	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
+	RARB := append(RARBx.Bytes(), RARBy.Bytes()...)
+	JRARB := append(J, RARB...)
+	JRARBm := append(JRARB, m...)
+	HJRARBm := btcutils.Sha256(JRARBm)
+	challenge := HJRARBm
+	return challenge
 }
 
 // https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/
-func main() {
+func testadaptorsig() {
 	x, Px, Py, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
@@ -333,4 +356,42 @@ func main() {
 	} else {
 		log.Println("adaptor sigs work")
 	}
+}
+
+func main() {
+	a, Ax, Ay, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+	ra, Rax, Ray, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	rb, Rbx, Rby, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+	b, Bx, By, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	m := []byte("hello world")
+
+	Jx, Jy, apr, bpr := Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By)
+
+	challenge := GenerateSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, m)
+
+	sig1 := BlindServerSign(ra, challenge, apr)
+	sig2 := BlindServerSign(rb, challenge, bpr)
+	sagg := new(big.Int).Add(BytesToNum(sig1), BytesToNum(sig2))
+
+	saggx, saggy := Curve.ScalarBaseMult(sagg.Bytes())
+
+	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
+	eJx, eJy := Curve.ScalarMult(Jx, Jy, challenge)
+	RHSx, RHSy := Curve.Add(RARBx, RARBy, eJx, eJy)
+
+	log.Println(saggx, RHSx, saggy, RHSy)
 }
