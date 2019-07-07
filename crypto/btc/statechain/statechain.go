@@ -97,103 +97,104 @@ func BlindServerNonce() (*big.Int, *big.Int, *big.Int) {
 
 func BlindClientBlind(Rx *big.Int, Ry *big.Int, m []byte, Px, Py *big.Int) (
 	[]byte, []byte, *big.Int, *big.Int, []byte, []byte) {
+
 	alpha := GetRandomness()
 	beta := GetRandomness()
 
-	alphaGX, alphaGY := Curve.ScalarBaseMult(alpha)
-	betaPX, betaPY := Curve.ScalarMult(Px, Py, beta)
+	alphaGX, alphaGY := Curve.ScalarBaseMult(alpha)  // alpha*G
+	betaPX, betaPY := Curve.ScalarMult(Px, Py, beta) // beta*P
 
 	// need to add Rx, alphax, betapx
 	tempX, tempY := Curve.Add(Rx, Ry, alphaGX, alphaGY)   // R + alpha*G
 	RprX, RprY := Curve.Add(tempX, tempY, betaPX, betaPY) // R + alpha*G + beta*P
 
-	Rpr := append(RprX.Bytes(), RprY.Bytes()...)
+	Rpr := append(RprX.Bytes(), RprY.Bytes()...) // R' = R + alpha*G + beta*P
 	P := append(Px.Bytes(), Py.Bytes()...)
 
-	cpr := btcutils.Sha256(append(append(Rpr, P...), m...))
-	c := new(big.Int).Add(BytesToNum(cpr), BytesToNum(beta))
+	cpr := btcutils.Sha256(append(append(Rpr, P...), m...))  // c' = H(R',P,m)
+	c := new(big.Int).Add(BytesToNum(cpr), BytesToNum(beta)) // c = c' + beta
 
 	return alpha, beta, RprX, RprY, cpr, c.Bytes()
 }
 
 func BlindServerSign(k *big.Int, cByte []byte, privkey *big.Int) []byte {
 	c := BytesToNum(cByte)
-	cx := new(big.Int).Mul(c, privkey)
-
-	sig := new(big.Int).Add(k, cx)
+	cx := new(big.Int).Mul(c, privkey) // c*x
+	sig := new(big.Int).Add(k, cx)     // s = k + c*x
 	return sig.Bytes()
 }
 
 func BlindClientUnblind(alphaByte []byte, sigByte []byte) []byte {
 	alpha := BytesToNum(alphaByte)
-	s := BytesToNum(sigByte)
-	spr := new(big.Int).Add(s, alpha)
+	spr := new(big.Int).Add(BytesToNum(sigByte), alpha) // s' = s + alpha
 	return spr.Bytes()
 }
 
-func MuSig2CreateSign(X1x, X1y, X2x, X2y, r2, R2x, R2y, x1,
-	x2 *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
+func MuSig2CreateSign(x1, X1x, X1y, x2, X2x, X2y, r1, R1x, R1y, r2, R2x, R2y *big.Int,
+	m []byte) (*big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
 
-	L := btcutils.Sha256(append(X1x.Bytes(), append(X1y.Bytes(), append(X2x.Bytes(), X2y.Bytes()...)...)...))
-
-	hash1 := btcutils.Sha256(append(L, append(X1x.Bytes(), X1y.Bytes()...)...))
-	hash2 := btcutils.Sha256(append(L, append(X2x.Bytes(), X2y.Bytes()...)...))
-
-	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1)
-	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2)
-
-	Xx, Xy := Curve.Add(Xx1, Xy1, Xx2, Xy2) // X
-
-	r1, R1x, R1y := BlindServerNonce()
-	Rx, Ry := Curve.Add(R1x, R1y, R2x, R2y) // R
-
-	X := append(Xx.Bytes(), Xy.Bytes()...)
 	X1 := append(X1x.Bytes(), X1y.Bytes()...)
 	X2 := append(X2x.Bytes(), X2y.Bytes()...)
-	R := append(Rx.Bytes(), Ry.Bytes()...)
-	m := []byte("hello world")
 
-	HXRm := btcutils.Sha256(append(X, append(R, m...)...))
-	HLX1 := btcutils.Sha256(append(L, X1...))
-	HLX2 := btcutils.Sha256(append(L, X2...))
+	// L = H(X1,X2)
+	L := btcutils.Sha256(append(X1, X2...))
 
-	s1 := new(big.Int).Add(r1, new(big.Int).Mul(new(big.Int).Mul(BytesToNum(HXRm), BytesToNum(HLX1)), x1))
-	s2 := new(big.Int).Add(r2, new(big.Int).Mul(new(big.Int).Mul(BytesToNum(HXRm), BytesToNum(HLX2)), x2))
-	s := new(big.Int).Add(s1, s2)
+	hash1 := btcutils.Sha256(append(L, X1...)) // H(L,X1)
+	hash2 := btcutils.Sha256(append(L, X2...)) // H(L,X2)
+
+	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1) // H(L,X1)X1
+	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2) // H(L,X2)X2
+
+	Xx, Xy := Curve.Add(Xx1, Xy1, Xx2, Xy2)
+	X := append(Xx.Bytes(), Xy.Bytes()...) // X = H(L,X1)X1 + H(L,X2)X2
+
+	Rx, Ry := Curve.Add(R1x, R1y, R2x, R2y)
+	R := append(Rx.Bytes(), Ry.Bytes()...) // R = R1 + R2
+
+	HXRm := BytesToNum(btcutils.Sha256(append(X, append(R, m...)...))) // H(X,R,m)
+	HLX1 := BytesToNum(btcutils.Sha256(append(L, X1...)))              // H(L,X1)
+	HLX2 := BytesToNum(btcutils.Sha256(append(L, X2...)))              // H(L,X2)
+
+	s1 := new(big.Int).Add(r1, new(big.Int).Mul(new(big.Int).Mul(HXRm, HLX1), x1)) // s1 = r1 + H(X,R,m)*H(L,X1)*x1
+	s2 := new(big.Int).Add(r2, new(big.Int).Mul(new(big.Int).Mul(HXRm, HLX2), x2)) // s2 = r2+ H(X,R,m)*H(L,X2)*x2
+	s := new(big.Int).Add(s1, s2)                                                  // s = s1 + s2
 
 	return Rx, Ry, Xx, Xy, s
 }
 
-func MuSig2Verify(Rx, Ry, Xx, Xy, s *big.Int) bool {
+func MuSig2Verify(Rx, Ry, Xx, Xy, s *big.Int, m []byte) bool {
 
-	sGx, sGy := Curve.ScalarBaseMult(s.Bytes())
+	sGx, sGy := Curve.ScalarBaseMult(s.Bytes()) // s*G
 
 	X := append(Xx.Bytes(), Xy.Bytes()...)
 	R := append(Rx.Bytes(), Ry.Bytes()...)
-	m := []byte("hello world")
-	HXRm := btcutils.Sha256(append(X, append(R, m...)...))
 
-	Cx, Cy := Curve.ScalarMult(Xx, Xy, HXRm)
+	HXRm := btcutils.Sha256(append(X, append(R, m...)...)) // H(X,R,m)
+	Cx, Cy := Curve.ScalarMult(Xx, Xy, HXRm)               // H(X,R,m)X
+	rightX, rightY := Curve.Add(Rx, Ry, Cx, Cy)            // R + H(X,R,m)X
 
-	rightX, rightY := Curve.Add(Rx, Ry, Cx, Cy)
-
-	if sGx.Cmp(rightX) == 0 && sGy.Cmp(rightY) == 0 {
+	if sGx.Cmp(rightX) == 0 && sGy.Cmp(rightY) == 0 { // s*G == R + H(X,R,m)X
 		return true
 	}
+
 	return false
 }
 
 func StatechainGenMuSigKey(X1x, X1y, X2x, X2y *big.Int) ([]byte, *big.Int, *big.Int) {
 
-	L := btcutils.Sha256(append(X1x.Bytes(), append(X1y.Bytes(), append(X2x.Bytes(), X2y.Bytes()...)...)...))
+	X1 := append(X1x.Bytes(), X1y.Bytes()...)
+	X2 := append(X2x.Bytes(), X2y.Bytes()...)
 
-	hash1 := btcutils.Sha256(append(L, append(X1x.Bytes(), X1y.Bytes()...)...))
-	hash2 := btcutils.Sha256(append(L, append(X2x.Bytes(), X2y.Bytes()...)...))
+	// L = H(X1,X2)
+	L := btcutils.Sha256(append(X1, X2...))
 
-	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1)
-	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2)
+	hash1 := btcutils.Sha256(append(L, X1...)) // H(L,X1)
+	hash2 := btcutils.Sha256(append(L, X2...)) // H(L,X2)
 
-	Xx, Xy := Curve.Add(Xx1, Xy1, Xx2, Xy2) // X
+	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1) // H(L,X1)X1
+	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2) // H(L,X2)X2
+
+	Xx, Xy := Curve.Add(Xx1, Xy1, Xx2, Xy2) // X = H(L,X1)X1 + H(L,X2)X2
 
 	return L, Xx, Xy
 }
@@ -232,7 +233,6 @@ func StateServerRequestNewPubkey(userPubkey []byte) (*big.Int, *big.Int, error) 
 
 	// store private key, pkX, pkY for blind signing later when requested
 	Storage[string(userPubkey)] = make([]*big.Int, 3)
-	log.Println("PRIVKEY:", privkey)
 	Storage[string(userPubkey)][0] = privkey
 	Storage[string(userPubkey)][1] = pkX
 	Storage[string(userPubkey)][2] = pkY
@@ -254,7 +254,6 @@ func StatechainRequestBlindSig(userSig []byte, blindedMsg []byte, k *big.Int,
 	}
 
 	privkey = val[0]
-	log.Println("PRIVKEY:", privkey)
 	serverSig := BlindServerSign(k, blindedMsg, privkey) // user has signed over the blind message tx2,
 
 	Storage[string(nextUserPubkey)] = make([]*big.Int, 3)
@@ -319,27 +318,30 @@ func testBlindSchnorr() {
 }
 
 func testmusig() {
-	privkeyServer, PSx, PSy, err := GetNewKeys()
+	p1, P1x, P1y, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	privkeyClient, PCx, PCy, err := GetNewKeys()
+	p2, P2x, P2y, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	r2, R2x, R2y := BlindServerNonce()
+	r1, R1x, R1y := BlindServerNonce() // craete random ri
+	r2, R2x, R2y := BlindServerNonce() // craete random ri
 
-	Rx, Ry, Xx, Xy, s := MuSig2CreateSign(PCx, PCy, PSx, PSy, r2, R2x, R2y, privkeyClient, privkeyServer)
-	if MuSig2Verify(Rx, Ry, Xx, Xy, s) {
+	message := []byte("hello world")
+
+	Rx, Ry, Xx, Xy, s := MuSig2CreateSign(p1, P1x, P1y, p2, P2x, P2y, r1, R1x, R1y, r2, R2x, R2y, message)
+	if MuSig2Verify(Rx, Ry, Xx, Xy, s, message) {
 		log.Println("musig verify works")
 	} else {
 		log.Println("musig verify doesn't work")
 	}
 }
 
-func main() {
+func teststatechain() {
 	InitStorage()
 	b, Bx, By, err := GetNewKeys()
 	if err != nil {
