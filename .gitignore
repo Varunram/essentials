@@ -8,3 +8,4 @@ emulator/emulator
 crypto/btc/rpc/rpc
 main.go
 test.png
+crypto/btc/statechain/statechain

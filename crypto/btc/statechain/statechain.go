@@ -272,39 +272,41 @@ func StatechainRequestBlindSig(userSig *big.Int, blindedMsg []byte, k *big.Int,
 
 func ConstructAdaptorSig(x, Px, Py *big.Int, m []byte) (*big.Int,
 	*big.Int, *big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
+
 	t := GetRandomness()
 	r := GetRandomness()
 
-	Tx, Ty := Curve.ScalarBaseMult(t)
-	Rx, Ry := Curve.ScalarBaseMult(r)
+	Tx, Ty := Curve.ScalarBaseMult(t) // T = t*G
+	Rx, Ry := Curve.ScalarBaseMult(r) // R = r*G
 
 	P := append(Px.Bytes(), Py.Bytes()...)
+
 	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
-	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...)
+	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...) // R+T
 
-	HPRTm := btcutils.Sha256(P, RplusT, m)
-	HPRTmx := new(big.Int).Mul(BytesToNum(HPRTm), x)
-	s := new(big.Int).Add(BytesToNum(r), new(big.Int).Add(BytesToNum(t), HPRTmx))
+	HPRTm := btcutils.Sha256(P, RplusT, m)                                        // H(P||R+T||m)
+	HPRTmx := new(big.Int).Mul(BytesToNum(HPRTm), x)                              // H(P||R+T||m) * x
+	s := new(big.Int).Add(BytesToNum(r), new(big.Int).Add(BytesToNum(t), HPRTmx)) // s = r + t + H(P||R+T||m) * x
 
-	spr := new(big.Int).Sub(s, BytesToNum(t))
+	spr := new(big.Int).Sub(s, BytesToNum(t)) // s' = s - t (s' is the adaptor signature)
 	return spr, BytesToNum(r), Rx, Ry, BytesToNum(t), Tx, Ty
 }
 
 func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
 
-	sGx, sGy := Curve.ScalarBaseMult(spr.Bytes())
+	sGx, sGy := Curve.ScalarBaseMult(spr.Bytes()) // s*G
 
 	P := append(Px.Bytes(), Py.Bytes()...)
 
 	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
-	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...)
+	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...) // R+T
 
-	HPRTm := btcutils.Sha256(P, RplusT, m)
+	HPRTm := btcutils.Sha256(P, RplusT, m) // H(P||R+T||m)
 
-	HPRTmPx, HPRTmPy := Curve.ScalarMult(Px, Py, HPRTm)
+	HPRTmPx, HPRTmPy := Curve.ScalarMult(Px, Py, HPRTm) // H(P||R+T||m) * P
 
-	RplusHPRTmPx, RplusHPRTmPy := Curve.Add(Rx, Ry, HPRTmPx, HPRTmPy)
-	if sGx.Cmp(RplusHPRTmPx) == 0 && sGy.Cmp(RplusHPRTmPy) == 0 {
+	RplusHPRTmPx, RplusHPRTmPy := Curve.Add(Rx, Ry, HPRTmPx, HPRTmPy) // R + H(P||R+T||m) * P
+	if sGx.Cmp(RplusHPRTmPx) == 0 && sGy.Cmp(RplusHPRTmPy) == 0 {     // s*G == R + H(P||R+T||m) * P
 		return true
 	}
 	return false
@@ -312,21 +314,22 @@ func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
 
 func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int,
 	*big.Int, *big.Int, *big.Int, *big.Int) {
+
 	A := append(Ax.Bytes(), Ay.Bytes()...)
 	B := append(Bx.Bytes(), By.Bytes()...)
 
-	HAB := btcutils.Sha256(A, B)
+	HAB := btcutils.Sha256(A, B) // H(A||B)
 
-	HHABA := btcutils.Sha256(HAB, A)
-	HHABB := btcutils.Sha256(HAB, B)
+	HHABA := btcutils.Sha256(HAB, A) // H(H(A||B)||A)
+	HHABB := btcutils.Sha256(HAB, B) // H(H(A||B)||B)
 
-	Aprx, Apry := Curve.ScalarMult(Ax, Ay, HHABA)
-	Bprx, Bpry := Curve.ScalarMult(Bx, By, HHABB)
+	Aprx, Apry := Curve.ScalarMult(Ax, Ay, HHABA) // A' = H(H(A||B)||A) * A
+	Bprx, Bpry := Curve.ScalarMult(Bx, By, HHABB) // B' = H(H(A||B)||B) * B
 
-	Jx, Jy := Curve.Add(Aprx, Apry, Bprx, Bpry)
+	Jx, Jy := Curve.Add(Aprx, Apry, Bprx, Bpry) // J = A'+B'
 
-	apr := new(big.Int).Mul(BytesToNum(HHABA), a)
-	bpr := new(big.Int).Mul(BytesToNum(HHABB), b)
+	apr := new(big.Int).Mul(BytesToNum(HHABA), a) // a' = H(H(A||B)||A) * a
+	bpr := new(big.Int).Mul(BytesToNum(HHABB), b) // b' = H(H(A||B)||B) * b
 
 	return Jx, Jy, apr, bpr, Aprx, Apry, Bprx, Bpry
 }
@@ -335,20 +338,21 @@ func Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) [
 	J := append(Jx.Bytes(), Jy.Bytes()...)
 
 	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
-	RARB := append(RARBx.Bytes(), RARBy.Bytes()...)
-	HJRARBm := btcutils.Sha256(J, RARB, m)
+	RARB := append(RARBx.Bytes(), RARBy.Bytes()...) // RA + RB
+	HJRARBm := btcutils.Sha256(J, RARB, m)          // e = H(J||RA+RB||m)
 	challenge := HJRARBm
 	return challenge
 }
 
 func Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty *big.Int, m []byte) []byte {
 	J := append(Jx.Bytes(), Jy.Bytes()...)
-	T := append(Tx.Bytes(), Ty.Bytes()...)
 
 	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
-	RARB := append(RARBx.Bytes(), RARBy.Bytes()...)
 
-	HJRARBTm := btcutils.Sha256(J, RARB, T, m)
+	RARBTx, RARBTy := Curve.Add(RARBx, RARBy, Tx, Ty)
+	RARBT := append(RARBTx.Bytes(), RARBTy.Bytes()...)
+
+	HJRARBTm := btcutils.Sha256(J, RARBT, m) // e = H(J || RA+RB+T || m)
 	challenge := HJRARBTm
 	return challenge
 }
@@ -395,17 +399,21 @@ func test22Schnorr() {
 
 	challenge := Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, m)
 
-	sig1 := BlindServerSign(ra, challenge, apr)
-	sig2 := BlindServerSign(rb, challenge, bpr)
-	sagg := new(big.Int).Add(sig1, sig2)
+	sig1 := BlindServerSign(ra, challenge, apr) // ra + challenge*apr
+	sig2 := BlindServerSign(rb, challenge, bpr) // rb + challenge*bpr
+	sagg := new(big.Int).Add(sig1, sig2)        // ra + rb + challenge(apr + bpr)
 
-	saggx, saggy := Curve.ScalarBaseMult(sagg.Bytes())
+	saggx, saggy := Curve.ScalarBaseMult(sagg.Bytes()) // sagg*G
 
-	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
-	eJx, eJy := Curve.ScalarMult(Jx, Jy, challenge)
-	RHSx, RHSy := Curve.Add(RARBx, RARBy, eJx, eJy)
+	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)   // RA + RB
+	eJx, eJy := Curve.ScalarMult(Jx, Jy, challenge) // challenge * J
+	RHSx, RHSy := Curve.Add(RARBx, RARBy, eJx, eJy) // RA+RB + challenge*J
 
-	log.Println(saggx, RHSx, saggy, RHSy)
+	if saggx.Cmp(RHSx) == 0 && saggy.Cmp(RHSy) == 0 {
+		log.Println("22 schnorr works")
+	} else {
+		log.Fatal("22 schnorr doesn't work")
+	}
 }
 
 func main() {
@@ -435,40 +443,42 @@ func main() {
 	Jx, Jy, apr, bpr, Aprx, Apry, Bprx, Bpry := Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By)
 	challenge := Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty, m)
 
-	sig1 := BlindServerSign(rb, challenge, bpr)
+	sig1 := BlindServerSign(rb, challenge, bpr) // rb + challenge*bpr
 
-	sprGx, sprGy := Curve.ScalarBaseMult(sig1.Bytes())
+	sprGx, sprGy := Curve.ScalarBaseMult(sig1.Bytes()) // sig1*G
 
-	eBx, eBy := Curve.ScalarMult(Bprx, Bpry, challenge)
-	RHSx, RHSy := Curve.Add(Rbx, Rby, eBx, eBy)
+	eBx, eBy := Curve.ScalarMult(Bprx, Bpry, challenge) // challenge*B
+	RHSx, RHSy := Curve.Add(Rbx, Rby, eBx, eBy)         // R B+ challenge*B
 
-	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 {
+	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 { // sig1*G == RB + challenge*B
 		log.Println("can verify Bob's adaptor sig")
 	} else {
 		log.Fatal("can't verify Bob's adaptor sig")
 	}
 
-	sig2 := BlindServerSign(ra, challenge, apr)
+	sig2 := BlindServerSign(ra, challenge, apr) // ra + challenge * apr
 
-	sprGx, sprGy = Curve.ScalarBaseMult(sig2.Bytes())
+	sprGx, sprGy = Curve.ScalarBaseMult(sig2.Bytes()) // sig2*G
 
-	eAx, eAy := Curve.ScalarMult(Aprx, Apry, challenge)
-	RHSx, RHSy = Curve.Add(Rax, Ray, eAx, eAy)
+	eAx, eAy := Curve.ScalarMult(Aprx, Apry, challenge) // challenge*A
+	RHSx, RHSy = Curve.Add(Rax, Ray, eAx, eAy)          // RA + challenge*A
 
-	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 {
+	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 { // sig2*G == RA+challenge*A
 		log.Println("can verify Alice's adaptor sig")
 	} else {
 		log.Fatal("can't verify Alice's adaptor sig")
 	}
 
-	rbt := new(big.Int).Add(rb, t)
-	ebpr := new(big.Int).Mul(BytesToNum(challenge), bpr)
+	// bob has alice's signature
+	rbt := new(big.Int).Add(rb, t)                       // rb + t
+	ebpr := new(big.Int).Mul(BytesToNum(challenge), bpr) // challenge * bpr
 
-	sagg := new(big.Int).Add(sig2, new(big.Int).Add(rbt, ebpr))
+	sagg := new(big.Int).Add(sig2, new(big.Int).Add(rbt, ebpr)) // sig2 + rb + t + challenge * bpr
 
-	check := new(big.Int).Sub(new(big.Int).Sub(sagg, sig2), sig1)
+	// alice wants to check the sig
+	check := new(big.Int).Sub(new(big.Int).Sub(sagg, sig2), sig1) // sagg - sig2 - sig1 = t
 
-	if check.Cmp(t) == 0 {
+	if check.Cmp(t) == 0 { // check == t?
 		log.Println("22 Adaptor Schnorr works")
 	} else {
 		log.Fatal("22 Adaptor Schnorr doesn't work")
