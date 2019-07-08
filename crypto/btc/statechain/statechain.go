@@ -49,14 +49,14 @@ func GetRandomness() []byte {
 	return k
 }
 
-func SchnorrSign(kByte []byte, Px, Py *big.Int, m string, privkey *big.Int) (*big.Int, *big.Int, *big.Int) {
+func SchnorrSign(kByte []byte, Px, Py *big.Int, m []byte, privkey *big.Int) (*big.Int, *big.Int, *big.Int) {
 
 	P := append(Px.Bytes(), Py.Bytes()...)
 
 	Rx, Ry := Curve.ScalarBaseMult(kByte) // R = k*G
 	R := append(Rx.Bytes(), Ry.Bytes()...)
 
-	eByte := btcutils.Sha256(append(append(R, P...), []byte(m)...))
+	eByte := btcutils.Sha256(R, P, m)
 	e := new(big.Int).SetBytes(eByte)
 
 	k := new(big.Int).SetBytes(kByte) // hash(R,P,m)
@@ -70,7 +70,7 @@ func SchnorrVerify(sig *big.Int, Rx, Ry *big.Int, Px, Py *big.Int, m []byte) boo
 	P := append(Px.Bytes(), Py.Bytes()...)
 	R := append(Rx.Bytes(), Ry.Bytes()...)
 
-	eByte := btcutils.Sha256(append(append(R, P...), m...))
+	eByte := btcutils.Sha256(R, P, m)
 	//e := new(big.Int).SetBytes(eByte)
 
 	// e is a scalar, multiple the scalar with the point P
@@ -111,7 +111,7 @@ func BlindClientBlind(Rx *big.Int, Ry *big.Int, m []byte, Px, Py *big.Int) (
 	Rpr := append(RprX.Bytes(), RprY.Bytes()...) // R' = R + alpha*G + beta*P
 	P := append(Px.Bytes(), Py.Bytes()...)
 
-	cpr := btcutils.Sha256(append(append(Rpr, P...), m...))  // c' = H(R',P,m)
+	cpr := btcutils.Sha256(Rpr, P, m)  // c' = H(R',P,m)
 	c := new(big.Int).Add(BytesToNum(cpr), BytesToNum(beta)) // c = c' + beta
 
 	return alpha, beta, RprX, RprY, cpr, c.Bytes()
@@ -137,10 +137,10 @@ func MuSig2CreateSign(x1, X1x, X1y, x2, X2x, X2y, r1, R1x, R1y, r2, R2x, R2y *bi
 	X2 := append(X2x.Bytes(), X2y.Bytes()...)
 
 	// L = H(X1,X2)
-	L := btcutils.Sha256(append(X1, X2...))
+	L := btcutils.Sha256(X1, X2)
 
-	hash1 := btcutils.Sha256(append(L, X1...)) // H(L,X1)
-	hash2 := btcutils.Sha256(append(L, X2...)) // H(L,X2)
+	hash1 := btcutils.Sha256(L, X1) // H(L,X1)
+	hash2 := btcutils.Sha256(L, X2) // H(L,X2)
 
 	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1) // H(L,X1)X1
 	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2) // H(L,X2)X2
@@ -151,9 +151,9 @@ func MuSig2CreateSign(x1, X1x, X1y, x2, X2x, X2y, r1, R1x, R1y, r2, R2x, R2y *bi
 	Rx, Ry := Curve.Add(R1x, R1y, R2x, R2y)
 	R := append(Rx.Bytes(), Ry.Bytes()...) // R = R1 + R2
 
-	HXRm := BytesToNum(btcutils.Sha256(append(X, append(R, m...)...))) // H(X,R,m)
-	HLX1 := BytesToNum(btcutils.Sha256(append(L, X1...)))              // H(L,X1)
-	HLX2 := BytesToNum(btcutils.Sha256(append(L, X2...)))              // H(L,X2)
+	HXRm := BytesToNum(btcutils.Sha256(X, R, m)) // H(X,R,m)
+	HLX1 := BytesToNum(btcutils.Sha256(L, X1))              // H(L,X1)
+	HLX2 := BytesToNum(btcutils.Sha256(L, X2))              // H(L,X2)
 
 	s1 := new(big.Int).Add(r1, new(big.Int).Mul(new(big.Int).Mul(HXRm, HLX1), x1)) // s1 = r1 + H(X,R,m)*H(L,X1)*x1
 	s2 := new(big.Int).Add(r2, new(big.Int).Mul(new(big.Int).Mul(HXRm, HLX2), x2)) // s2 = r2+ H(X,R,m)*H(L,X2)*x2
@@ -169,7 +169,7 @@ func MuSig2Verify(Rx, Ry, Xx, Xy, s *big.Int, m []byte) bool {
 	X := append(Xx.Bytes(), Xy.Bytes()...)
 	R := append(Rx.Bytes(), Ry.Bytes()...)
 
-	HXRm := btcutils.Sha256(append(X, append(R, m...)...)) // H(X,R,m)
+	HXRm := btcutils.Sha256(X, R, m) // H(X,R,m)
 	Cx, Cy := Curve.ScalarMult(Xx, Xy, HXRm)               // H(X,R,m)X
 	rightX, rightY := Curve.Add(Rx, Ry, Cx, Cy)            // R + H(X,R,m)X
 
@@ -186,10 +186,10 @@ func StatechainGenMuSigKey(X1x, X1y, X2x, X2y *big.Int) ([]byte, *big.Int, *big.
 	X2 := append(X2x.Bytes(), X2y.Bytes()...)
 
 	// L = H(X1,X2)
-	L := btcutils.Sha256(append(X1, X2...))
+	L := btcutils.Sha256(X1, X2)
 
-	hash1 := btcutils.Sha256(append(L, X1...)) // H(L,X1)
-	hash2 := btcutils.Sha256(append(L, X2...)) // H(L,X2)
+	hash1 := btcutils.Sha256(L, X1) // H(L,X1)
+	hash2 := btcutils.Sha256(L, X2) // H(L,X2)
 
 	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1) // H(L,X1)X1
 	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2) // H(L,X2)X2
@@ -282,7 +282,7 @@ func ConstructAdaptorSig(x, Px, Py *big.Int, m []byte) (*big.Int,
 	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
 	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...)
 
-	HPRTm := btcutils.Sha256(append(P, append(RplusT, m...)...))
+	HPRTm := btcutils.Sha256(P, RplusT, m)
 	HPRTmx := new(big.Int).Mul(BytesToNum(HPRTm), x)
 	s := new(big.Int).Add(BytesToNum(r), new(big.Int).Add(BytesToNum(t), HPRTmx))
 
@@ -299,7 +299,7 @@ func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
 	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
 	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...)
 
-	HPRTm := btcutils.Sha256(append(P, append(RplusT, m...)...))
+	HPRTm := btcutils.Sha256(P, RplusT, m)
 
 	HPRTmPx, HPRTmPy := Curve.ScalarMult(Px, Py, HPRTm)
 
@@ -315,10 +315,10 @@ func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int
 	A := append(Ax.Bytes(), Ay.Bytes()...)
 	B := append(Bx.Bytes(), By.Bytes()...)
 
-	HAB := btcutils.Sha256(append(A, B...))
+	HAB := btcutils.Sha256(A, B)
 
-	HHABA := btcutils.Sha256(append(HAB, A...))
-	HHABB := btcutils.Sha256(append(HAB, B...))
+	HHABA := btcutils.Sha256(HAB, A)
+	HHABB := btcutils.Sha256(HAB, B)
 
 	Aprx, Apry := Curve.ScalarMult(Ax, Ay, HHABA)
 	Bprx, Bpry := Curve.ScalarMult(Bx, By, HHABB)
@@ -349,10 +349,8 @@ func Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty *big.I
 
 	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
 	RARB := append(RARBx.Bytes(), RARBy.Bytes()...)
-	RARBT := append(RARB, T...)
-	JRARBT := append(J, RARBT...)
-	JRARBTm := append(JRARBT, m...)
-	HJRARBTm := btcutils.Sha256(JRARBTm)
+
+	HJRARBTm := btcutils.Sha256(J, RARB, T, m)
 	challenge := HJRARBTm
 	return challenge
 }

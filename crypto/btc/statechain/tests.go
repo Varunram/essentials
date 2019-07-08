@@ -13,7 +13,7 @@ func testSchnorr() {
 	}
 	//log.Println("PRIVKEY: ", privkey, "PUBKEY: ", pubkey, len(privkey), len(pubkey))
 	k := GetRandomness()
-	sig, Rx, Ry := SchnorrSign(k, Px, Py, "hello world", privkey)
+	sig, Rx, Ry := SchnorrSign(k, Px, Py, []byte("hello world"), privkey)
 	// log.Println("SCHNORR SIG: ", sig)
 
 	if !SchnorrVerify(sig, Rx, Ry, Px, Py, []byte("hello world")) {

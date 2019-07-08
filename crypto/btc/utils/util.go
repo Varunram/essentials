@@ -24,9 +24,11 @@ func Hash160(data []byte) []byte {
 	return ripe.Sum(nil)
 }
 
-func Sha256(data []byte) []byte {
+func Sha256(inputs ...[]byte) []byte {
 	shaNew := sha256.New()
-	shaNew.Write(data)
+	for _, input := range inputs {
+		shaNew.Write(input)
+	}
 	return shaNew.Sum(nil)
 }
 
