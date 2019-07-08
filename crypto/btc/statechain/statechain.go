@@ -49,137 +49,6 @@ func GetRandomness() []byte {
 	return k
 }
 
-func SchnorrSign(kByte []byte, Px, Py *big.Int, m []byte, privkey *big.Int) (*big.Int, *big.Int, *big.Int) {
-
-	P := append(Px.Bytes(), Py.Bytes()...)
-
-	Rx, Ry := Curve.ScalarBaseMult(kByte) // R = k*G
-	R := append(Rx.Bytes(), Ry.Bytes()...)
-
-	eByte := btcutils.Sha256(R, P, m)
-	e := new(big.Int).SetBytes(eByte)
-
-	k := new(big.Int).SetBytes(kByte) // hash(R,P,m)
-
-	sig := new(big.Int).Add(k, new(big.Int).Mul(e, privkey)) // k + hash(R,P,m) * privkey
-	return sig, Rx, Ry
-}
-
-func SchnorrVerify(sig *big.Int, Rx, Ry *big.Int, Px, Py *big.Int, m []byte) bool {
-
-	P := append(Px.Bytes(), Py.Bytes()...)
-	R := append(Rx.Bytes(), Ry.Bytes()...)
-
-	eByte := btcutils.Sha256(R, P, m)
-	//e := new(big.Int).SetBytes(eByte)
-
-	// e is a scalar, multiple the scalar with the point P
-
-	ePx, ePy := Curve.ScalarMult(Px, Py, eByte) // H(R,P,m) * P
-	cX, cY := Curve.Add(Rx, Ry, ePx, ePy)
-	sx, sy := Curve.ScalarBaseMult(sig.Bytes()) // s*G
-	if sx.Cmp(cX) == 0 && sy.Cmp(cY) == 0 {
-		return true
-	}
-	return false
-}
-
-func BlindServerNonce() (*big.Int, *big.Int, *big.Int) {
-	k := make([]byte, 32)
-	_, err := io.ReadFull(rand.Reader, k)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	Rx, Ry := Curve.ScalarBaseMult(k) // R = k*G
-	return BytesToNum(k), Rx, Ry
-}
-
-func BlindClientBlind(Rx *big.Int, Ry *big.Int, m []byte, Px, Py *big.Int) (
-	[]byte, []byte, *big.Int, *big.Int, []byte, []byte) {
-
-	alpha := GetRandomness()
-	beta := GetRandomness()
-
-	alphaGX, alphaGY := Curve.ScalarBaseMult(alpha)  // alpha*G
-	betaPX, betaPY := Curve.ScalarMult(Px, Py, beta) // beta*P
-
-	// need to add Rx, alphax, betapx
-	tempX, tempY := Curve.Add(Rx, Ry, alphaGX, alphaGY)   // R + alpha*G
-	RprX, RprY := Curve.Add(tempX, tempY, betaPX, betaPY) // R + alpha*G + beta*P
-
-	Rpr := append(RprX.Bytes(), RprY.Bytes()...) // R' = R + alpha*G + beta*P
-	P := append(Px.Bytes(), Py.Bytes()...)
-
-	cpr := btcutils.Sha256(Rpr, P, m)                        // c' = H(R',P,m)
-	c := new(big.Int).Add(BytesToNum(cpr), BytesToNum(beta)) // c = c' + beta
-
-	return alpha, beta, RprX, RprY, cpr, c.Bytes()
-}
-
-func BlindServerSign(k *big.Int, cByte []byte, privkey *big.Int) *big.Int {
-	c := BytesToNum(cByte)
-	cx := new(big.Int).Mul(c, privkey) // c*x
-	sig := new(big.Int).Add(k, cx)     // s = k + c*x
-	return sig
-}
-
-func BlindClientUnblind(alphaByte []byte, sig *big.Int) *big.Int {
-	alpha := BytesToNum(alphaByte)
-	spr := new(big.Int).Add(sig, alpha) // s' = s + alpha
-	return spr
-}
-
-func MuSig2CreateSign(x1, X1x, X1y, x2, X2x, X2y, r1, R1x, R1y, r2, R2x, R2y *big.Int,
-	m []byte) (*big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
-
-	X1 := append(X1x.Bytes(), X1y.Bytes()...)
-	X2 := append(X2x.Bytes(), X2y.Bytes()...)
-
-	// L = H(X1,X2)
-	L := btcutils.Sha256(X1, X2)
-
-	hash1 := btcutils.Sha256(L, X1) // H(L,X1)
-	hash2 := btcutils.Sha256(L, X2) // H(L,X2)
-
-	Xx1, Xy1 := Curve.ScalarMult(X1x, X1y, hash1) // H(L,X1)X1
-	Xx2, Xy2 := Curve.ScalarMult(X2x, X2y, hash2) // H(L,X2)X2
-
-	Xx, Xy := Curve.Add(Xx1, Xy1, Xx2, Xy2)
-	X := append(Xx.Bytes(), Xy.Bytes()...) // X = H(L,X1)X1 + H(L,X2)X2
-
-	Rx, Ry := Curve.Add(R1x, R1y, R2x, R2y)
-	R := append(Rx.Bytes(), Ry.Bytes()...) // R = R1 + R2
-
-	HXRm := BytesToNum(btcutils.Sha256(X, R, m)) // H(X,R,m)
-	HLX1 := BytesToNum(btcutils.Sha256(L, X1))   // H(L,X1)
-	HLX2 := BytesToNum(btcutils.Sha256(L, X2))   // H(L,X2)
-
-	s1 := new(big.Int).Add(r1, new(big.Int).Mul(new(big.Int).Mul(HXRm, HLX1), x1)) // s1 = r1 + H(X,R,m)*H(L,X1)*x1
-	s2 := new(big.Int).Add(r2, new(big.Int).Mul(new(big.Int).Mul(HXRm, HLX2), x2)) // s2 = r2+ H(X,R,m)*H(L,X2)*x2
-	s := new(big.Int).Add(s1, s2)                                                  // s = s1 + s2
-
-	return Rx, Ry, Xx, Xy, s
-}
-
-func MuSig2Verify(Rx, Ry, Xx, Xy, s *big.Int, m []byte) bool {
-
-	sGx, sGy := Curve.ScalarBaseMult(s.Bytes()) // s*G
-
-	X := append(Xx.Bytes(), Xy.Bytes()...)
-	R := append(Rx.Bytes(), Ry.Bytes()...)
-
-	HXRm := btcutils.Sha256(X, R, m)            // H(X,R,m)
-	Cx, Cy := Curve.ScalarMult(Xx, Xy, HXRm)    // H(X,R,m)X
-	rightX, rightY := Curve.Add(Rx, Ry, Cx, Cy) // R + H(X,R,m)X
-
-	if sGx.Cmp(rightX) == 0 && sGy.Cmp(rightY) == 0 { // s*G == R + H(X,R,m)X
-		return true
-	}
-
-	return false
-}
-
 func StatechainGenMuSigKey(X1x, X1y, X2x, X2y *big.Int) ([]byte, *big.Int, *big.Int) {
 
 	X1 := append(X1x.Bytes(), X1y.Bytes()...)
@@ -270,150 +139,71 @@ func StatechainRequestBlindSig(userSig *big.Int, blindedMsg []byte, k *big.Int,
 	return serverSig, nil
 }
 
-func ConstructAdaptorSig(x, Px, Py *big.Int, m []byte) (*big.Int,
-	*big.Int, *big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
-
-	t := GetRandomness()
-	r := GetRandomness()
-
-	Tx, Ty := Curve.ScalarBaseMult(t) // T = t*G
-	Rx, Ry := Curve.ScalarBaseMult(r) // R = r*G
-
-	P := append(Px.Bytes(), Py.Bytes()...)
-
-	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
-	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...) // R+T
-
-	HPRTm := btcutils.Sha256(P, RplusT, m)                                        // H(P||R+T||m)
-	HPRTmx := new(big.Int).Mul(BytesToNum(HPRTm), x)                              // H(P||R+T||m) * x
-	s := new(big.Int).Add(BytesToNum(r), new(big.Int).Add(BytesToNum(t), HPRTmx)) // s = r + t + H(P||R+T||m) * x
-
-	spr := new(big.Int).Sub(s, BytesToNum(t)) // s' = s - t (s' is the adaptor signature)
-	return spr, BytesToNum(r), Rx, Ry, BytesToNum(t), Tx, Ty
-}
-
-func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
-
-	sGx, sGy := Curve.ScalarBaseMult(spr.Bytes()) // s*G
-
-	P := append(Px.Bytes(), Py.Bytes()...)
-
-	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
-	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...) // R+T
-
-	HPRTm := btcutils.Sha256(P, RplusT, m) // H(P||R+T||m)
-
-	HPRTmPx, HPRTmPy := Curve.ScalarMult(Px, Py, HPRTm) // H(P||R+T||m) * P
-
-	RplusHPRTmPx, RplusHPRTmPy := Curve.Add(Rx, Ry, HPRTmPx, HPRTmPy) // R + H(P||R+T||m) * P
-	if sGx.Cmp(RplusHPRTmPx) == 0 && sGy.Cmp(RplusHPRTmPy) == 0 {     // s*G == R + H(P||R+T||m) * P
-		return true
-	}
-	return false
-}
-
-func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int, *big.Int, *big.Int,
-	*big.Int, *big.Int, *big.Int, *big.Int) {
-
-	A := append(Ax.Bytes(), Ay.Bytes()...)
-	B := append(Bx.Bytes(), By.Bytes()...)
-
-	HAB := btcutils.Sha256(A, B) // H(A||B)
-
-	HHABA := btcutils.Sha256(HAB, A) // H(H(A||B)||A)
-	HHABB := btcutils.Sha256(HAB, B) // H(H(A||B)||B)
-
-	Aprx, Apry := Curve.ScalarMult(Ax, Ay, HHABA) // A' = H(H(A||B)||A) * A
-	Bprx, Bpry := Curve.ScalarMult(Bx, By, HHABB) // B' = H(H(A||B)||B) * B
-
-	Jx, Jy := Curve.Add(Aprx, Apry, Bprx, Bpry) // J = A'+B'
-
-	apr := new(big.Int).Mul(BytesToNum(HHABA), a) // a' = H(H(A||B)||A) * a
-	bpr := new(big.Int).Mul(BytesToNum(HHABB), b) // b' = H(H(A||B)||B) * b
-
-	return Jx, Jy, apr, bpr, Aprx, Apry, Bprx, Bpry
-}
-
-func Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) []byte {
-	J := append(Jx.Bytes(), Jy.Bytes()...)
-
-	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
-	RARB := append(RARBx.Bytes(), RARBy.Bytes()...) // RA + RB
-	HJRARBm := btcutils.Sha256(J, RARB, m)          // e = H(J||RA+RB||m)
-	challenge := HJRARBm
-	return challenge
-}
-
-func Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty *big.Int, m []byte) []byte {
-	J := append(Jx.Bytes(), Jy.Bytes()...)
-
-	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
-
-	RARBTx, RARBTy := Curve.Add(RARBx, RARBy, Tx, Ty)
-	RARBT := append(RARBTx.Bytes(), RARBTy.Bytes()...)
-
-	HJRARBTm := btcutils.Sha256(J, RARBT, m) // e = H(J || RA+RB+T || m)
-	challenge := HJRARBTm
-	return challenge
-}
-
-// https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/
-func testadaptorsig() {
-	x, Px, Py, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	m := []byte("hello world")
-	spr, r, Rx, Ry, t, Tx, Ty := ConstructAdaptorSig(x, Px, Py, m)
-	log.Println("r=", r, "t=", t)
-	if !VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py, m) {
-		log.Println("adaptor sigs don't work")
-	} else {
-		log.Println("adaptor sigs work")
-	}
-}
-
-func test22Schnorr() {
-	a, Ax, Ay, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-	ra, Rax, Ray, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	rb, Rbx, Rby, err := GetNewKeys()
-	if err != nil {
-		log.Fatal(err)
-	}
+// https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2019-June/017005.html
+// https://github.com/RubenSomsen/rubensomsen.github.io/blob/master/img/statechains.pdf
+func teststatechain() {
+	InitStorage()
 	b, Bx, By, err := GetNewKeys()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	m := []byte("hello world")
-
-	Jx, Jy, apr, bpr, _, _, _, _ := Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By)
-
-	challenge := Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, m)
-
-	sig1 := BlindServerSign(ra, challenge, apr) // ra + challenge*apr
-	sig2 := BlindServerSign(rb, challenge, bpr) // rb + challenge*bpr
-	sagg := new(big.Int).Add(sig1, sig2)        // ra + rb + challenge(apr + bpr)
-
-	saggx, saggy := Curve.ScalarBaseMult(sagg.Bytes()) // sagg*G
-
-	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)   // RA + RB
-	eJx, eJy := Curve.ScalarMult(Jx, Jy, challenge) // challenge * J
-	RHSx, RHSy := Curve.Add(RARBx, RARBy, eJx, eJy) // RA+RB + challenge*J
-
-	if saggx.Cmp(RHSx) == 0 && saggy.Cmp(RHSy) == 0 {
-		log.Println("22 schnorr works")
-	} else {
-		log.Fatal("22 schnorr doesn't work")
+	B := SerializeCompressed(Bx, By)
+	Ax, Ay, err := StateServerRequestNewPubkey(B) // request A = a*G from the server, A is the server pubkey
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	x, Xx, Xy, err := GetNewKeys() // generate transitory keypair X (x, Xx, Xy)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	L, AXx, AXy := StatechainGenMuSigKey(Ax, Ay, Xx, Xy)
+	// log.Println("L=", L, "AX=", len(AXx.Bytes()), len(AXy.Bytes()))
+	// 	tx1 := []byte("") // 1 BTC to AX - this stuff must come from the client
+	tx2 := []byte("") // eltoo tx assigning 1 btc back to B - this stuff must come from the client
+	m := tx2
+
+	c, Cx, Cy, err := GetNewKeys()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	C := SerializeCompressed(Cx, Cy)
+	AX := SerializeCompressed(AXx, AXy)
+	nextUserPubkey := C
+
+	k, Rx, Ry := BlindServerNonce() // generate nonce for signing
+
+	alpha, _, RprX, RprY, _, challenge := BlindClientBlind(Rx, Ry, m, Bx, By) // blind the message and generate challenge
+	userSig := BlindServerSign(k, challenge, b)                               // user has signed over the blind message tx2,
+	userSig = BlindClientUnblind(alpha, userSig)
+	// pass to server the challenge and the userSig so it can add userSig to its sign and return
+	// final MuSig tx
+	log.Println("USERSIG: ", userSig)
+	if !SchnorrVerify(userSig, RprX, RprY, Bx, By, m) {
+		log.Fatal("user signature not verified, quitting")
+	}
+
+	alpha, _, RprX, RprY, _, challenge = BlindClientBlind(Rx, Ry, m, Ax, Ay) // blind the message and generate challenge
+	sig, err := StatechainRequestBlindSig(userSig, challenge, k, B, Bx, By, nextUserPubkey)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sig = BlindClientUnblind(alpha, sig)
+	log.Println("SERVERSIG:", sig)
+	if !SchnorrVerify(sig, RprX, RprY, Ax, Ay, m) {
+		log.Fatal("server sig doesn't match, quitting")
+	}
+
+	//broadcastTx(tx1)
+
+	userSig = BlindClientUnblind(alpha, userSig)
+	sig = BlindClientUnblind(alpha, sig)
+
+	log.Println("Passing transitory key: ", x, " to C: ", c, "MUSIG PUBKEY: ", AX, "L=", L)
 }
 
 func main() {
