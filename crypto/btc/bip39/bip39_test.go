@@ -256,7 +256,7 @@ func TestEntropyFromMnemonicInvalidChecksum(t *testing.T) {
 func TestEntropyFromMnemonicInvalidMnemonicSize(t *testing.T) {
 	for _, mnemonic := range []string{
 		"a a a a a a a a a a a a a a a a a a a a a a a a a", // Too many words
-		"a", // Too few
+		"a",                           // Too few
 		"a a a a a a a a a a a a a a", // Not multiple of 3
 	} {
 		_, err := EntropyFromMnemonic(mnemonic)

@@ -189,7 +189,7 @@ func NewMnemonic(entropy []byte) (string, error) {
 	word := big.NewInt(0)
 
 	for i := sentenceLength - 1; i >= 0; i-- {
-		word.And(entropyInt, last11BitsMask) // get the 11 right most bits
+		word.And(entropyInt, last11BitsMask)        // get the 11 right most bits
 		entropyInt.Div(entropyInt, shift11BitsMask) // shift entropy to the right for the next round
 		// Get the bytes representing the 11 bits as a 2 byte slice.
 		wordBytes := padByteSlice(word.Bytes(), 2)
