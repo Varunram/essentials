@@ -39,14 +39,14 @@ func BytesToNum(byteString []byte) *big.Int {
 	return new(big.Int).SetBytes(byteString)
 }
 
-func GetRandomness() []byte {
+func GetRandomness() *big.Int {
 	k := make([]byte, 32)
 	_, err := io.ReadFull(rand.Reader, k)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return k
+	return BytesToNum(k)
 }
 
 func StatechainGenMuSigKey(X1x, X1y, X2x, X2y *big.Int) ([]byte, *big.Int, *big.Int) {
@@ -109,7 +109,7 @@ func StateServerRequestNewPubkey(userPubkey []byte) (*big.Int, *big.Int, error) 
 	return pkX, pkY, nil
 }
 
-func StatechainRequestBlindSig(userSig *big.Int, blindedMsg []byte, k *big.Int,
+func StatechainRequestBlindSig(userSig *big.Int, blindedMsg *big.Int, k *big.Int,
 	userPubkey []byte, Bx, By *big.Int, nextUserPubkey []byte) (*big.Int, error) {
 	//var serverPubkey []byte
 	//Storage[nextUserPubkey] = serverPubkey
@@ -237,8 +237,8 @@ func main() {
 
 	sprGx, sprGy := Curve.ScalarBaseMult(sig1.Bytes()) // sig1*G
 
-	eBx, eBy := Curve.ScalarMult(Bprx, Bpry, challenge) // challenge*B
-	RHSx, RHSy := Curve.Add(Rbx, Rby, eBx, eBy)         // R B+ challenge*B
+	eBx, eBy := Curve.ScalarMult(Bprx, Bpry, challenge.Bytes()) // challenge*B
+	RHSx, RHSy := Curve.Add(Rbx, Rby, eBx, eBy)                 // R B+ challenge*B
 
 	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 { // sig1*G == RB + challenge*B
 		log.Println("can verify Bob's adaptor sig")
@@ -250,8 +250,8 @@ func main() {
 
 	sprGx, sprGy = Curve.ScalarBaseMult(sig2.Bytes()) // sig2*G
 
-	eAx, eAy := Curve.ScalarMult(Aprx, Apry, challenge) // challenge*A
-	RHSx, RHSy = Curve.Add(Rax, Ray, eAx, eAy)          // RA + challenge*A
+	eAx, eAy := Curve.ScalarMult(Aprx, Apry, challenge.Bytes()) // challenge*A
+	RHSx, RHSy = Curve.Add(Rax, Ray, eAx, eAy)                  // RA + challenge*A
 
 	if sprGx.Cmp(RHSx) == 0 && sprGy.Cmp(RHSy) == 0 { // sig2*G == RA+challenge*A
 		log.Println("can verify Alice's adaptor sig")
@@ -260,8 +260,8 @@ func main() {
 	}
 
 	// bob has alice's signature
-	rbt := new(big.Int).Add(rb, t)                       // rb + t
-	ebpr := new(big.Int).Mul(BytesToNum(challenge), bpr) // challenge * bpr
+	rbt := new(big.Int).Add(rb, t)           // rb + t
+	ebpr := new(big.Int).Mul(challenge, bpr) // challenge * bpr
 
 	sagg := new(big.Int).Add(sig2, new(big.Int).Add(rbt, ebpr)) // sig2 + rb + t + challenge * bpr
 

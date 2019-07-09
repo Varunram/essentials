@@ -22,13 +22,13 @@ func BlindServerNonce() (*big.Int, *big.Int, *big.Int) {
 }
 
 func BlindClientBlind(Rx *big.Int, Ry *big.Int, m []byte, Px, Py *big.Int) (
-	[]byte, []byte, *big.Int, *big.Int, []byte, []byte) {
+	*big.Int, *big.Int, *big.Int, *big.Int, *big.Int, *big.Int) {
 
 	alpha := GetRandomness()
 	beta := GetRandomness()
 
-	alphaGX, alphaGY := Curve.ScalarBaseMult(alpha)  // alpha*G
-	betaPX, betaPY := Curve.ScalarMult(Px, Py, beta) // beta*P
+	alphaGX, alphaGY := Curve.ScalarBaseMult(alpha.Bytes())  // alpha*G
+	betaPX, betaPY := Curve.ScalarMult(Px, Py, beta.Bytes()) // beta*P
 
 	// need to add Rx, alphax, betapx
 	tempX, tempY := Curve.Add(Rx, Ry, alphaGX, alphaGY)   // R + alpha*G
@@ -37,21 +37,19 @@ func BlindClientBlind(Rx *big.Int, Ry *big.Int, m []byte, Px, Py *big.Int) (
 	Rpr := append(RprX.Bytes(), RprY.Bytes()...) // R' = R + alpha*G + beta*P
 	P := append(Px.Bytes(), Py.Bytes()...)
 
-	cpr := btcutils.Sha256(Rpr, P, m)                        // c' = H(R',P,m)
-	c := new(big.Int).Add(BytesToNum(cpr), BytesToNum(beta)) // c = c' + beta
+	cpr := btcutils.Sha256(Rpr, P, m)            // c' = H(R',P,m)
+	c := new(big.Int).Add(BytesToNum(cpr), beta) // c = c' + beta
 
-	return alpha, beta, RprX, RprY, cpr, c.Bytes()
+	return alpha, beta, RprX, RprY, BytesToNum(cpr), c
 }
 
-func BlindServerSign(k *big.Int, cByte []byte, privkey *big.Int) *big.Int {
-	c := BytesToNum(cByte)
+func BlindServerSign(k *big.Int, c *big.Int, privkey *big.Int) *big.Int {
 	cx := new(big.Int).Mul(c, privkey) // c*x
 	sig := new(big.Int).Add(k, cx)     // s = k + c*x
 	return sig
 }
 
-func BlindClientUnblind(alphaByte []byte, sig *big.Int) *big.Int {
-	alpha := BytesToNum(alphaByte)
+func BlindClientUnblind(alpha *big.Int, sig *big.Int) *big.Int {
 	spr := new(big.Int).Add(sig, alpha) // s' = s + alpha
 	return spr
 }

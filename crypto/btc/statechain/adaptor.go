@@ -13,20 +13,20 @@ func ConstructAdaptorSig(x, Px, Py *big.Int, m []byte) (*big.Int,
 	t := GetRandomness()
 	r := GetRandomness()
 
-	Tx, Ty := Curve.ScalarBaseMult(t) // T = t*G
-	Rx, Ry := Curve.ScalarBaseMult(r) // R = r*G
+	Tx, Ty := Curve.ScalarBaseMult(t.Bytes()) // T = t*G
+	Rx, Ry := Curve.ScalarBaseMult(r.Bytes()) // R = r*G
 
 	P := append(Px.Bytes(), Py.Bytes()...)
 
 	RplusTx, RplusTy := Curve.Add(Rx, Ry, Tx, Ty)
 	RplusT := append(RplusTx.Bytes(), RplusTy.Bytes()...) // R+T
 
-	HPRTm := btcutils.Sha256(P, RplusT, m)                                        // H(P||R+T||m)
-	HPRTmx := new(big.Int).Mul(BytesToNum(HPRTm), x)                              // H(P||R+T||m) * x
-	s := new(big.Int).Add(BytesToNum(r), new(big.Int).Add(BytesToNum(t), HPRTmx)) // s = r + t + H(P||R+T||m) * x
+	HPRTm := btcutils.Sha256(P, RplusT, m)                // H(P||R+T||m)
+	HPRTmx := new(big.Int).Mul(BytesToNum(HPRTm), x)      // H(P||R+T||m) * x
+	s := new(big.Int).Add(r, new(big.Int).Add(t, HPRTmx)) // s = r + t + H(P||R+T||m) * x
 
-	spr := new(big.Int).Sub(s, BytesToNum(t)) // s' = s - t (s' is the adaptor signature)
-	return spr, BytesToNum(r), Rx, Ry, BytesToNum(t), Tx, Ty
+	spr := new(big.Int).Sub(s, t) // s' = s - t (s' is the adaptor signature)
+	return spr, r, Rx, Ry, t, Tx, Ty
 }
 
 func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
@@ -49,7 +49,7 @@ func VerifyAdaptorSig(spr, Rx, Ry, Tx, Ty, Px, Py *big.Int, m []byte) bool {
 	return false
 }
 
-func Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty *big.Int, m []byte) []byte {
+func Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty *big.Int, m []byte) *big.Int {
 	J := append(Jx.Bytes(), Jy.Bytes()...)
 
 	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
@@ -59,7 +59,7 @@ func Generate22AdaptorSchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby, Tx, Ty *big.I
 
 	HJRARBTm := btcutils.Sha256(J, RARBT, m) // e = H(J || RA+RB+T || m)
 	challenge := HJRARBTm
-	return challenge
+	return BytesToNum(challenge)
 }
 
 // https://joinmarket.me/blog/blog/flipping-the-scriptless-script-on-schnorr/

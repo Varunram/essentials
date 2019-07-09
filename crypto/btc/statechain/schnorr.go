@@ -8,17 +8,15 @@ import (
 	btcutils "github.com/Varunram/essentials/crypto/btc/utils"
 )
 
-func SchnorrSign(kByte []byte, Px, Py *big.Int, m []byte, privkey *big.Int) (*big.Int, *big.Int, *big.Int) {
+func SchnorrSign(k, Px, Py *big.Int, m []byte, privkey *big.Int) (*big.Int, *big.Int, *big.Int) {
 
 	P := append(Px.Bytes(), Py.Bytes()...)
 
-	Rx, Ry := Curve.ScalarBaseMult(kByte) // R = k*G
+	Rx, Ry := Curve.ScalarBaseMult(k.Bytes()) // R = k*G
 	R := append(Rx.Bytes(), Ry.Bytes()...)
 
 	eByte := btcutils.Sha256(R, P, m)
 	e := new(big.Int).SetBytes(eByte)
-
-	k := new(big.Int).SetBytes(kByte) // hash(R,P,m)
 
 	sig := new(big.Int).Add(k, new(big.Int).Mul(e, privkey)) // k + hash(R,P,m) * privkey
 	return sig, Rx, Ry
@@ -65,14 +63,14 @@ func Construct22SchnorrPubkey(a, Ax, Ay, b, Bx, By *big.Int) (*big.Int, *big.Int
 	return Jx, Jy, apr, bpr, Aprx, Apry, Bprx, Bpry
 }
 
-func Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) []byte {
+func Generate22SchnorrChallenge(Jx, Jy, Rax, Ray, Rbx, Rby *big.Int, m []byte) *big.Int {
 	J := append(Jx.Bytes(), Jy.Bytes()...)
 
 	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)
 	RARB := append(RARBx.Bytes(), RARBy.Bytes()...) // RA + RB
 	HJRARBm := btcutils.Sha256(J, RARB, m)          // e = H(J||RA+RB||m)
 	challenge := HJRARBm
-	return challenge
+	return BytesToNum(challenge)
 }
 
 func test22Schnorr() {
@@ -106,9 +104,9 @@ func test22Schnorr() {
 
 	saggx, saggy := Curve.ScalarBaseMult(sagg.Bytes()) // sagg*G
 
-	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)   // RA + RB
-	eJx, eJy := Curve.ScalarMult(Jx, Jy, challenge) // challenge * J
-	RHSx, RHSy := Curve.Add(RARBx, RARBy, eJx, eJy) // RA+RB + challenge*J
+	RARBx, RARBy := Curve.Add(Rax, Ray, Rbx, Rby)           // RA + RB
+	eJx, eJy := Curve.ScalarMult(Jx, Jy, challenge.Bytes()) // challenge * J
+	RHSx, RHSy := Curve.Add(RARBx, RARBy, eJx, eJy)         // RA+RB + challenge*J
 
 	if saggx.Cmp(RHSx) == 0 && saggy.Cmp(RHSy) == 0 {
 		log.Println("22 schnorr works")
