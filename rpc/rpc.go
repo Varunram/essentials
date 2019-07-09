@@ -36,7 +36,7 @@ func SetupBasicHandlers() {
 // CheckOrigin checks the origin of the incoming request
 func CheckOrigin(w http.ResponseWriter, r *http.Request) error {
 	// re-enable this function for all private routes
-	if strings.Contains(r.Header.Get("Origin"), "localhost") { // allow only our frontend UI to connect to our RPC instance
+	if !strings.Contains(r.Header.Get("Origin"), "localhost") { // allow only our frontend UI to connect to our RPC instance
 		return errors.New("origin not localhost")
 	}
 	return nil
