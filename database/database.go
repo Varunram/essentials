@@ -105,27 +105,34 @@ func Retrieve(dir string, bucketName []byte, key int) (interface{}, error) {
 	return x, err
 }
 
-func RetrieveAllKeys(dir string, bucketName []byte) ([]interface{}, error) {
-	var arr []interface{}
+func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
+	var arr [][]byte
 	db, err := OpenDB(dir)
 	if err != nil {
 		return arr, errors.Wrap(err, "Error while opening database")
 	}
 	defer db.Close()
 
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists(bucketName) // the projects bucket contains all our projects
+		if err != nil {
+			log.Println("Error while creating projects bucket", err)
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return arr, errors.New("bucket not created and error while creating new bucket")
+	}
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 		for i := 1; ; i++ {
-			var rInterface interface{}
 			x := b.Get(utils.ItoB(i))
 			if x == nil {
 				return nil
 			}
-			err := json.Unmarshal(x, &rInterface)
-			if err != nil {
-				return errors.Wrap(err, "Error while unmarshalling json")
-			}
-			arr = append(arr, rInterface)
+			arr = append(arr, x)
 		}
 	})
 	return arr, err
