@@ -100,7 +100,11 @@ func Retrieve(dir string, bucketName []byte, key int) (interface{}, error) {
 			// no investor with the specific details
 			return errors.New("No investor found with required credentials")
 		}
-		return json.Unmarshal(byteString, x)
+		err := json.Unmarshal(byteString, &x)
+		if err != nil {
+			return err
+		}
+		return nil
 	})
 	return x, err
 }
