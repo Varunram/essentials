@@ -105,8 +105,8 @@ func Retrieve(dir string, bucketName []byte, key int) (interface{}, error) {
 	return x, err
 }
 
-func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
-	var arr [][]byte
+func RetrieveAllKeys(dir string, bucketName []byte) ([]interface{}, error) {
+	var arr []interface{}
 	db, err := OpenDB(dir)
 	if err != nil {
 		return arr, errors.Wrap(err, "Error while opening database")
@@ -132,7 +132,12 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 			if x == nil {
 				return nil
 			}
-			arr = append(arr, x)
+			var rInterface interface{}
+			err := json.Unmarshal(x, &rInterface)
+			if err != nil {
+				return errors.Wrap(err, "Error while unmarshalling json")
+			}
+			arr = append(arr, rInterface)
 		}
 	})
 	return arr, err
