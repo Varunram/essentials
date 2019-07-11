@@ -86,27 +86,39 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	return err
 }
 
-func Retrieve(dir string, bucketName []byte, key int) (interface{}, error) {
-	var x interface{}
+func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
+	var returnBytes []byte
 	db, err := OpenDB(dir)
 	if err != nil {
-		return x, errors.Wrap(err, "failed to open db")
+		return returnBytes, errors.Wrap(err, "failed to open db")
 	}
 	defer db.Close()
-	err = db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketName)
-		byteString := b.Get(utils.ItoB(key))
-		if byteString == nil {
-			// no investor with the specific details
-			return errors.New("No investor found with required credentials")
-		}
-		err := json.Unmarshal(byteString, &x)
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists(bucketName) // the projects bucket contains all our projects
 		if err != nil {
+			log.Println("Error while creating projects bucket", err)
 			return err
 		}
 		return nil
 	})
-	return x, err
+
+	if err != nil {
+		return returnBytes, errors.New("could not create bucket, exiting")
+	}
+
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketName)
+		x := b.Get(utils.ItoB(key))
+		if x == nil {
+			return nil
+		}
+		returnBytes = make([]byte, len(x))
+		copy(returnBytes, x)
+		return nil
+	})
+
+	return returnBytes, err
 }
 
 func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
