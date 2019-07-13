@@ -70,10 +70,18 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 	case bytes.Compare(w.VersionBytes, MnPrivkeyVByte) == 0, bytes.Compare(w.VersionBytes, TestPrivkeyVByte) == 0:
 		mac := hmac.New(sha512.New, w.Chaincode)
 		if i >= uint32(0x80000000) { // Hardened
-			mac.Write(append(w.Key, utils.Uint32tB(i)...))
+			iB, err := utils.ToByte(i)
+			if err != nil {
+				return nil, err
+			}
+			mac.Write(append(w.Key, iB...))
 		} else {
 			pub := btcutils.PrivToPub(w.Key)
-			mac.Write(append(pub, utils.Uint32tB(i)...))
+			iB, err := utils.ToByte(i)
+			if err != nil {
+				return nil, err
+			}
+			mac.Write(append(pub, iB...))
 		}
 		childNumber = mac.Sum(nil)
 		iL := new(big.Int).SetBytes(childNumber[:32])
@@ -88,7 +96,11 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 		if i >= uint32(0x80000000) {
 			return &HDWallet{}, errors.New("Can't do Private derivation on Public key!")
 		}
-		mac.Write(append(w.Key, utils.Uint32tB(i)...))
+		iB, err := utils.ToByte(i)
+		if err != nil {
+			return nil, err
+		}
+		mac.Write(append(w.Key, iB...))
 		childNumber = mac.Sum(nil)
 		iL := new(big.Int).SetBytes(childNumber[:32])
 		if iL.Cmp(btcutils.Curve.N) >= 0 || iL.Sign() == 0 {
@@ -97,12 +109,16 @@ func (w *HDWallet) Child(i uint32) (*HDWallet, error) {
 		newkey = btcutils.AddPubKeys(btcutils.PrivToPub(childNumber[:32]), w.Key)
 		fingerprint = btcutils.Hash160(w.Key)[:4]
 	}
-	return &HDWallet{w.VersionBytes, w.Depth + 1, fingerprint, utils.Uint32tB(i), childNumber[32:], newkey}, nil
+	iB, err := utils.ToByte(i)
+	if err != nil {
+		return nil, err
+	}
+	return &HDWallet{w.VersionBytes, w.Depth + 1, fingerprint, iB, childNumber[32:], newkey}, nil
 }
 
 // Serialize returns the serialized form of the wallet.
 func (w *HDWallet) Serialize() []byte {
-	depth := utils.Uint16tB(uint16(w.Depth % 256))
+	depth, _ := utils.ToByte(uint16(w.Depth % 256))
 	//bindata = VersionBytes||depth||fingerprint||i||chaincode||key
 	bindata := make([]byte, 78)
 	copy(bindata, w.VersionBytes)

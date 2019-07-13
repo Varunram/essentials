@@ -78,7 +78,8 @@ func ScanForStringWithCheckF() (string, error) {
 		return "", errors.New("Couldn't read user input")
 	}
 	inputString := scanner.Text()
-	if utils.StoF(inputString) == 0 {
+	_, err := utils.ToFloat(inputString)
+	if err != nil {
 		fmt.Println("Amount entered is not a float, quitting")
 		return "", errors.New("Amount entered is not a float, quitting")
 	}

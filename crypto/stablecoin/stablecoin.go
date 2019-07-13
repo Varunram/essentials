@@ -107,7 +107,8 @@ func ListenForPayments() {
 					xlmWorth := tickers.ExchangeXLMforUSD(amount)
 					log.Println("The deposited amount is worth: ", xlmWorth)
 					// now send the stableusd asset over to this guy
-					_, hash, err := assets.SendAssetFromIssuer(StablecoinCode, payee, utils.FtoS(xlmWorth), StablecoinSeed, StablecoinPublicKey)
+					xlmWs, _ := utils.ToString(xlmWorth)
+					_, hash, err := assets.SendAssetFromIssuer(StablecoinCode, payee, xlmWs, StablecoinSeed, StablecoinPublicKey)
 					if err != nil {
 						log.Println("Error while sending USD Assets back to payee: ", payee, err)
 						//  don't skip here, there's technically nothing we can do

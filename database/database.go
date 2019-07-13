@@ -63,7 +63,11 @@ func DeleteKeyFromBucket(dir string, key int, bucketName []byte) error {
 	defer db.Close()
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
-		b.Delete(utils.ItoB(key))
+		iK, err := utils.ToByte(key)
+		if err != nil {
+			return err
+		}
+		b.Delete(iK)
 		return nil
 	})
 }
@@ -81,7 +85,11 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 		if err != nil {
 			return errors.Wrap(err, "error while marshaling json struct")
 		}
-		return b.Put([]byte(utils.ItoB(key)), encoded)
+		iK, err := utils.ToByte(key)
+		if err != nil {
+			return err
+		}
+		return b.Put(iK, encoded)
 	})
 	return err
 }
@@ -109,7 +117,11 @@ func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
-		x := b.Get(utils.ItoB(key))
+		iK, err := utils.ToByte(key)
+		if err != nil {
+			return err
+		}
+		x := b.Get(iK)
 		if x == nil {
 			return nil
 		}
@@ -144,7 +156,11 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 		for i := 1; ; i++ {
-			x := b.Get(utils.ItoB(i))
+			iB, err := utils.ToByte(i)
+			if err != nil {
+				return err
+			}
+			x := b.Get(iB)
 			if x == nil {
 				return nil
 			}

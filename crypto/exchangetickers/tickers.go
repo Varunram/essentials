@@ -84,7 +84,7 @@ func BinanceTicker() (float64, error) {
 		return -1, errors.New("ticker symbols don't match with API response")
 	}
 	// response.Price is in string, need to convert it to float
-	price, err := utils.StoFWithCheck(response.Price)
+	price, err := utils.ToFloat(response.Price)
 	if err != nil {
 		return -1, errors.Wrap(err, "could not convert price from string to float, quitting!")
 	}
@@ -109,7 +109,7 @@ func BinanceVolume() (float64, error) {
 		return -1, errors.New("ticker symbols don't match with API response")
 	}
 
-	volume, err := utils.StoFWithCheck(response.Volume)
+	volume, err := utils.ToFloat(response.Volume)
 	if err != nil {
 		return -1, errors.Wrap(err, "could not convert price from string to float, quitting!")
 	}
@@ -131,7 +131,7 @@ func CoinbaseTicker() (float64, error) {
 	}
 
 	// response.Price is in string, need to convert it to float
-	price, err := utils.StoFWithCheck(response.Price)
+	price, err := utils.ToFloat(response.Price)
 	if err != nil {
 		return -1, errors.Wrap(err, "could not convert price from string to float, quitting!")
 	}
@@ -153,7 +153,7 @@ func CoinbaseVolume() (float64, error) {
 	}
 
 	// response.Price is in string, need to convert it to float
-	volume, err := utils.StoFWithCheck(response.Volume)
+	volume, err := utils.ToFloat(response.Volume)
 	if err != nil {
 		return -1, errors.Wrap(err, "could not convert price from string to float, quitting!")
 	}
@@ -175,7 +175,7 @@ func KrakenTicker() (float64, error) {
 	}
 
 	// response.Price is in string, need to convert it to float
-	price, err := utils.StoFWithCheck(response.Result.XXLMZUSD.C[0])
+	price, err := utils.ToFloat(response.Result.XXLMZUSD.C[0])
 	if err != nil {
 		return -1, errors.Wrap(err, "could not convert price from string to float, quitting!")
 	}
@@ -197,7 +197,7 @@ func KrakenVolume() (float64, error) {
 	}
 
 	// response.Price is in string, need to convert it to float
-	volume, err := utils.StoFWithCheck(response.Result.XXLMZUSD.V[1]) // we want volume over the last 24 hours
+	volume, err := utils.ToFloat(response.Result.XXLMZUSD.V[1]) // we want volume over the last 24 hours
 	if err != nil {
 		return -1, errors.Wrap(err, "could not convert price from string to float, quitting!")
 	}
@@ -248,7 +248,7 @@ func XLMUSD() (float64, error) {
 // how real world exchanges would behave. This fee is 0.01% for now
 func ExchangeXLMforUSD(amount string) float64 {
 	// defines the rate for 1 usd = x XLM. Currently hardcoded to 10
-	amountF := utils.StoF(amount)
+	amountF, _ := utils.ToFloat(amount)
 	// exchangeRate := 0.1 // hardcode for now, can query cmc apis later
 	exchangeRate := 10000000.0 // rig the exchange rate so that we can test some stuff
 	return amountF * exchangeRate

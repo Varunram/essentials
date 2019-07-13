@@ -21,7 +21,7 @@ func GetAnchorUSD(recpSeed string, amountUSDs string) (string, error) {
 	log.Println("tx hash for trusting stableUSD: ", txhash)
 	// now send coins across and see if our tracker detects it
 	// the given amount is in USD, we need to convert it into XLM since we're sending XLM
-	amountUSD, err := utils.StoFWithCheck(amountUSDs)
+	amountUSD, err := utils.ToFloat(amountUSDs)
 	if err != nil {
 		return txhash, err
 	}
@@ -33,7 +33,8 @@ func GetAnchorUSD(recpSeed string, amountUSDs string) (string, error) {
 	amountXLM := exchangeRate * amountUSD
 
 	log.Println("Exchanging: ", amountXLM, " XLM for anchorUSD")
-	_, txhash, err = xlm.SendXLM(AnchorUSDAddress, utils.FtoS(amountXLM), recpSeed, "Exchange XLM for anchorUSD")
+	amountXLMS, _ := utils.ToString(amountXLM)
+	_, txhash, err = xlm.SendXLM(AnchorUSDAddress, amountXLMS, recpSeed, "Exchange XLM for anchorUSD")
 	if err != nil {
 		return txhash, errors.Wrap(err, "couldn't send xlm")
 	}

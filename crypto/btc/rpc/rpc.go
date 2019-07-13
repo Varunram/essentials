@@ -107,7 +107,7 @@ func GetBlockHeader(blockhash string) ([]byte, error) {
 func GetBlockStats(hashOrHeight string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "getblockstats"
-	height, err := utils.StoICheck(hashOrHeight)
+	height, err := utils.ToInt(hashOrHeight)
 	if err != nil {
 		// hash and not height
 		if len(hashOrHeight) != 64 {
@@ -133,7 +133,7 @@ func GetChainTxStats(nBlocks string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "getchaintxstats"
 
-	nBlocksInt, err := utils.StoICheck(nBlocks)
+	nBlocksInt, err := utils.ToInt(nBlocks)
 	if err != nil {
 		return nil, errors.New("input block height not integer")
 	}
@@ -233,7 +233,7 @@ func PruneBlockchain(height string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "getchaintxstats"
 
-	heightI, err := utils.StoICheck(height)
+	heightI, err := utils.ToInt(height)
 	if err != nil {
 		return nil, errors.New("input block height not integer")
 	}
@@ -260,14 +260,14 @@ func VerifyChain(nBlocks string, checkLevel string) ([]byte, error) {
 
 	var temp []interface{}
 	if nBlocks != "" {
-		nBlocksInt, err := utils.StoICheck(nBlocks)
+		nBlocksInt, err := utils.ToInt(nBlocks)
 		if err != nil {
 			return nil, errors.New("nblocks not int")
 		}
 		temp = append(temp, nBlocksInt)
 	}
 	if checkLevel != "" {
-		checkLevelInt, err := utils.StoICheck(checkLevel)
+		checkLevelInt, err := utils.ToInt(checkLevel)
 		if err != nil {
 			return nil, errors.New("checklevel not int")
 		}
@@ -335,14 +335,14 @@ func Generate(nBlocks string, maxtries string) ([]byte, error) {
 	payload.Method = "generate"
 
 	var temp []interface{}
-	nBlocksInt, err := utils.StoICheck(nBlocks)
+	nBlocksInt, err := utils.ToInt(nBlocks)
 	if err != nil {
 		return nil, errors.New("nblocks not int")
 	}
 
 	temp = append(temp, nBlocksInt)
 	if maxtries != "" {
-		maxTriesInt, err := utils.StoICheck(maxtries)
+		maxTriesInt, err := utils.ToInt(maxtries)
 		if err != nil {
 			return nil, errors.New("maxtries not int")
 		}
@@ -356,7 +356,7 @@ func GenerateToAddress(nBlocks string, address string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "generatetoaddress"
 
-	nBlocksInt, err := utils.StoICheck(nBlocks)
+	nBlocksInt, err := utils.ToInt(nBlocks)
 	if err != nil {
 		return nil, errors.New("nblocks not int")
 	}
@@ -468,7 +468,7 @@ func SetBan(subnet string, command string, bantime string, absolute bool) ([]byt
 
 	temp = append(temp, subnet, command)
 	if bantime != "" {
-		bantimeInt, err := utils.StoICheck(bantime)
+		bantimeInt, err := utils.ToInt(bantime)
 		if err != nil {
 			return nil, errors.New("ban time not int")
 		}
@@ -670,7 +670,7 @@ func DeriveAddresses(descriptor string) ([]byte, error) {
 func EstimateSmartFee(confTarget string, estimateMode string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "estimatesmartfee"
-	confTargetInt, err := utils.StoICheck(confTarget)
+	confTargetInt, err := utils.ToInt(confTarget)
 	if err != nil {
 		return nil, errors.New("input block height not integer")
 	}
@@ -735,7 +735,7 @@ func AbortRescan() ([]byte, error) {
 func AddMultisigAddress(n string, keys ...string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "addmultisigaddress"
-	nInt, err := utils.StoICheck(n)
+	nInt, err := utils.ToInt(n)
 	if err != nil {
 		return nil, errors.Wrap(err, "input not integer")
 	}
@@ -827,7 +827,7 @@ func GetBalance(dummy string, minConf string, watchOnly bool) ([]byte, error) {
 	temp = append(temp, dummy)
 
 	if minConf != "" {
-		minConfInt, err := utils.StoICheck(minConf)
+		minConfInt, err := utils.ToInt(minConf)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
@@ -965,7 +965,7 @@ func KeypoolRefill(newSize string) ([]byte, error) {
 	payload.Method = "keypoolrefill"
 
 	if newSize != "" {
-		newSizeInt, err := utils.StoICheck(newSize)
+		newSizeInt, err := utils.ToInt(newSize)
 		if err != nil {
 			return nil, errors.Wrap(err, "new size not int")
 		}
@@ -1003,7 +1003,7 @@ func ListReceivedByAddress(minConf string, includeEmpty bool, watchOnly bool, ad
 
 	var temp []interface{}
 	if minConf != "" {
-		minConfInt, err := utils.StoICheck(minConf)
+		minConfInt, err := utils.ToInt(minConf)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
@@ -1030,7 +1030,7 @@ func ListReceivedByLabel(minConf string, includeEmpty bool, watchOnly bool) ([]b
 
 	var temp []interface{}
 	if minConf != "" {
-		minConfInt, err := utils.StoICheck(minConf)
+		minConfInt, err := utils.ToInt(minConf)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
@@ -1060,7 +1060,7 @@ func ListSinceBlock(blockhash string, targetConf string, watchOnly bool, include
 		temp = append(temp, blockhash)
 	}
 	if targetConf != "" {
-		targetConfInt, err := utils.StoICheck(targetConf)
+		targetConfInt, err := utils.ToInt(targetConf)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
@@ -1087,14 +1087,14 @@ func ListTransactions(label string, count string, skip string, watchOnly bool) (
 		temp = append(temp, label)
 	}
 	if count != "" {
-		countInt, err := utils.StoICheck(count)
+		countInt, err := utils.ToInt(count)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
 		temp = append(temp, countInt)
 	}
 	if skip != "" {
-		skipInt, err := utils.StoICheck(skip)
+		skipInt, err := utils.ToInt(skip)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
@@ -1116,14 +1116,14 @@ func ListUnspent(minConf string, maxConf string, addresses []string) ([]byte, er
 	var temp []interface{}
 
 	if minConf != "" {
-		minConfInt, err := utils.StoICheck(minConf)
+		minConfInt, err := utils.ToInt(minConf)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
 		temp = append(temp, minConfInt)
 	}
 	if maxConf != "" {
-		maxConfInt, err := utils.StoICheck(maxConf)
+		maxConfInt, err := utils.ToInt(maxConf)
 		if err != nil {
 			return nil, errors.Wrap(err, "minconf not int")
 		}
@@ -1165,12 +1165,12 @@ func RescanBlockchain(startHeight string, stopHeight string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "rescanblockchain"
 
-	startHeightI, err := utils.StoICheck(startHeight)
+	startHeightI, err := utils.ToInt(startHeight)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not convert string to int")
 	}
 
-	stopHeightI, err := utils.StoICheck(stopHeight)
+	stopHeightI, err := utils.ToInt(stopHeight)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not convert string to int")
 	}
@@ -1188,7 +1188,7 @@ func SendToAddress(address string, amount string,
 
 	var payload RPCReq
 	payload.Method = "sendtoaddress"
-	amountI, err := utils.StoICheck(amount)
+	amountI, err := utils.ToInt(amount)
 	if err != nil {
 		return nil, errors.New("could not convert string to int, quitting")
 	}
@@ -1247,7 +1247,7 @@ func SetTxFee(amount string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "settxfee"
 
-	amountI, err := utils.StoICheck(amount)
+	amountI, err := utils.ToInt(amount)
 	if err != nil {
 		return nil, errors.New("could not convert string to int, quitting")
 	}
@@ -1297,7 +1297,7 @@ func WalletPassphrase(passphrase string, timeout string) ([]byte, error) {
 	var payload RPCReq
 	payload.Method = "walletpassphrase"
 
-	timeoutI, err := utils.StoICheck(timeout)
+	timeoutI, err := utils.ToInt(timeout)
 	if err != nil {
 		return nil, errors.New("timeout not integer")
 	}

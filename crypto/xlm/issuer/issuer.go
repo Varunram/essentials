@@ -21,7 +21,8 @@ import (
 
 // CreatePath returns the path of a specific project
 func CreatePath(path string, projIndex int) string {
-	return path + utils.ItoS(projIndex) + ".key"
+	piS, _ := utils.ToString(projIndex)
+	return path + piS + ".key"
 }
 
 // CreateFile creates a new empty keyfile

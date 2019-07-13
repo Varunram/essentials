@@ -43,12 +43,12 @@ func ParseInput(cmd []string) error {
 			minShares := cmd[1]
 			maxShares := cmd[2]
 
-			minInt, err := utils.StoICheck(minShares)
+			minInt, err := utils.ToInt(minShares)
 			if err != nil {
 				return errors.Wrap(err, "minshares not int")
 			}
 
-			maxInt, err := utils.StoICheck(maxShares)
+			maxInt, err := utils.ToInt(maxShares)
 			if err != nil {
 				return errors.Wrap(err, "maxshares not int")
 			}
@@ -128,7 +128,7 @@ func ParseInput(cmd []string) error {
 			return errors.New("USAGE: mnemonic <12/15/18/21/24> passphrase")
 		}
 
-		wordSize, err := utils.StoICheck(cmd[1])
+		wordSize, err := utils.ToInt(cmd[1])
 		if err != nil {
 			return errors.Wrap(err, "could not convert input into string, returning")
 		}

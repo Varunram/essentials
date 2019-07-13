@@ -149,7 +149,7 @@ func RefillAccount(publicKey string, platformSeed string) error {
 	if err != nil {
 		return errors.Wrap(err, "could not get native balance")
 	}
-	balanceI := utils.StoF(balance)
+	balanceI, _ := utils.ToFloat(balance)
 	if balanceI < 3 { // to setup trustlines
 		_, _, err = SendXLM(publicKey, RefillAmount, platformSeed, "Sending XLM to refill")
 		if err != nil {

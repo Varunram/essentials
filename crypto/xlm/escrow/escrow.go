@@ -57,8 +57,9 @@ func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string,
 // TransferFundsToEscrow transfers a specific amount of currency to the escrow. Usually called by the platform or recipient
 func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string, platformSeed string) error {
 	// we have the wallet pubkey, transfer funds to the escrow now
+	aS, _ := utils.ToString(amount)
 	_, txhash, err := assets.SendAsset(stablecoin.StablecoinCode, stablecoin.StablecoinPublicKey, escrowPubkey,
-		utils.FtoS(amount), platformSeed, "escrow init")
+		aS, platformSeed, "escrow init")
 	if err != nil {
 		return errors.Wrap(err, "could not fund escrow, quitting!")
 	}

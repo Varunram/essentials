@@ -24,7 +24,9 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 		return errors.Wrap(err, "couldn't get native balance from api")
 	}
 
-	if utils.StoF(balance) <= utils.StoF(convAmount) {
+	bs, _ := utils.ToFloat(balance)
+	cs, _ := utils.ToFloat(convAmount)
+	if bs < cs {
 		return errors.New("insufficient balance")
 	}
 
@@ -35,7 +37,9 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 		trustLimit = "0"
 	}
 
-	if (utils.StoF(trustLimit) < utils.StoF(convAmount)) && trustLimit != "0" {
+	tls, _ := utils.ToFloat(trustLimit)
+	cs1, _ := utils.ToFloat(convAmount)
+	if tls < cs1 && trustLimit != "0" {
 		return errors.Wrap(err, "trust limit doesn't warrant investment, please contact platform admin")
 	}
 
@@ -64,8 +68,15 @@ func OfferExchange(publicKey string, seed string, invAmount string) error {
 		balance = "0"
 	}
 
-	balF := utils.StoF(balance)
-	invF := utils.StoF(invAmount)
+	balF, err := utils.ToFloat(balance)
+	if err != nil {
+		return err
+	}
+	invF, err := utils.ToFloat(invAmount)
+	if err != nil {
+		return err
+	}
+
 	if balF < invF {
 		log.Println("Offering xlm to stableusd exchange to investor")
 		// user's stablecoin balance is less than the amount he wishes to invest, get stablecoin
@@ -88,7 +99,8 @@ func OfferExchange(publicKey string, seed string, invAmount string) error {
 		// 1 xlm can fetch exchangeRate USD, how much xlm does diff USD need?
 		amountToExchange := diff / exchangeRate
 		log.Println(diff, exchangeRate, amountToExchange)
-		err = Exchange(publicKey, seed, utils.FtoS(amountToExchange))
+		atss, _ := utils.ToString(amountToExchange)
+		err = Exchange(publicKey, seed, atss)
 		if err != nil {
 			return errors.New("Unable to exchange XLM for USD and automate payment. Please get more STABLEUSD to fulfil the payment")
 		}

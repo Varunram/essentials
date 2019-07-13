@@ -78,7 +78,8 @@ func DexStableCoinBuy(seed string, amount string) (int32, string, error) {
 		return -1, "", errors.New("could not fetch price form binance, quitting")
 	}
 	price = price * 1.02 // a small premium to get the order fulfilled immediately
-	return NewBuyOrder(seed, assetName, issuer, amount, utils.FtoS(price))
+	ftss, _ := utils.ToString(price)
+	return NewBuyOrder(seed, assetName, issuer, amount, ftss)
 }
 
 // DexStableCoinBuy gets the price from an oracle and places an order on the DEX to sell AnchorUSD
@@ -90,5 +91,6 @@ func DexStableCoinSell(seed string, amount string) (int32, string, error) {
 		return -1, "", errors.New("could not fetch price form binance, quitting")
 	}
 	price = price * 1.02 // a small premium to get the order fulfilled immediately
-	return NewSellOrder(seed, assetName, issuer, amount, utils.FtoS(price))
+	ftss, _ := utils.ToString(price)
+	return NewSellOrder(seed, assetName, issuer, amount, ftss)
 }
