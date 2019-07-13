@@ -122,7 +122,7 @@ func ToInt(x interface{}) (int, error) {
 	case string:
 		return strconv.Atoi(x.(string))
 	case []byte:
-		strconv.Atoi(string(x.([]byte)))
+		return strconv.Atoi(string(x.([]byte)))
 	}
 	return -1, errors.New("could not convert to int")
 }

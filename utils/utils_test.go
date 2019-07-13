@@ -18,8 +18,11 @@ func TestUtils(t *testing.T) {
 	testFloat := 10.0
 	var err error
 
-	testSlice := ItoB(10)
-	log.Println("hi", testString, testInt)
+	testSlice, err := ToByte(10)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// slcies can be compared only with nil
 	for i, char := range testSlice {
 		if char != testByte[i] {
@@ -39,47 +42,54 @@ func TestUtils(t *testing.T) {
 		t.Fatalf("Failed to catch error while comparing two different slcies")
 	}
 
-	if ItoS(testInt) != testString {
-		t.Fatalf("ItoS deosn't work as expected, quitting!")
+	x1, err := ToString(testInt)
+	if err != nil || x1 != testString {
+		t.Fatalf("ToString deosn't work as expected, quitting!")
 	}
 
-	if ItoS(testInt) == "" {
-		t.Fatalf("ItoS deosn't work as expected, quitting!")
+	x2, err := ToString(testInt)
+	if err != nil || x2 == "" {
+		t.Fatalf("ToString deosn't work as expected, quitting!")
 	}
 
-	if BToI(testByte) != testInt {
-		t.Fatalf("BToI deosn't work as expected, quitting!")
+	x3, err := ToInt(testByte)
+	if err != nil || x3 != testInt {
+		log.Println(x3, err)
+		t.Fatalf("ToInt deosn't work as expected, quitting!")
 	}
 
-	if BToI(testByte) == 9 {
-		t.Fatalf("BToI deosn't work as expected, quitting!")
+	x4, err := ToInt(testByte)
+	if err == nil && x4 == 9 {
+		t.Fatalf("ToInt deosn't work as expected, quitting!")
 	}
 
-	if FtoS(testFloat) != testStringFloat {
-		log.Println(FtoS(testFloat))
-		t.Fatalf("FtoS deosn't work as expected, quitting!")
+	x5, err := ToString(testFloat)
+	if err != nil || x5 != testStringFloat {
+		t.Fatalf("ToString deosn't work as expected, quitting!")
 	}
 
-	if FtoS(testFloat) == testString {
-		log.Println(FtoS(testFloat))
-		t.Fatalf("FtoS deosn't work as expected, quitting!")
+	x6, err := ToString(testFloat)
+	if err == nil && x6 == testString {
+		t.Fatalf("ToString deosn't work as expected, quitting!")
 	}
 
-	if StoF(testStringFloat) != testFloat {
-		log.Println(StoF(testStringFloat))
+	x7, err := ToFloat(testStringFloat)
+	if err != nil || x7 != testFloat {
 		t.Fatalf("StoF deosn't work as expected, quitting!")
 	}
 
-	if StoF(testStringFloat) == 9.0 {
-		log.Println(StoF(testStringFloat))
+	x8, err := ToFloat(testStringFloat)
+	if err == nil && x8 == 9.0 {
 		t.Fatalf("StoF deosn't work as expected, quitting!")
 	}
 
-	if StoI(testString) != testInt {
+	x9, err := ToInt(testString)
+	if err != nil || x9 != testInt {
 		t.Fatalf("StoI deosn't work as expected, quitting!")
 	}
 
-	if StoI(testString) == 9 {
+	x10, err := ToInt(testString)
+	if err == nil && x10 == 9 {
 		t.Fatalf("StoI deosn't work as expected, quitting!")
 	}
 
@@ -114,16 +124,17 @@ func TestUtils(t *testing.T) {
 		t.Fatalf("Timestamps don't match, quitting!")
 	}
 
-	if I64toS(123412341234) != "123412341234" {
+	y, err := ToString(123412341234)
+	if err != nil || y != "123412341234" {
 		t.Fatalf("I64 to string doesn't work, quitting!")
 	}
 
-	_, err = StoFWithCheck("blah")
+	_, err = ToFloat("blah")
 	if err == nil {
 		t.Fatalf("Not able to catch invalid string to float error!")
 	}
 
-	_, err = StoICheck("blah")
+	_, err = ToInt("blah")
 	if err == nil {
 		t.Fatalf("Not able to catch invalid string to float error!")
 	}
