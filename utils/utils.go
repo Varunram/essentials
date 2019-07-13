@@ -4,6 +4,9 @@ package utils
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"github.com/pkg/errors"
+	"log"
+	"math/big"
 	"math/rand"
 	"os/user"
 	"strconv"
@@ -11,6 +14,8 @@ import (
 
 	"golang.org/x/crypto/sha3"
 )
+
+var TypeNotSupported = errors.New("type not supported, please feel free to PR")
 
 // Timestamp gets the human readable timestamp
 func Timestamp() string {
@@ -20,61 +25,6 @@ func Timestamp() string {
 // Unix gets the unix timestamp
 func Unix() int64 {
 	return time.Now().Unix()
-}
-
-// I64toS converts an int64 to a string
-func I64toS(a int64) string {
-	return strconv.FormatInt(a, 10) // s == "97" (decimal)
-}
-
-// ItoB converts an integer to a byte
-func ItoB(a int) []byte {
-	// need to convert int to a byte array for indexing
-	string1 := strconv.Itoa(a)
-	return []byte(string1)
-}
-
-// ItoS converts an integer to a string
-func ItoS(a int) string {
-	aStr := strconv.Itoa(a)
-	return aStr
-}
-
-// BToI converts a byte to an integer
-func BToI(a []byte) int {
-	x, _ := strconv.Atoi(string(a))
-	return x
-}
-
-// FtoS converts a float to a string
-func FtoS(a float64) string {
-	return strconv.FormatFloat(a, 'f', 6, 64)
-	// return fmt.Sprintf("%f", a) is also possible, but slower due to the Sprintf
-}
-
-// StoF converts a string to a float
-func StoF(a string) float64 {
-	x, _ := strconv.ParseFloat(a, 32)
-	// ignore this error since we hopefully call this in the right place
-	return x
-}
-
-// StoFWithCheck converts a string to a float with checks
-func StoFWithCheck(a string) (float64, error) {
-	return strconv.ParseFloat(a, 32)
-}
-
-// StoI converts a string to an int
-func StoI(a string) int {
-	// convert string to int
-	aInt, _ := strconv.Atoi(a)
-	return aInt
-}
-
-// StoICheck converts a string to an int with checks
-func StoICheck(a string) (int, error) {
-	// convert string to int
-	return strconv.Atoi(a)
 }
 
 // SHA3hash gets the SHA3-512 hash of the passed string
@@ -88,26 +38,6 @@ func SHA3hash(inputString string) string {
 func GetHomeDir() (string, error) {
 	usr, err := user.Current()
 	return usr.HomeDir, err
-}
-
-func Uint32tB(i uint32) []byte {
-	a := make([]byte, 4)
-	binary.BigEndian.PutUint32(a, i)
-	return a
-}
-
-func Uint16tB(i uint16) []byte {
-	a := make([]byte, 2)
-	binary.BigEndian.PutUint16(a, i)
-	return a[1:]
-}
-
-func BtUint16(b []byte) uint16 {
-	if len(b) == 1 {
-		zero := make([]byte, 1)
-		b = append(zero, b...)
-	}
-	return binary.BigEndian.Uint16(b)
 }
 
 // GetRandomString gets a random string of length _n_
@@ -137,4 +67,84 @@ func GetRandomString(n int) string {
 	}
 
 	return string(b)
+}
+
+func ToBigInt(x interface{}) (*big.Int, error) {
+	log.Println("calling anything to byte function")
+	switch x.(type) {
+	case []byte:
+		return new(big.Int).SetBytes(x.([]byte)), nil
+	case int:
+		return big.NewInt(int64(x.(int))), nil
+	case uint64:
+		return new(big.Int).SetUint64(x.(uint64)), nil
+	case string:
+		log.Println([]byte(x.(string)))
+		return new(big.Int).SetBytes([]byte(x.(string))), nil
+	default:
+		log.Println("MYSTERY")
+		return new(big.Int).SetUint64(0), nil
+	}
+	return nil, errors.New("type not suported, please feel free to PR")
+}
+
+func ToByte(x interface{}) ([]byte, error) {
+	switch x.(type) {
+	case int:
+		string1 := strconv.Itoa(x.(int))
+		return []byte(string1), nil
+	case uint32:
+		a := make([]byte, 4)
+		binary.BigEndian.PutUint32(a, x.(uint32))
+		return a, nil
+	case uint16:
+		a := make([]byte, 2)
+		binary.BigEndian.PutUint16(a, x.(uint16))
+		return a[1:], nil
+	}
+	return nil, TypeNotSupported
+}
+
+func ToString(x interface{}) (string, error) {
+	switch x.(type) {
+	case float64:
+		return strconv.FormatFloat(x.(float64), 'f', 6, 64), nil
+	case int64:
+		return strconv.FormatInt(x.(int64), 10), nil // s == "97" (decimal)
+	case int:
+		return strconv.Itoa(x.(int)), nil
+	}
+	return "", errors.New("could not convert to string")
+}
+
+func ToInt(x interface{}) (int, error) {
+	switch x.(type) {
+	case string:
+		return strconv.Atoi(x.(string))
+	case []byte:
+		strconv.Atoi(string(x.([]byte)))
+	}
+	return -1, errors.New("could not convert to int")
+}
+
+func ToFloat(x interface{}) (float64, error) {
+	switch x.(type) {
+	case string:
+		return strconv.ParseFloat(x.(string), 32)
+	}
+
+	return -1, TypeNotSupported
+}
+
+func ToUint16(x interface{}) (uint16, error) {
+	switch x.(type) {
+	case []byte:
+		b := x.([]byte)
+		if len(b) == 1 {
+			zero := make([]byte, 1)
+			b = append(zero, b...)
+		}
+		return binary.BigEndian.Uint16(b), nil
+	}
+	return 0, TypeNotSupported
 }
