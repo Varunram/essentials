@@ -34,8 +34,7 @@ func Decrypt(input []byte, passphrase string) ([]byte, error) {
 		return nil, errors.Wrap(err, "Failed to instantiate XChaCha20-Poly1305")
 	}
 
-	nonce := make([]byte, cc20.NonceSizeX)
-	nonce = []byte(utils.SHA3hash(sha3Hash))[0:24]
+	nonce := []byte(utils.SHA3hash(sha3Hash))[0:24]
 
 	plaintext, err := aead.Open(nil, nonce, input, nil)
 	if err != nil {

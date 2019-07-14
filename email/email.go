@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// sendMail is a handler for sending out an email to an entity, reading required params from the config file
+// SendMail is a handler for sending out an email to an entity, reading required params from the config file
 func SendMail(body string, to string) error {
 	var err error
 	// read from config.yaml in the working directory

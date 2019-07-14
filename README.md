@@ -1,10 +1,13 @@
 # Essentials
 
+[![Build Status](https://travis-ci.com/Varunram/essentials.svg?branch=master)](https://travis-ci.com/Varunram/essentials)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Varunram/essentials)](https://goreportcard.com/report/github.com/Varunram/essentials)  
+
 Essentials is a collection of go packages that are helpful for projects (and save a click of two from stackoverflow). Each subrepo is its own package and you can import them wherever needed.
 
 ## Supporters
 
-This open source project is proudly supported by [Bithyve](https://github.com/bithyve)
+This open source project is partially supported by [Bithyve](https://github.com/bithyve). If you like my work and would consider sponsoring in some capacity, please reach out to `contact@varunram.com`, thanks!
 
 ## Contributing
 

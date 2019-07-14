@@ -47,8 +47,7 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 		return data, errors.Wrap(err, "failed to initialize new gcm block")
 	}
 
-	nonce := make([]byte, gcm.NonceSize())
-	nonce = []byte(utils.SHA3hash(sha3Hash))[0:gcm.NonceSize()]
+	nonce := []byte(utils.SHA3hash(sha3Hash))[0:gcm.NonceSize()]
 
 	plaintext, err := gcm.Open(nil, nonce, data, nil)
 	if err != nil {

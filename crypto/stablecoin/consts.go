@@ -5,7 +5,6 @@ import (
 )
 
 var (
-	// XLM Stablecoin constants
 	// HomeDir is the hone directory of the openx platform
 	HomeDir = os.Getenv("HOME") + "/.openx"
 	// StablecoinCode is the code of the test stablecoin

@@ -25,6 +25,7 @@ func RetrieveShell() *shell.Shell {
 	return shell.NewShell(path)
 }
 
+// SetPath sets the path for the local / remote ipfs daemon
 func SetPath(newPath string) {
 	path = newPath
 }

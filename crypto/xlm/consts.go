@@ -18,5 +18,5 @@ var TestNetClient = &horizon.Client{
 // Passphrase defines the stellar network passphrase
 var Passphrase = network.TestNetworkPassphrase
 
-// RefillAmountd defines the default stellar refill amount
+// RefillAmount defines the default stellar refill amount
 var RefillAmount = "10"
