@@ -11,16 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// escrow defines the escrow of asset for a specific project. We should generate a
-// new seed and public key pair for each project that is at stage 3, so this would be
-// automated at that stage. Once an investor has finished investing in the project,
-// we need to send the recipient DebtAssets and then set all weights to zero in order
-// to lock the account and prevent any further transactions from being authorized.
-// One can stil send fund to the frozen account but the account can not use them
-// this serves our purpose since we only want receipt of debt assets and want to freeze
-// issuance so that anybody who hacks us can not print more tokens.
-
-// In financial terms, an escrow is a special purpose vehicle (kind of cool that we have SPV in finance)
+// escrow implements an escrow based off Stellar
 
 // InitEscrow creates a new keypair and stores it in a file
 func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string, platformSeed string) (string, error) {
@@ -68,12 +59,9 @@ func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string, p
 	return nil
 }
 
-// InitMultisigEscrow initializes a multisig escrow with one signer as the recipient and the other as the platform
-func initMultisigEscrow(pubkey1 string, platformPubkey string) (string, error) {
-	// recpPubkey is the public key of the recipient
-	// the seed of the escrow is needed to init the first tx that will change options
-	// we now have the two public keys that are needed to authorize this transaction. Construct a 2of2 multisig
-	return multisig.New2of2(pubkey1, platformPubkey)
+// InitMultisigEscrow initializes a multisig escrow
+func initMultisigEscrow(pubkey1 string, pubkey2 string) (string, error) {
+	return multisig.New2of2(pubkey1, pubkey2)
 }
 
 // SendFundsFromEscrow sends funds to a destination address from the project escrow

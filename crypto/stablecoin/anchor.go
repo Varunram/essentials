@@ -11,6 +11,8 @@ import (
 	utils "github.com/Varunram/essentials/utils"
 )
 
+// anchor implements stuff which is needed to interact with the anchor stablecoin
+
 // GetAnchorUSD gets anchorUSD from Anchor
 func GetAnchorUSD(recpSeed string, amountUSDs string) (string, error) {
 	txhash, err := assets.TrustAsset(AnchorUSDCode, AnchorUSDAddress, AnchorUSDTrustLimit, recpSeed)

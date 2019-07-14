@@ -10,6 +10,9 @@ import (
 	"github.com/boltdb/bolt"
 )
 
+// package database contains useful boltdb handlers
+
+// CreateDirs creates (db) directories if they don't exist
 func CreateDirs(dirs ...string) {
 	for _, dir := range dirs {
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -19,10 +22,7 @@ func CreateDirs(dirs ...string) {
 	}
 }
 
-// don't lock since boltdb can only process one operation at a time. As the application
-// grows bigger, this would be a major reason to search for a new db system
-
-// OpenDB opens the db
+// CreateDB creates a new database
 func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 	// we need to check and create this directory if it doesn't exist
 	db, err := bolt.Open(dir, 0600, nil) // store this in its ownd database
@@ -46,6 +46,7 @@ func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 	return db, nil
 }
 
+// OpenDB opens the database
 func OpenDB(dir string) (*bolt.DB, error) {
 	return bolt.Open(dir, 0600, nil) // store this in its ownd database
 }
@@ -72,7 +73,7 @@ func DeleteKeyFromBucket(dir string, key int, bucketName []byte) error {
 	})
 }
 
-// Save inserts a passed Investor object into the database
+// Save inserts an interface with an integer key
 func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	db, err := OpenDB(dir)
 	if err != nil {
@@ -94,6 +95,7 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	return err
 }
 
+// Retrieve retrieves a byteStringf rom the database
 func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 	var returnBytes []byte
 	db, err := OpenDB(dir)
@@ -103,7 +105,7 @@ func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(bucketName) // the projects bucket contains all our projects
+		_, err := tx.CreateBucketIfNotExists(bucketName)
 		if err != nil {
 			log.Println("Error while creating projects bucket", err)
 			return err
@@ -133,6 +135,7 @@ func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 	return returnBytes, err
 }
 
+// RetrieveAllKeys retrieves all key value pairs from the database
 func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	var arr [][]byte
 	db, err := OpenDB(dir)
@@ -142,7 +145,7 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	defer db.Close()
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(bucketName) // the projects bucket contains all our projects
+		_, err := tx.CreateBucketIfNotExists(bucketName)
 		if err != nil {
 			log.Println("Error while creating projects bucket", err)
 			return err

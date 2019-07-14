@@ -40,7 +40,7 @@ func GetHomeDir() (string, error) {
 	return usr.HomeDir, err
 }
 
-// GetRandomString gets a random string of length _n_
+// GetRandomString gets a random string of length n
 func GetRandomString(n int) string {
 	// random string implementation courtesy: icza
 	// https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
@@ -82,10 +82,9 @@ func ToBigInt(x interface{}) (*big.Int, error) {
 		log.Println([]byte(x.(string)))
 		return new(big.Int).SetBytes([]byte(x.(string))), nil
 	default:
-		log.Println("MYSTERY")
 		return new(big.Int).SetUint64(0), nil
 	}
-	return nil, errors.New("type not suported, please feel free to PR")
+	return nil, TypeNotSupported
 }
 
 func ToByte(x interface{}) ([]byte, error) {
@@ -114,7 +113,7 @@ func ToString(x interface{}) (string, error) {
 	case int:
 		return strconv.Itoa(x.(int)), nil
 	}
-	return "", errors.New("could not convert to string")
+	return "", TypeNotSupported
 }
 
 func ToInt(x interface{}) (int, error) {
@@ -124,7 +123,7 @@ func ToInt(x interface{}) (int, error) {
 	case []byte:
 		return strconv.Atoi(string(x.([]byte)))
 	}
-	return -1, errors.New("could not convert to int")
+	return -1, TypeNotSupported
 }
 
 func ToFloat(x interface{}) (float64, error) {

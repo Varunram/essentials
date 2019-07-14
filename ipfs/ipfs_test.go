@@ -10,6 +10,7 @@ import (
 // You need to be running an active ipfs daemon in order for this to succeed
 // kind of weird to get ipfs setup for a single tests, but this would be useful
 func TestIpfs(t *testing.T) {
+	SetPath("localhost:5001")
 	hash, err := AddStringToIpfs("Hello, this is a test from ipfs to see if it works")
 	if err != nil {
 		t.Fatal(err)

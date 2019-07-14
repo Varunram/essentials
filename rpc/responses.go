@@ -65,7 +65,7 @@ func ResponseHandler(w http.ResponseWriter, status int) {
 	MarshalSend(w, response)
 }
 
-// MarshalSend marshals and writes a json string into the writer
+// MarshalSend marshals and writes a json string
 func MarshalSend(w http.ResponseWriter, x interface{}) {
 	xJson, err := json.Marshal(x)
 	if err != nil {
@@ -76,7 +76,7 @@ func MarshalSend(w http.ResponseWriter, x interface{}) {
 	WriteToHandler(w, xJson)
 }
 
-// WriteToHandler constructs a reply to the passed writer
+// WriteToHandler returns a reply to the passed writer
 func WriteToHandler(w http.ResponseWriter, jsonString []byte) {
 	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
 	w.Header().Add("Access-Control-Allow-Methods", "*")

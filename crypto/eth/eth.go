@@ -1,4 +1,4 @@
-package essentials
+package eth
 
 import (
 	"crypto/ecdsa"
@@ -8,12 +8,16 @@ import (
 	crypto "github.com/ethereum/go-ethereum/crypto"
 )
 
+// the eth package can be used to interact with the ethereum blockchain
+
+// EthereumWallet defines an ethereum wallet structure
 type EthereumWallet struct {
 	Address    string
 	PublicKey  string
 	PrivateKey string
 }
 
+// GenEthWallet generates a new ethereum wallet
 func GenEthWallet() (EthereumWallet, error) {
 
 	var x EthereumWallet
@@ -32,7 +36,7 @@ func GenEthWallet() (EthereumWallet, error) {
 	}
 
 	publicKeyBytes := crypto.FromECDSAPub(publicKeyECDSA)
-	x.PublicKey = hexutil.Encode(publicKeyBytes)[4:] // an ethereum address is 65 bytes long and hte first byte is 0x04 for DER encoding, so we omit that
+	x.PublicKey = hexutil.Encode(publicKeyBytes)[4:] // an ethereum address is 65 bytes long and the first byte is 0x04 for DER encoding, so we omit that
 
 	if crypto.PubkeyToAddress(*publicKeyECDSA).Hex() != x.Address {
 		return x, errors.Wrap(err, "addresses don't match, quitting!")

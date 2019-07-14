@@ -10,24 +10,17 @@ import (
 	"github.com/pkg/errors"
 )
 
-// issuer defines the issuer of asset for a specific project. We should generate a
-// new seed and public key pair for each project that is at stage 3, so this would be
-// automated at that stage. Once an investor has finished investing in the project,
-// we need to send the recipient DebtAssets and then set all weights to zero in order
-// to lock the account and prevent any further transactions from being authorized.
-// One can stil send fund to the frozen account but the account can not use them
-// this serves our purpose since we only want receipt of debt assets and want to freeze
-// issuance so that anybody who hacks us can not print more tokens
+// issuer contains functions that can be called by asset issuers on Stellar
 
-// CreatePath returns the path of a specific project
-func CreatePath(path string, projIndex int) string {
+// createPath returns the path of a specific project
+func createPath(path string, projIndex int) string {
 	piS, _ := utils.ToString(projIndex)
 	return path + piS + ".key"
 }
 
 // CreateFile creates a new empty keyfile
 func CreateFile(issuerPath string, projIndex int) string {
-	path := CreatePath(issuerPath, projIndex)
+	path := createPath(issuerPath, projIndex)
 	// we need to create this file
 	os.Create(path)
 	return path
@@ -35,7 +28,6 @@ func CreateFile(issuerPath string, projIndex int) string {
 
 // InitIssuer creates a new keypair and stores it in a file
 func InitIssuer(issuerPath string, projIndex int, seedpwd string) error {
-	// init a new pk and seed pair
 	seed, _, err := xlm.GetKeyPair()
 	if err != nil {
 		return errors.Wrap(err, "Error while generating keypair")
@@ -51,10 +43,8 @@ func InitIssuer(issuerPath string, projIndex int, seedpwd string) error {
 }
 
 // DeleteIssuer deletes the keyfile
-// But this is not needed since once the account is frozen, an attacker who does
-// have access to the seed can not aim to achieve anything since the account is locked
 func DeleteIssuer(issuerPath string, projIndex int) error {
-	path := CreatePath(issuerPath, projIndex)
+	path := createPath(issuerPath, projIndex)
 	return os.Remove(path)
 }
 
@@ -63,7 +53,7 @@ func DeleteIssuer(issuerPath string, projIndex int) error {
 // of how many issuers are in existence and how many projects have been invested in.
 func FundIssuer(issuerPath string, projIndex int, seedpwd string, platformSeed string) error {
 	// need to read the seed from the file using the seedpwd
-	path := CreatePath(issuerPath, projIndex)
+	path := createPath(issuerPath, projIndex)
 	pubkey, seed, err := wallet.RetrieveSeed(path, seedpwd)
 	if err != nil {
 		return errors.Wrap(err, "Error while retrieving seed")
@@ -86,7 +76,7 @@ func FundIssuer(issuerPath string, projIndex int, seedpwd string, platformSeed s
 // FreezeIssuer freezes the issuer account and makes it not possible for someone
 // to sign new transactions or send funds from the given account
 func FreezeIssuer(issuerPath string, projIndex int, seedpwd string) (string, error) {
-	path := CreatePath(issuerPath, projIndex)
+	path := createPath(issuerPath, projIndex)
 	_, seed, err := wallet.RetrieveSeed(path, seedpwd)
 	if err != nil {
 		return "", errors.Wrap(err, "Error while retrieving seed")

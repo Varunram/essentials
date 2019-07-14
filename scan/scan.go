@@ -1,9 +1,5 @@
 package scan
 
-// package scan is not in utils since we can't test the below functions (which require
-// user interaction) whereas functions in utils are essential
-// and need to be tested in order for stuff to run properly
-
 import (
 	"bufio"
 	"fmt"
@@ -15,6 +11,8 @@ import (
 	utils "github.com/Varunram/essentials/utils"
 	"golang.org/x/crypto/ssh/terminal"
 )
+
+// package scan can be used by CLI clients that want to accept inptus from the CLI
 
 // ScanForInt scans for an integer
 func ScanForInt() (int, error) {
@@ -63,7 +61,7 @@ func ScanForStringWithCheckI() (string, error) {
 		return "", errors.New("Couldn't read user input")
 	}
 	inputString := scanner.Text()
-	_, err := strconv.Atoi(inputString) // check whether input string is a number (for payback)
+	_, err := strconv.Atoi(inputString)
 	if err != nil {
 		return "", err
 	}

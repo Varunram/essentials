@@ -3,12 +3,13 @@ package tickers
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
-	"io/ioutil"
 	"log"
-	"net/http"
 
 	utils "github.com/Varunram/essentials/utils"
+	erpc "github.com/Varunram/essentials/rpc"
 )
+
+// package tickers implements handlers for getting price from cryptocurrencyu markets
 
 // we take the three largest (no wash trading) markets for XLM USD and return their weighted average
 // to arrive at the price for XLM-USD. This price is indicative and not final since there will be latency
@@ -25,18 +26,21 @@ type BinanceTickerResponse struct {
 	Price  string `json:"price"`
 }
 
+// BinanceVolumeResponse defines the structure of binance's volume endpoint response
 type BinanceVolumeResponse struct {
 	// there are other fields as well, but we ignore them for now
 	Symbol string `json:"symbol"`
 	Volume string `json:"volume"`
 }
 
+// CoinbaseTickerResponse defines the structure of coinbase's ticker endpoitt response
 type CoinbaseTickerResponse struct {
 	TradeId int    `json:"trade_id"`
 	Price   string `json:"price"`
 	Volume  string `json:"volume"`
 }
 
+// KrakenTickerResponse defines the structure of kraken's ticker response
 type KrakenTickerResponse struct {
 	Error  []string `json:"error"`
 	Result struct {
@@ -48,27 +52,9 @@ type KrakenTickerResponse struct {
 	}
 }
 
-// GetRequest is a clone of the original GetRequest from rpc
-func GetRequest(url string) ([]byte, error) {
-	var dummy []byte
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Println("did not create new GET request", err)
-		return dummy, err
-	}
-	req.Header.Set("Origin", "localhost")
-	res, err := client.Do(req)
-	if err != nil {
-		log.Println("did not make request", err)
-		return dummy, err
-	}
-	defer res.Body.Close()
-	return ioutil.ReadAll(res.Body)
-}
-
+// BinanceTicker gets price data from Binance
 func BinanceTicker() (float64, error) {
-	data, err := GetRequest(BinanceReq)
+	data, err := erpc.GetRequest(BinanceReq)
 	if err != nil {
 		log.Println("did not get response", err)
 		return -1, errors.Wrap(err, "did not get response from Binance API")
@@ -92,8 +78,9 @@ func BinanceTicker() (float64, error) {
 	return price, nil
 }
 
+// BinanceVolume gets volume data from Binance
 func BinanceVolume() (float64, error) {
-	data, err := GetRequest(BinanceVol)
+	data, err := erpc.GetRequest(BinanceVol)
 	if err != nil {
 		log.Println("did not get response", err)
 		return -1, errors.Wrap(err, "did not get response from Binance API")
@@ -117,8 +104,9 @@ func BinanceVolume() (float64, error) {
 	return volume, nil // volume is in xlm and not usd
 }
 
+// CoinbaseTicker gets ticker data from coinbase
 func CoinbaseTicker() (float64, error) {
-	data, err := GetRequest(CoinbaseReq)
+	data, err := erpc.GetRequest(CoinbaseReq)
 	if err != nil {
 		log.Println("did not get response", err)
 		return -1, errors.Wrap(err, "did not get response from Coinbase API")
@@ -139,8 +127,9 @@ func CoinbaseTicker() (float64, error) {
 	return price, nil
 }
 
+// CoinbaseVolume gets volume data from coinbase
 func CoinbaseVolume() (float64, error) {
-	data, err := GetRequest(CoinbaseReq)
+	data, err := erpc.GetRequest(CoinbaseReq)
 	if err != nil {
 		log.Println("did not get response", err)
 		return -1, errors.Wrap(err, "did not get response from Coinbase API")
@@ -161,8 +150,9 @@ func CoinbaseVolume() (float64, error) {
 	return volume, nil
 }
 
+// KrakenTicker gets ticker data from kraken
 func KrakenTicker() (float64, error) {
-	data, err := GetRequest(KrakenReq)
+	data, err := erpc.GetRequest(KrakenReq)
 	if err != nil {
 		log.Println("did not get response", err)
 		return -1, errors.Wrap(err, "did not get response from Kraken API")
@@ -183,8 +173,9 @@ func KrakenTicker() (float64, error) {
 	return price, nil
 }
 
+// KrakenVolume gets volume data from kraken
 func KrakenVolume() (float64, error) {
-	data, err := GetRequest(KrakenReq)
+	data, err := erpc.GetRequest(KrakenReq)
 	if err != nil {
 		log.Println("did not get response", err)
 		return -1, errors.Wrap(err, "did not get response from Kraken API")
@@ -205,7 +196,7 @@ func KrakenVolume() (float64, error) {
 	return volume, nil
 }
 
-// XLMUSD returns the XLMUSD ticker from Binance
+// XLMUSD returns aggregated XLMUSD ticker data
 func XLMUSD() (float64, error) {
 	binanceVolume, err := CoinbaseVolume()
 	if err != nil {
@@ -243,6 +234,7 @@ func XLMUSD() (float64, error) {
 	return binanceTicker*(binanceVolume/netVolume) + cbTicker*(cbVolume/netVolume) + krakenTicker*(krakenVolume/netVolume), nil
 }
 
+/*
 // ExchangeXLMforUSD retrieves the current price of XLM/USD and then returns the USD amount
 // that the XLM deposited is worth and takes a percentage premium that emulates
 // how real world exchanges would behave. This fee is 0.01% for now
@@ -253,3 +245,4 @@ func ExchangeXLMforUSD(amount string) float64 {
 	exchangeRate := 10000000.0 // rig the exchange rate so that we can test some stuff
 	return amountF * exchangeRate
 }
+*/

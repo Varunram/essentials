@@ -7,6 +7,9 @@ import (
 	cc20 "golang.org/x/crypto/chacha20poly1305"
 )
 
+// package cc20 implements encrypt/decrypt functions for the chacha20poly1305 cipher
+
+// Encrypt encrypts a given passphrase using CC20-poly1305
 func Encrypt(input []byte, passphrase string) ([]byte, error) {
 	sha3Hash := utils.SHA3hash(passphrase)
 	key := []byte(sha3Hash[0:32])
@@ -22,6 +25,7 @@ func Encrypt(input []byte, passphrase string) ([]byte, error) {
 	return ciphertext, nil
 }
 
+// Decrypt decrypts a given cipher wiht the passed passphrase
 func Decrypt(input []byte, passphrase string) ([]byte, error) {
 	sha3Hash := utils.SHA3hash(passphrase)
 	key := []byte(sha3Hash[0:32])

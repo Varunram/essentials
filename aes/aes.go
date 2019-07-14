@@ -1,6 +1,5 @@
 package aes
 
-// the aes package implements AES-256 GCM encryption and decrpytion functions
 import (
 	"crypto/aes"
 	"crypto/cipher"
@@ -10,6 +9,8 @@ import (
 
 	utils "github.com/Varunram/essentials/utils"
 )
+
+// the aes package implements AES-256 GCM encryption and decrpytion functions
 
 // Encrypt encrypts a given data stream with a given passphrase
 func Encrypt(data []byte, passphrase string) ([]byte, error) {

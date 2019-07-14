@@ -1,20 +1,5 @@
 package stablecoin
 
-// the idea of this stablecoin package is to issue a stablecoin on stellar testnet
-// so that we can test the function of something similar on mainnet. The stablecoin
-// provider should be stored in a different database because we will not be migrating
-// this.
-
-// The idea is to issue a single USD asset for every USD that we receive on our
-// account, this should be automated and we must not have any kind of user interaction that is in
-// place here. We also need a stablecoin Code, which we shall call as "STABLEUSD"
-// for easy reference. Most functions would be similar to the one in assets.go,
-// but need to be tailored to suit our requirements
-
-// the USD asset defined here is what is issued by the speciifc bank. Ideally, we
-// could accept a tx hash and check it as well, but since we can query balances,
-// much easier to do it this way.
-// or can be something like a stablecoin or asset
 import (
 	"context"
 	"fmt"
@@ -33,7 +18,9 @@ import (
 	"github.com/stellar/go/protocols/horizon/operations"
 )
 
-// InitStableCoin returns the platform structure and the seed
+// Package stablecoin implements a stablecoin with code STABLEUSD built on Stellar.
+
+// InitStableCoin starts the stablecoin daemon
 func InitStableCoin() error {
 	var publicKey string
 	var seed string
@@ -73,9 +60,9 @@ func InitStableCoin() error {
 	return nil
 }
 
+// ListenForPayments listens to all payments to/from the stablecoin address
 func ListenForPayments() {
 	client := xlm.TestNetClient
-	// all payments
 	opRequest := horizon.OperationRequest{ForAccount: StableCoinAddress}
 
 	ctx, _ := context.WithCancel(context.Background()) // cancel
