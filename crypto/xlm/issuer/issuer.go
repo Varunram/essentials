@@ -48,10 +48,8 @@ func DeleteIssuer(issuerPath string, projIndex int) error {
 	return os.Remove(path)
 }
 
-// FundIssuer funds the issuer using the platform's seed. This is the only way we
-// can know if a specific account is an issuer or not. Also helps accountability
-// of how many issuers are in existence and how many projects have been invested in.
-func FundIssuer(issuerPath string, projIndex int, seedpwd string, platformSeed string) error {
+// FundIssuer creates an issuer account and funds it with a second account
+func FundIssuer(issuerPath string, projIndex int, seedpwd string, funderSeed string) error {
 	// need to read the seed from the file using the seedpwd
 	path := createPath(issuerPath, projIndex)
 	pubkey, seed, err := wallet.RetrieveSeed(path, seedpwd)
@@ -59,8 +57,7 @@ func FundIssuer(issuerPath string, projIndex int, seedpwd string, platformSeed s
 		return errors.Wrap(err, "Error while retrieving seed")
 	}
 	log.Printf("Project Index: %d, Seed: %s, Address: %s", projIndex, seed, pubkey)
-	// func SendXLMCreateAccount(destination string, amount string, Seed string) (int32, string, error) {
-	_, txhash, err := xlm.SendXLMCreateAccount(pubkey, "100", platformSeed)
+	_, txhash, err := xlm.SendXLMCreateAccount(pubkey, "100", funderSeed)
 	if err != nil {
 		return errors.Wrap(err, "Error while sending xlm to create account")
 	}
@@ -73,8 +70,7 @@ func FundIssuer(issuerPath string, projIndex int, seedpwd string, platformSeed s
 	return nil
 }
 
-// FreezeIssuer freezes the issuer account and makes it not possible for someone
-// to sign new transactions or send funds from the given account
+// FreezeIssuer freezes the issuer account
 func FreezeIssuer(issuerPath string, projIndex int, seedpwd string) (string, error) {
 	path := createPath(issuerPath, projIndex)
 	_, seed, err := wallet.RetrieveSeed(path, seedpwd)

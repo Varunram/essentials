@@ -14,20 +14,20 @@ import (
 // escrow implements an escrow based off Stellar
 
 // InitEscrow creates a new keypair and stores it in a file
-func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string, platformSeed string) (string, error) {
-	platformPubkey, err := wallet.ReturnPubkey(platformSeed)
+func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string, otherSeed string) (string, error) {
+	otherPubkey, err := wallet.ReturnPubkey(otherSeed)
 	if err != nil {
 		return "", errors.Wrap(err, "could not get pubkey from seed")
 	}
 
-	pubkey, err := initMultisigEscrow(recpPubkey, platformPubkey)
+	pubkey, err := initMultisigEscrow(recpPubkey, otherPubkey)
 	if err != nil {
 		return pubkey, errors.Wrap(err, "error while initializing multisig escrow, quitting!")
 	}
 
 	log.Println("successfully initialized multisig escrow")
 	// define two seeds that are needed for signing transactions from the escrow
-	seed1 := platformSeed
+	seed1 := otherSeed
 	seed2 := mySeed
 
 	log.Println("stored escrow pubkey successfully")
@@ -45,12 +45,12 @@ func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string,
 	return pubkey, nil
 }
 
-// TransferFundsToEscrow transfers a specific amount of currency to the escrow. Usually called by the platform or recipient
-func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string, platformSeed string) error {
+// TransferFundsToEscrow transfers stablecoin to the escrow address from otherSeed
+func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string, otherSeed string) error {
 	// we have the wallet pubkey, transfer funds to the escrow now
 	aS, _ := utils.ToString(amount)
 	_, txhash, err := assets.SendAsset(stablecoin.StablecoinCode, stablecoin.StablecoinPublicKey, escrowPubkey,
-		aS, platformSeed, "escrow init")
+		aS, otherSeed, "escrow init")
 	if err != nil {
 		return errors.Wrap(err, "could not fund escrow, quitting!")
 	}

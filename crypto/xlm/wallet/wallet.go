@@ -8,9 +8,10 @@ import (
 	"github.com/stellar/go/keypair"
 )
 
-// NewSeed creates a new seed and stores the seed in an encrypted form in the
-// specified path
-func NewSeed(path string, password string) (string, string, error) {
+// the wallet package contains stellar specific wallet functions
+
+// NewSeed creates a new seed and stores the seed in an encrypted form in the passed path
+func NewSeedStore(path string, password string) (string, string, error) {
 	// these can store the file in any path passed to them
 	var seed string
 	var publicKey string
@@ -24,7 +25,7 @@ func NewSeed(path string, password string) (string, string, error) {
 	return publicKey, seed, err
 }
 
-// StoreSeed encrypts and stores the seed in a file
+// StoreSeed encrypts and stores the seed
 func StoreSeed(seed string, password string, path string) error {
 	// these can store the file ion any path passed to them
 	err := aes.EncryptFile(path, []byte(seed), password)
@@ -35,8 +36,7 @@ func StoreSeed(seed string, password string, path string) error {
 	return err
 }
 
-// RetrieveSeed retrieves the seed and the publicket when an encrypted file path
-// is passed to it
+// RetrieveSeed retrieves the seed and publickey when an encrypted file path is passed
 func RetrieveSeed(path string, password string) (string, string, error) {
 	var publicKey string
 	var seed string
@@ -47,20 +47,6 @@ func RetrieveSeed(path string, password string) (string, string, error) {
 	seed = string(data)
 	keyp, err := keypair.Parse(seed)
 	return keyp.Address(), seed, errors.Wrap(err, "could not parse seed to get keypair")
-}
-
-// RetrieveAndStorePubkey restores the publicKey when passed a seed and stores the
-// seed in an encrypted format in the specified path
-func RetrieveAndStorePubkey(seed string, path string, password string) (string, error) {
-	var publicKey string
-	keyp, err := keypair.Parse(seed)
-	if err != nil {
-		return publicKey, errors.Wrap(err, "could not parse seed to get keypair")
-	}
-
-	publicKey = keyp.Address()
-	StoreSeed(seed, password, path)
-	return publicKey, nil
 }
 
 // DecryptSeed decrpyts the encrypted seed and returns the raw unencrypted seed

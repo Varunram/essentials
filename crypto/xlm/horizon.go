@@ -10,9 +10,6 @@ import (
 	protocols "github.com/stellar/go/protocols/horizon"
 )
 
-// xlm is a set of functions that interface with stellar-core without needing the
-// horizon API that stellar provides, which is incomplete
-
 // GetLedgerData gets the latest data from the ledger
 func GetLedgerData(blockNumber string) ([]byte, error) {
 	var err error
@@ -26,7 +23,7 @@ func GetLedgerData(blockNumber string) ([]byte, error) {
 	return data, err
 }
 
-// GetBlockHash gets the block hash corresponding to the passed block number
+// GetBlockHash gets the block hash corresponding to a block number
 func GetBlockHash(blockNumber string) (string, error) {
 	var err error
 	var hash string
@@ -98,8 +95,6 @@ func GetNativeBalance(publicKey string) (string, error) {
 	var err error
 	b, err := GetAccountData(publicKey)
 	if err != nil {
-		// error where account does not exist at all
-		// so don't return error and hope its caught later on
 		return balance, errors.New("Account does not exist yet, get funds!")
 	}
 	var x protocols.Account
@@ -112,8 +107,7 @@ func GetNativeBalance(publicKey string) (string, error) {
 			return balance.Balance, nil
 		}
 	}
-	// technically accounts on stellar can't exist without a balance, so it should
-	// never come here
+	// technically accounts on stellar can't exist without a balance, so it should never come here
 	return balance, errors.New("Native balance not found")
 }
 
@@ -138,7 +132,7 @@ func GetAssetBalance(publicKey string, assetName string) (string, error) {
 	return balance, errors.New("Asset balance not found")
 }
 
-// GetAssetTrustLimit gets the trust limit that the user has with the issue for a specific asset
+// GetAssetTrustLimit gets the trust limit that the user has with an issuer
 func GetAssetTrustLimit(publicKey string, assetName string) (string, error) {
 	var balance string
 	var err error
@@ -159,8 +153,7 @@ func GetAssetTrustLimit(publicKey string, assetName string) (string, error) {
 	return balance, errors.New("Asset limit not found")
 }
 
-// GetAllBalances calls the stellar testnet API to get all the balances associated
-// with a certain account.
+// GetAllBalances gets all the balances associated with a certain account.
 func GetAllBalances(publicKey string) ([]protocols.Balance, error) {
 
 	account, err := ReturnSourceAccountPubkey(publicKey)
@@ -170,12 +163,10 @@ func GetAllBalances(publicKey string) ([]protocols.Balance, error) {
 	return account.Balances, nil
 }
 
-// HasStableCoin checks whether the PublicKey has a stablecoin balance associated
-// with it in the first place, if not, returns false
+// HasStableCoin checks whether the PublicKey has a stablecoin balance
 func HasStableCoin(publicKey string) bool {
 	account, err := ReturnSourceAccountPubkey(publicKey)
 	if err != nil {
-		// account does not exist
 		return false
 	}
 
@@ -203,7 +194,7 @@ func GetTransactionData(txhash string) ([]byte, error) {
 	return data, err
 }
 
-// GetTransactionHeight gets tx height
+// GetTransactionHeight gets height at which a tx was confirmed
 func GetTransactionHeight(txhash string) (int, error) {
 	var err error
 	var txheight int

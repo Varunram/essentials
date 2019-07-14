@@ -9,10 +9,11 @@ import (
 	build "github.com/stellar/go/txnbuild"
 )
 
-// AddSigner is used to add a signer to the account with Public Key pubkey
+// AddSigner is used to add a signer to the pubkey account
 func addSigner(seed string, pubkey string, cosignerPubkey string) error {
 	memo := "addsigner"
-	amount := "1" // some token amount, this can be any number though (even larger than the number of xlm in  xistence)
+	amount := "1"
+	// fun fact: this can be larget than the number of xlm in existence
 
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
 	if err != nil {
@@ -45,9 +46,8 @@ func addSigner(seed string, pubkey string, cosignerPubkey string) error {
 	return err
 }
 
-// when the number of tx's reaches x-1, call the threshold tx to set thresholds
+// constructThresholdTx is used when the number of tx's reaches x-1
 func constructThresholdTx(seed string, pubkey string, cosignerPubkey string, y int) error {
-
 	memo := "sealthreshold"
 	amount := "1" // some token amount, this can be any number though (even larger than the number of xlm in  xistence)
 	x := build.Threshold(y)
@@ -86,7 +86,7 @@ func constructThresholdTx(seed string, pubkey string, cosignerPubkey string, y i
 	return err
 }
 
-// Newxofy defines a new x of y multisig contract. Returns the pubkey of the multisig account created
+// Newxofy defines a new x of y multisig contract
 func Newxofy(x int, y int, signers ...string) (string, error) {
 
 	if y != len(signers) {
@@ -96,10 +96,8 @@ func Newxofy(x int, y int, signers ...string) (string, error) {
 	tempSeed, pubkey, err := xlm.GetKeyPair()
 	if err != nil {
 		return "", errors.Wrap(err, "error while getting keypair")
-		// return errors.Wrap(err, "error while getting keypair") doesnt' return an error, weird
 	}
 
-	// setup account
 	err = xlm.GetXLM(pubkey)
 	if err != nil {
 		return pubkey, errors.Wrap(err, "error while getting xlm from friendbot")
@@ -130,16 +128,14 @@ func New2of2(cosigner1Pubkey string, cosigner2Pubkey string) (string, error) {
 	return Newxofy(2, 2, cosigner1Pubkey, cosigner2Pubkey)
 }
 
-// SendTx sends the multisig tx. Copied from xlm/ to  avoid import cycles
+// SendTx broadcasts a multisig tx
 func SendTx(txXdr string) (int32, string, error) {
-
 	resp, err := xlm.TestNetClient.SubmitTransactionXDR(txXdr)
 	if err != nil {
 		return -1, "", errors.Wrap(err, "could not submit tx to horizon")
 	}
 
 	log.Printf("Propagated Transaction: %s, sequence: %d\n", resp.Hash, resp.Ledger)
-
 	return resp.Ledger, resp.Hash, nil
 }
 
@@ -260,7 +256,7 @@ func TrustAssetTx(assetCode string, assetIssuer string, limit string, pubkey str
 
 // Convert2of2 converts the account with pubkey myPubkey to a 2of2 multisig account
 func Convert2of2(myPubkey string, seed string, cosignerPubkey string) error {
-	// don't check if the account exists or not, hopefully it does
+	// account should exist before calling this route
 	memo := "testsign"
 	amount := "1"
 

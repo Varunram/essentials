@@ -234,10 +234,7 @@ func XLMUSD() (float64, error) {
 	return binanceTicker*(binanceVolume/netVolume) + cbTicker*(cbVolume/netVolume) + krakenTicker*(krakenVolume/netVolume), nil
 }
 
-/*
 // ExchangeXLMforUSD retrieves the current price of XLM/USD and then returns the USD amount
-// that the XLM deposited is worth and takes a percentage premium that emulates
-// how real world exchanges would behave. This fee is 0.01% for now
 func ExchangeXLMforUSD(amount string) float64 {
 	// defines the rate for 1 usd = x XLM. Currently hardcoded to 10
 	amountF, _ := utils.ToFloat(amount)
@@ -245,4 +242,3 @@ func ExchangeXLMforUSD(amount string) float64 {
 	exchangeRate := 10000000.0 // rig the exchange rate so that we can test some stuff
 	return amountF * exchangeRate
 }
-*/

@@ -11,8 +11,7 @@ import (
 	build "github.com/stellar/go/txnbuild"
 )
 
-// package xlm provides all the necessary handlers in order to interact with the
-// Stellar blockchain
+// xlm is a package with stellar related handlers which are useful for interacting with horizon
 
 // Generating a keypair on stellar doesn't mean that you can send funds to it
 // you need to call the CreateAccount method in project to be able to send funds
@@ -24,19 +23,13 @@ func GetKeyPair() (string, string, error) {
 	return pair.Seed(), pair.Address(), err
 }
 
-// AccountExists checks whether an account exists, not needed now since we do the check ourselves
-// in multiple places
+// AccountExists checks whether an account exists
 func AccountExists(publicKey string) bool {
 	_, err := ReturnSourceAccountPubkey(publicKey)
 	return !(err != nil)
-	/*
-		if err != nil {
-			return false
-		}
-		return true
-	*/
 }
 
+// SendTx signs and braodcasts a given stellar tx
 func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
 	txe, err := tx.BuildSignEncode(mykp.(*keypair.Full))
 	if err != nil {
@@ -49,13 +42,11 @@ func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
 	}
 
 	log.Printf("Propagated Transaction: %s, sequence: %d\n", resp.Hash, resp.Ledger)
-
 	return resp.Ledger, resp.Hash, nil
 }
 
-// SendXLMCreateAccount sends XLM to an account and creates the account if it doesn't exist already
+// SendXLMCreateAccount creates and sends XLM to a new account
 func SendXLMCreateAccount(destination string, amount string, seed string) (int32, string, error) {
-
 	// don't check if the account exists or not, hopefully it does
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
 	if err != nil {
@@ -77,6 +68,7 @@ func SendXLMCreateAccount(destination string, amount string, seed string) (int32
 	return SendTx(mykp, tx)
 }
 
+// ReturnSourceAccount returns the source account of the seed
 func ReturnSourceAccount(seed string) (horizonprotocol.Account, keypair.KP, error) {
 	var sourceAccount horizonprotocol.Account
 	mykp, err := keypair.Parse(seed)
@@ -94,6 +86,7 @@ func ReturnSourceAccount(seed string) (horizonprotocol.Account, keypair.KP, erro
 	return sourceAccount, mykp, nil
 }
 
+// ReturnSourceAccountPubkey returns the source account of the pubkey
 func ReturnSourceAccountPubkey(pubkey string) (horizonprotocol.Account, error) {
 	client := horizon.DefaultTestNetClient
 	ar := horizon.AccountRequest{AccountID: pubkey}
@@ -105,8 +98,7 @@ func ReturnSourceAccountPubkey(pubkey string) (horizonprotocol.Account, error) {
 	return sourceAccount, nil
 }
 
-// SendXLM sends _amount_ number of native tokens (XLM) to the specified destination
-// address using the stellar testnet API
+// SendXLM sends xlm to a destination address
 func SendXLM(destination string, amount string, seed string, memo string) (int32, string, error) {
 	// don't check if the account exists or not, hopefully it does
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
@@ -132,13 +124,13 @@ func SendXLM(destination string, amount string, seed string, memo string) (int32
 }
 
 // RefillAccount refills an account
-func RefillAccount(publicKey string, platformSeed string) error {
+func RefillAccount(publicKey string, refillSeed string) error {
 	var err error
 	if !AccountExists(publicKey) {
 		// there is no account under the user's name
 		// means we need to setup an account first
 		log.Println("Account does not exist, creating: ", publicKey)
-		_, _, err = SendXLMCreateAccount(publicKey, RefillAmount, platformSeed)
+		_, _, err = SendXLMCreateAccount(publicKey, RefillAmount, refillSeed)
 		if err != nil {
 			log.Println("Account Could not be created")
 			return errors.New("Account Could not be created")
@@ -151,15 +143,10 @@ func RefillAccount(publicKey string, platformSeed string) error {
 	}
 	balanceI, _ := utils.ToFloat(balance)
 	if balanceI < 3 { // to setup trustlines
-		_, _, err = SendXLM(publicKey, RefillAmount, platformSeed, "Sending XLM to refill")
+		_, _, err = SendXLM(publicKey, RefillAmount, refillSeed, "Sending XLM to refill")
 		if err != nil {
 			return errors.New("Account doesn't have funds or invalid seed")
 		}
 	}
 	return nil
-}
-
-type StellarWallet struct {
-	PublicKey string
-	Seed      string
 }

@@ -43,7 +43,7 @@ func InitStableCoin() error {
 		if err != nil {
 			return err
 		}
-		publicKey, seed, err = wallet.NewSeed(StableCoinSeedFile, password)
+		publicKey, seed, err = wallet.NewSeedStore(StableCoinSeedFile, password)
 		if err != nil {
 			return err
 		}

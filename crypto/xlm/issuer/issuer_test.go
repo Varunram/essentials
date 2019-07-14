@@ -17,11 +17,11 @@ func TestIssuer(t *testing.T) {
 	}
 	TestDir := wd + "/test"
 	os.MkdirAll(TestDir, 0775)
-	platformSeed, platformPubkey, err := xlm.GetKeyPair()
+	otherSeed, otherPubkey, err := xlm.GetKeyPair()
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = xlm.GetXLM(platformPubkey)
+	err = xlm.GetXLM(otherPubkey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,11 +29,11 @@ func TestIssuer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = FundIssuer(TestDir, 1, "blah", platformSeed)
+	err = FundIssuer(TestDir, 1, "blah", otherSeed)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = FundIssuer(TestDir, 1, "cool", platformSeed)
+	err = FundIssuer(TestDir, 1, "cool", otherSeed)
 	if err == nil {
 		t.Fatalf("not able to catch invalid seed error, quitting!")
 	}

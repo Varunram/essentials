@@ -26,7 +26,7 @@ func SetAuthImmutable(seed string) (int32, string, error) {
 	return SendTx(mykp, tx)
 }
 
-// FreezeAccount freezes the account
+// FreezeAccount freezes an account
 func FreezeAccount(seed string) (int32, string, error) {
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
 	if err != nil {

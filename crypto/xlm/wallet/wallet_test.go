@@ -39,19 +39,6 @@ func TestWallet(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Decrpytion succeeds with incorrect path")
 	}
-	pk, err := RetrieveAndStorePubkey(seed, filepathdup, "password")
-	// this password is to store this file again, but we delete the file anyway
-	if err != nil {
-		t.Fatal(err)
-	}
-	if pk != pubkey {
-		t.Fatalf("RetrieveAndStorePubkey returns the wrong pubkey, quitting!")
-	}
-	_, err = RetrieveAndStorePubkey("blah", filepathdup, "password")
-	// this password is to store this file again, but we delete the file anyway
-	if err == nil {
-		t.Fatal(err)
-	}
 	os.Remove(filepathdup)
 	// need to read from filepath and decrypt seed to test that function
 	data, err := ioutil.ReadFile(filepath)
@@ -69,7 +56,7 @@ func TestWallet(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Can decrypt the seed with the wrong password, qutiting!")
 	}
-	_, seedtest, err := NewSeed(filepathdup, "password")
+	_, seedtest, err := NewSeedStore(filepathdup, "password")
 	if err != nil {
 		t.Fatal(err)
 	}
