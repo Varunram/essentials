@@ -10,7 +10,7 @@ import (
 
 // the wallet package contains stellar specific wallet functions
 
-// NewSeed creates a new seed and stores the seed in an encrypted form in the passed path
+// NewSeedStore creates a new seed and stores the seed in an encrypted form in the passed path
 func NewSeedStore(path string, password string) (string, string, error) {
 	// these can store the file in any path passed to them
 	var seed string

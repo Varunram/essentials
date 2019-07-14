@@ -5,8 +5,8 @@ import (
 	"github.com/pkg/errors"
 	"log"
 
-	utils "github.com/Varunram/essentials/utils"
 	erpc "github.com/Varunram/essentials/rpc"
+	utils "github.com/Varunram/essentials/utils"
 )
 
 // package tickers implements handlers for getting price from cryptocurrencyu markets
@@ -14,10 +14,17 @@ import (
 // we take the three largest (no wash trading) markets for XLM USD and return their weighted average
 // to arrive at the price for XLM-USD. This price is indicative and not final since there will be latency
 // involved between price display and trade finality.
+
+// BinanceReq is the binance ticker from the API
 var BinanceReq = "https://api.binance.com/api/v1/ticker/price?symbol=XLMUSDT"
+
+// CoinbaseReq is the coinbase ticker from the API
 var CoinbaseReq = "https://api.pro.coinbase.com/products/XLM-USD/ticker"
+
+// KrakenReq is the kraken ticker from the API
 var KrakenReq = "https://api.kraken.com/0/public/Ticker?pair=XLMUSD"
 
+// BinanceVol is the binance ticker from the API
 var BinanceVol = "https://api.binance.com/api/v1/ticker/24hr?symbol=XLMUSDT"
 
 // BinanceTickerResponse defines the ticker API response from Binanace

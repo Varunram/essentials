@@ -15,7 +15,8 @@ import (
 	"golang.org/x/crypto/sha3"
 )
 
-var TypeNotSupported = errors.New("type not supported, please feel free to PR")
+// ErrTypeNotSupported is an error returned if the given type conversion isn't supported yet
+var ErrTypeNotSupported = errors.New("type not supported, please feel free to PR")
 
 // Timestamp gets the human readable timestamp
 func Timestamp() string {
@@ -69,6 +70,7 @@ func GetRandomString(n int) string {
 	return string(b)
 }
 
+// ToBigInt converts a passed interface to big.Int
 func ToBigInt(x interface{}) (*big.Int, error) {
 	log.Println("calling anything to byte function")
 	switch x.(type) {
@@ -84,9 +86,9 @@ func ToBigInt(x interface{}) (*big.Int, error) {
 	default:
 		return new(big.Int).SetUint64(0), nil
 	}
-	return nil, TypeNotSupported
 }
 
+// ToByte converts a passed interface to bytes
 func ToByte(x interface{}) ([]byte, error) {
 	switch x.(type) {
 	case int:
@@ -101,9 +103,10 @@ func ToByte(x interface{}) ([]byte, error) {
 		binary.BigEndian.PutUint16(a, x.(uint16))
 		return a[1:], nil
 	}
-	return nil, TypeNotSupported
+	return nil, ErrTypeNotSupported
 }
 
+// ToString converts a passed interface to string
 func ToString(x interface{}) (string, error) {
 	switch x.(type) {
 	case float64:
@@ -113,9 +116,10 @@ func ToString(x interface{}) (string, error) {
 	case int:
 		return strconv.Itoa(x.(int)), nil
 	}
-	return "", TypeNotSupported
+	return "", ErrTypeNotSupported
 }
 
+// ToInt converts a passed interface to int
 func ToInt(x interface{}) (int, error) {
 	switch x.(type) {
 	case string:
@@ -123,18 +127,20 @@ func ToInt(x interface{}) (int, error) {
 	case []byte:
 		return strconv.Atoi(string(x.([]byte)))
 	}
-	return -1, TypeNotSupported
+	return -1, ErrTypeNotSupported
 }
 
+// ToFloat converts a passed interface to float
 func ToFloat(x interface{}) (float64, error) {
 	switch x.(type) {
 	case string:
 		return strconv.ParseFloat(x.(string), 32)
 	}
 
-	return -1, TypeNotSupported
+	return -1, ErrTypeNotSupported
 }
 
+// ToUint16 converts a passed interface to uint16
 func ToUint16(x interface{}) (uint16, error) {
 	switch x.(type) {
 	case []byte:
@@ -145,5 +151,5 @@ func ToUint16(x interface{}) (uint16, error) {
 		}
 		return binary.BigEndian.Uint16(b), nil
 	}
-	return 0, TypeNotSupported
+	return 0, ErrTypeNotSupported
 }

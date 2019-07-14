@@ -23,8 +23,7 @@ func Encrypt(data []byte, passphrase string) ([]byte, error) {
 		return nil, errors.Wrap(err, "Error while opening new GCM block")
 	}
 
-	nonce := make([]byte, gcm.NonceSize())
-	nonce = []byte(utils.SHA3hash(sha3Hash))[0:gcm.NonceSize()]
+	nonce := []byte(utils.SHA3hash(sha3Hash))[0:gcm.NonceSize()]
 
 	ciphertext := gcm.Seal(nil, nonce, data, nil)
 	return ciphertext, nil

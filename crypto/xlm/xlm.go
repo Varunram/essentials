@@ -29,7 +29,7 @@ func AccountExists(publicKey string) bool {
 	return !(err != nil)
 }
 
-// SendTx signs and braodcasts a given stellar tx
+// SendTx signs and broadcasts a given stellar tx
 func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
 	txe, err := tx.BuildSignEncode(mykp.(*keypair.Full))
 	if err != nil {

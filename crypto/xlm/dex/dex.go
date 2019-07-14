@@ -82,7 +82,7 @@ func DexStableCoinBuy(seed string, amount string) (int32, string, error) {
 	return NewBuyOrder(seed, assetName, issuer, amount, ftss)
 }
 
-// DexStableCoinBuy gets the price from an oracle and places an order on the DEX to sell AnchorUSD
+// DexStableCoinSell places a sell order for STABLEUSD on the Stellar dex
 func DexStableCoinSell(seed string, amount string) (int32, string, error) {
 	assetName := "USD"
 	issuer := stablecoin.AnchorUSDAddress

@@ -65,7 +65,8 @@ func ListenForPayments() {
 	client := xlm.TestNetClient
 	opRequest := horizon.OperationRequest{ForAccount: StableCoinAddress}
 
-	ctx, _ := context.WithCancel(context.Background()) // cancel
+	ctx, cancel := context.WithCancel(context.Background()) // cancel
+	defer cancel()
 	go func() {
 		// Stop streaming after 60 seconds.
 		log.Println("monitoring payments made towards address")

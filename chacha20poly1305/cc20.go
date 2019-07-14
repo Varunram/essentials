@@ -18,14 +18,13 @@ func Encrypt(input []byte, passphrase string) ([]byte, error) {
 		return nil, errors.Wrap(err, "Failed to instantiate XChaCha20-Poly1305")
 	}
 
-	nonce := make([]byte, cc20.NonceSizeX)
-	nonce = []byte(utils.SHA3hash(sha3Hash))[0:24]
+	nonce := []byte(utils.SHA3hash(sha3Hash))[0:24]
 
 	ciphertext := aead.Seal(nil, nonce, input, nil) // prepend nonce to the ciphertext
 	return ciphertext, nil
 }
 
-// Decrypt decrypts a given cipher wiht the passed passphrase
+// Decrypt decrypts a given cipher with the passed passphrase
 func Decrypt(input []byte, passphrase string) ([]byte, error) {
 	sha3Hash := utils.SHA3hash(passphrase)
 	key := []byte(sha3Hash[0:32])

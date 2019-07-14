@@ -23,7 +23,10 @@ import (
 // API token. You can retrieve these from the `algod.net` and `algod.token`
 // files in the algod data directory.
 
+// AlgodClient is a package-level gloabal variable
 var AlgodClient algod.Client
+
+// KmdClient is a package-level gloabal variable
 var KmdClient kmd.Client
 
 // InitAlgodClient initializes a new algorand daemon client

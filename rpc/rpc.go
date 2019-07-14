@@ -19,7 +19,7 @@ type StatusResponse struct {
 	Status string
 }
 
-// setupBasicHandlers sets up two handler functions that serve ping and default response at /
+// SetupBasicHandlers sets up two handler functions that serve ping and default response at /
 func SetupBasicHandlers() {
 	SetupDefaultHandler()
 	SetupPingHandler()
@@ -43,7 +43,7 @@ func CheckGet(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// checkPost checks whether the incoming request is a POST request
+// CheckPost checks whether the incoming request is a POST request
 func CheckPost(w http.ResponseWriter, r *http.Request) error {
 	err := CheckOrigin(w, r)
 	if err != nil || r.Method != "POST" {
@@ -53,7 +53,7 @@ func CheckPost(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-// checkPost checks whether the incoming request is a PUT request
+// CheckPut checks whether the incoming request is a PUT request
 func CheckPut(w http.ResponseWriter, r *http.Request) error {
 	err := CheckOrigin(w, r)
 	if err != nil || r.Method != "PUT" {
@@ -179,7 +179,7 @@ func PutAndSend(w http.ResponseWriter, body string, payload io.Reader) {
 	MarshalSend(w, x)
 }
 
-// setupDefaultHandler sets up the default handler (ie returns 404 for invalid routes)
+// SetupDefaultHandler sets up the default handler (ie returns 404 for invalid routes)
 func SetupDefaultHandler() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// default to 404 for every application not running on localhost
@@ -192,7 +192,7 @@ func SetupDefaultHandler() {
 	})
 }
 
-// setupPingHandler is a ping route for remote callers to check if the platform is up
+// SetupPingHandler is a ping route for remote callers to check if the platform is up
 func SetupPingHandler() {
 	http.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		err := CheckGet(w, r)
