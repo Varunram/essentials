@@ -135,6 +135,8 @@ func ToFloat(x interface{}) (float64, error) {
 	switch x.(type) {
 	case string:
 		return strconv.ParseFloat(x.(string), 32)
+	case int:
+		return float64(x.(int)), nil
 	}
 
 	return -1, ErrTypeNotSupported

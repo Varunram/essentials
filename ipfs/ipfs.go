@@ -30,8 +30,13 @@ func SetPath(newPath string) {
 	path = newPath
 }
 
-// AddStringToIpfs stores the passed string in ipfs and returns the hash
-func AddStringToIpfs(a string) (string, error) {
+// ReadfromFile reads a pdf and returns the datastream
+func ReadfromFile(filepath string) ([]byte, error) {
+	return ioutil.ReadFile(filepath)
+}
+
+// IpfsAddString stores the passed string in ipfs and returns the hash
+func IpfsAddString(a string) (string, error) {
 	sh := RetrieveShell()
 	hash, err := sh.Add(strings.NewReader(a)) // input must be an io.Reader
 	if err != nil {
@@ -41,42 +46,8 @@ func AddStringToIpfs(a string) (string, error) {
 	return hash, nil
 }
 
-// GetFileFromIpfs gets back the contents of an ipfs hash and stores them
-// in the required extension format. This has to match with the extension
-// format that the original file had or else one would not be able to view
-// the file
-func GetFileFromIpfs(hash string, extension string) error {
-	// extension can be pdf, txt, ppt and others
-	sh := RetrieveShell()
-	// generate a random fileName and then return the file to the user
-	fileName := utils.GetRandomString(IpfsFileLength) + "." + extension
-	return sh.Get(hash, fileName)
-}
-
-// GetStringFromIpfs gets back the contents of an ipfs hash as a string
-func GetStringFromIpfs(hash string) (string, error) {
-	sh := RetrieveShell()
-	// since ipfs doesn't provide a method to read the string directly, we create a
-	// random file at tmp/, decrypt contents to that fiel and then read the file
-	// contents from there
-	tmpFileDir := "/tmp/" + utils.GetRandomString(IpfsFileLength) // using the same length here for consistency
-	sh.Get(hash, tmpFileDir)
-	data, err := ioutil.ReadFile(tmpFileDir)
-	if err != nil {
-		log.Println("Error while reading file", err)
-		return "", err
-	}
-	os.Remove(tmpFileDir)
-	return string(data), nil
-}
-
-// ReadfromFile reads a pdf and returns the datastream
-func ReadfromFile(filepath string) ([]byte, error) {
-	return ioutil.ReadFile(filepath)
-}
-
-// IpfsHashFile returns the ipfs hash of a file
-func IpfsHashFile(filepath string) (string, error) {
+// IpfsAddFile returns the ipfs hash of a file
+func IpfsAddFile(filepath string) (string, error) {
 	var dummy string
 	dataStream, err := ReadfromFile(filepath)
 	if err != nil {
@@ -94,8 +65,8 @@ func IpfsHashFile(filepath string) (string, error) {
 	return hash, nil
 }
 
-// IpfsHashData hashes a byte string
-func IpfsHashData(data []byte) (string, error) {
+// IpfsAddBytes hashes a byte string
+func IpfsAddBytes(data []byte) (string, error) {
 	var dummy string
 	reader := bytes.NewReader(data)
 	sh := RetrieveShell()
@@ -105,4 +76,33 @@ func IpfsHashData(data []byte) (string, error) {
 		return dummy, err
 	}
 	return hash, nil
+}
+
+// IpfsGetFile gets back the contents of an ipfs hash and stores them
+// in the required extension format. This has to match with the extension
+// format that the original file had or else one would not be able to view
+// the file
+func IpfsGetFile(hash string, extension string) error {
+	// extension can be pdf, txt, ppt and others
+	sh := RetrieveShell()
+	// generate a random fileName and then return the file to the user
+	fileName := utils.GetRandomString(IpfsFileLength) + "." + extension
+	return sh.Get(hash, fileName)
+}
+
+// IpfsGetString gets back the contents of an ipfs hash as a string
+func IpfsGetString(hash string) (string, error) {
+	sh := RetrieveShell()
+	// since ipfs doesn't provide a method to read the string directly, we create a
+	// random file at tmp/, decrypt contents to that fiel and then read the file
+	// contents from there
+	tmpFileDir := "/tmp/" + utils.GetRandomString(IpfsFileLength) // using the same length here for consistency
+	sh.Get(hash, tmpFileDir)
+	data, err := ioutil.ReadFile(tmpFileDir)
+	if err != nil {
+		log.Println("Error while reading file", err)
+		return "", err
+	}
+	os.Remove(tmpFileDir)
+	return string(data), nil
 }
