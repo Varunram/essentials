@@ -2,12 +2,12 @@ package utils
 
 // utils contains utility functions that are used in packages
 import (
+	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
 	"github.com/pkg/errors"
 	"log"
 	"math/big"
-	"math/rand"
 	"os/user"
 	"strconv"
 	"time"
@@ -52,12 +52,18 @@ func GetRandomString(n int) string {
 		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 	)
 
-	var src = rand.NewSource(time.Now().UnixNano())
+	var err error
+	int64Lim := new(big.Int).SetInt64(int64(1<<63 - 1)) // int64 lim = 2*63 -1
 	b := make([]byte, n)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
-	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+	for i, remain := n-1, letterIdxMax; i >= 0; {
+		var tmp *big.Int
+		tmp, err = rand.Int(rand.Reader, int64Lim)
+		cache := tmp.Int64()
 		if remain == 0 {
-			cache, remain = src.Int63(), letterIdxMax
+			tmp, err = rand.Int(rand.Reader, int64Lim)
+			cache = tmp.Int64()
+			remain = letterIdxMax
 		}
 		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
 			b[i] = letterBytes[idx]
@@ -65,6 +71,10 @@ func GetRandomString(n int) string {
 		}
 		cache >>= letterIdxBits
 		remain--
+	}
+
+	if err != nil {
+		b = []byte{0}
 	}
 
 	return string(b)
