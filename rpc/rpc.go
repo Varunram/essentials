@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -202,4 +203,39 @@ func SetupPingHandler() {
 		}
 		ResponseHandler(w, StatusOK)
 	})
+}
+
+// CheckHTTPSRedirect checks if HTTP requests are redirected to HTTPS on the same host
+func CheckHTTPSRedirect(urlString string) (bool, error) {
+	url, err := url.Parse(urlString)
+	if err != nil {
+		return false, errors.Wrap(err, "could not parse url string")
+	}
+	req, err := http.NewRequest("GET", url.String(), nil)
+	if err != nil {
+		return false, errors.Wrap(err, "errros while constructing new get request")
+	}
+
+	var client http.Client
+	client.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+	req.Close = true
+
+	resp, err := client.Do(req)
+	if err == nil && (resp.StatusCode == 301 || resp.StatusCode == 302) { // 301 moved permanently and 302 moved temporarily
+		headers := resp.Header
+		response, ok := headers["Location"] // get the location of the redirect
+		if ok {
+			redirURL, err := url.Parse(response[0]) // parse the redirect URL
+			if err == nil {
+				// if the host is the same and the URL is https
+				if redirURL.Host == url.Host && redirURL.Scheme == "https" {
+					return true, nil
+				}
+			}
+		}
+	}
+	// HTTP does not redirect to HTTPS, or does so improperly
+	return false, errors.New("does not redirect to https")
 }
