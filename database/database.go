@@ -3,12 +3,15 @@ package database
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
-	"log"
+	//"log"
 	"os"
 
 	utils "github.com/Varunram/essentials/utils"
 	"github.com/boltdb/bolt"
 )
+
+var ErrBucketMissing = errors.New("bucket doesn't exist")
+var ErrElementNotFound = errors.New("element not found")
 
 // package database contains useful boltdb handlers
 
@@ -25,16 +28,14 @@ func CreateDirs(dirs ...string) {
 // CreateDB creates a new database
 func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 	// we need to check and create this directory if it doesn't exist
-	db, err := bolt.Open(dir, 0600, nil) // store this in its ownd database
+	db, err := bolt.Open(dir, 0600, nil)
 	if err != nil {
-		log.Println("Couldn't open database, exiting!")
-		return db, err
+		return db, errors.New("Couldn't open database, exiting!")
 	}
 	for _, bucket := range buckets {
 		err = db.Update(func(tx *bolt.Tx) error {
-			_, err := tx.CreateBucketIfNotExists(bucket) // the projects bucket contains all our projects
+			_, err := tx.CreateBucketIfNotExists(bucket)
 			if err != nil {
-				log.Println("Error while creating projects bucket", err)
 				return err
 			}
 			return nil
@@ -48,22 +49,21 @@ func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 
 // OpenDB opens the database
 func OpenDB(dir string) (*bolt.DB, error) {
-	return bolt.Open(dir, 0600, nil) // store this in its ownd database
+	return bolt.Open(dir, 0600, nil)
 }
 
-// DeleteKeyFromBucket deletes a given key from the bucket bucketName but doesn
-// not shift indices of elements succeeding the deleted element's index
+// DeleteKeyFromBucket deletes a given key from a bucket
 func DeleteKeyFromBucket(dir string, key int, bucketName []byte) error {
-	// deleting project might be dangerous since that would mess with the other
-	// functions, have it in here for now, don't do too much with it / fiox retrieve all
-	// to handle this case
 	db, err := OpenDB(dir)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not open database")
 	}
 	defer db.Close()
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
+		if b == nil {
+			return ErrBucketMissing
+		}
 		iK, err := utils.ToByte(key)
 		if err != nil {
 			return err
@@ -77,11 +77,15 @@ func DeleteKeyFromBucket(dir string, key int, bucketName []byte) error {
 func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	db, err := OpenDB(dir)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not open database")
 	}
 	defer db.Close()
+
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
+		if b == nil {
+			return ErrBucketMissing
+		}
 		encoded, err := json.Marshal(x)
 		if err != nil {
 			return errors.Wrap(err, "error while marshaling json struct")
@@ -100,32 +104,22 @@ func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 	var returnBytes []byte
 	db, err := OpenDB(dir)
 	if err != nil {
-		return returnBytes, errors.Wrap(err, "failed to open db")
+		return returnBytes, errors.Wrap(err, "could not open database")
 	}
 	defer db.Close()
 
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(bucketName)
-		if err != nil {
-			log.Println("Error while creating projects bucket", err)
-			return err
-		}
-		return nil
-	})
-
-	if err != nil {
-		return returnBytes, errors.New("could not create bucket, exiting")
-	}
-
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
+		if b == nil {
+			return ErrBucketMissing
+		}
 		iK, err := utils.ToByte(key)
 		if err != nil {
 			return err
 		}
 		x := b.Get(iK)
 		if x == nil {
-			return nil
+			return ErrBucketMissing
 		}
 		returnBytes = make([]byte, len(x))
 		copy(returnBytes, x)
@@ -140,24 +134,15 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	var arr [][]byte
 	db, err := OpenDB(dir)
 	if err != nil {
-		return arr, errors.Wrap(err, "Error while opening database")
+		return err, errors.Wrap(err, "could not open database")
 	}
 	defer db.Close()
 
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists(bucketName)
-		if err != nil {
-			log.Println("Error while creating projects bucket", err)
-			return err
-		}
-		return nil
-	})
-
-	if err != nil {
-		return arr, errors.New("bucket not created and error while creating new bucket")
-	}
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
+		if b == nil {
+			return ErrBucketMissing
+		}
 		for i := 1; ; i++ {
 			iB, err := utils.ToByte(i)
 			if err != nil {
@@ -165,7 +150,7 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 			}
 			x := b.Get(iB)
 			if x == nil {
-				return nil
+				return ErrElementNotFound
 			}
 			temp := make([]byte, len(x))
 			copy(temp, x)

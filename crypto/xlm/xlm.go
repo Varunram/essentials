@@ -33,7 +33,7 @@ func AccountExists(publicKey string) bool {
 func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
 	txe, err := tx.BuildSignEncode(mykp.(*keypair.Full))
 	if err != nil {
-		return -1, "", err
+		return -1, "", errors.Wrap(err, "could not build/sign/encode")
 	}
 
 	resp, err := TestNetClient.SubmitTransactionXDR(txe)
@@ -50,7 +50,7 @@ func SendXLMCreateAccount(destination string, amount string, seed string) (int32
 	// don't check if the account exists or not, hopefully it does
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
 	if err != nil {
-		return -1, "", err
+		return -1, "", errors.Wrap(err, "could not get source account of seed")
 	}
 
 	op := build.CreateAccount{
@@ -103,7 +103,7 @@ func SendXLM(destination string, amount string, seed string, memo string) (int32
 	// don't check if the account exists or not, hopefully it does
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
 	if err != nil {
-		return -1, "", err
+		return -1, "", errors.Wrap(err, "could not return source account")
 	}
 
 	op := build.Payment{
@@ -133,7 +133,7 @@ func RefillAccount(publicKey string, refillSeed string) error {
 		_, _, err = SendXLMCreateAccount(publicKey, RefillAmount, refillSeed)
 		if err != nil {
 			log.Println("Account Could not be created")
-			return errors.New("Account Could not be created")
+			return errors.Wrap(err, "Account Could not be created")
 		}
 	}
 	// balance is in string, convert to float
@@ -145,7 +145,7 @@ func RefillAccount(publicKey string, refillSeed string) error {
 	if balanceI < 3 { // to setup trustlines
 		_, _, err = SendXLM(publicKey, RefillAmount, refillSeed, "Sending XLM to refill")
 		if err != nil {
-			return errors.New("Account doesn't have funds or invalid seed")
+			return errors.Wrap(err, "Account doesn't have funds or invalid seed")
 		}
 	}
 	return nil
