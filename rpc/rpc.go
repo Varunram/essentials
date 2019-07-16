@@ -239,3 +239,14 @@ func CheckHTTPSRedirect(urlString string) (bool, error) {
 	// HTTP does not redirect to HTTPS, or does so improperly
 	return false, errors.New("does not redirect to https")
 }
+
+// HTTPSRedirect redirects servers to use https instead of http
+func HTTPSRedirect(w http.ResponseWriter, r *http.Request, origin string) {
+	http.Redirect(w, r, "https://"+origin+r.RequestURI, http.StatusMovedPermanently)
+	// use the above like so:
+	/*
+		if err := http.ListenAndServe(":80", http.HandlerFunc(redirectTLS)); err != nil {
+				log.Fatalf("ListenAndServe error: %v", err)
+		}
+	*/
+}
