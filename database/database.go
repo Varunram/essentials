@@ -134,7 +134,7 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	var arr [][]byte
 	db, err := OpenDB(dir)
 	if err != nil {
-		return err, errors.Wrap(err, "could not open database")
+		return arr, errors.Wrap(err, "could not open database")
 	}
 	defer db.Close()
 
