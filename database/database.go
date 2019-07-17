@@ -3,7 +3,6 @@ package database
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
-	//"log"
 	"os"
 
 	utils "github.com/Varunram/essentials/utils"
@@ -119,7 +118,7 @@ func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 		}
 		x := b.Get(iK)
 		if x == nil {
-			return ErrBucketMissing
+			return ErrElementNotFound
 		}
 		returnBytes = make([]byte, len(x))
 		copy(returnBytes, x)
@@ -150,7 +149,7 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 			}
 			x := b.Get(iB)
 			if x == nil {
-				return ErrElementNotFound
+				return nil
 			}
 			temp := make([]byte, len(x))
 			copy(temp, x)
