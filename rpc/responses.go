@@ -6,8 +6,7 @@ import (
 	"net/http"
 )
 
-// use these standard error codes to send out to request replies so callers can figure
-// out what's going wrong with their requests
+// define these here since we only have stuff that's needed / supported
 const (
 	StatusOK                  = http.StatusOK                  //  200 RFC 7231, 6.3.1
 	StatusCreated             = http.StatusCreated             //  201 RFC 7231, 6.3.2
@@ -69,8 +68,7 @@ func ResponseHandler(w http.ResponseWriter, status int) {
 func MarshalSend(w http.ResponseWriter, x interface{}) {
 	xJson, err := json.Marshal(x)
 	if err != nil {
-		errString := "did not marshal json"
-		WriteToHandler(w, []byte(errString))
+		WriteToHandler(w, []byte("did not marshal json"))
 		return
 	}
 	WriteToHandler(w, xJson)

@@ -14,8 +14,8 @@ import (
 
 // package scan can be used by CLI clients that want to accept inptus from the CLI
 
-// ScanForInt scans for an integer
-func ScanForInt() (int, error) {
+// ScanInt scans for an integer
+func ScanInt() (int, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -29,8 +29,8 @@ func ScanForInt() (int, error) {
 	return numI, nil
 }
 
-// ScanForFloat scans for a float
-func ScanForFloat() (float64, error) {
+// ScanFloat scans for a float
+func ScanFloat() (float64, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -42,8 +42,8 @@ func ScanForFloat() (float64, error) {
 	return x, err
 }
 
-// ScanForString scans for a string
-func ScanForString() (string, error) {
+// ScanString scans for a string
+func ScanString() (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -53,8 +53,8 @@ func ScanForString() (string, error) {
 	return inputString, nil
 }
 
-// ScanForStringWithCheckI scans for a string checking whether it is an integer
-func ScanForStringWithCheckI() (string, error) {
+// ScanStringCheckInt scans for a string checking whether it is an integer
+func ScanStringCheckInt() (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -68,8 +68,8 @@ func ScanForStringWithCheckI() (string, error) {
 	return inputString, nil
 }
 
-// ScanForStringWithCheckF scans for a string checking whether its a float
-func ScanForStringWithCheckF() (string, error) {
+// ScanStringCheckFloat scans for a string checking whether its a float
+func ScanStringCheckFloat() (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -84,8 +84,8 @@ func ScanForStringWithCheckF() (string, error) {
 	return inputString, nil
 }
 
-// ScanForPassword scans for a password
-func ScanForPassword() (string, error) {
+// ScanPassword scans for a password
+func ScanPassword() (string, error) {
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Println()
 	if err != nil {
