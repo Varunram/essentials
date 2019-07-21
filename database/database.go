@@ -27,6 +27,8 @@ func CreateDirs(dirs ...string) {
 // CreateDB creates a new database
 func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 	// we need to check and create this directory if it doesn't exist
+
+	// bolt.Open creates a db if it doens't exist yet
 	db, err := bolt.Open(dir, 0600, nil)
 	if err != nil {
 		return db, errors.New("Couldn't open database, exiting!")
@@ -58,14 +60,17 @@ func DeleteKeyFromBucket(dir string, key int, bucketName []byte) error {
 		return errors.Wrap(err, "could not open database")
 	}
 	defer db.Close()
+
+	// if the passed key is not integer, don't open the db
+	iK, err := utils.ToByte(key)
+	if err != nil {
+		return err
+	}
+
 	return db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 		if b == nil {
 			return ErrBucketMissing
-		}
-		iK, err := utils.ToByte(key)
-		if err != nil {
-			return err
 		}
 		b.Delete(iK)
 		return nil
@@ -80,21 +85,27 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	}
 	defer db.Close()
 
+	// if x is not interace, don't open the database
+	encoded, err := json.Marshal(x)
+	if err != nil {
+		return errors.Wrap(err, "error while marshaling json struct")
+	}
+
+	// if the passed key is not integer, don't open the db
+	iK, err := utils.ToByte(key)
+	if err != nil {
+		return err
+	}
+
+	// open the db only to insert the element and don't check for other stuff
 	err = db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 		if b == nil {
 			return ErrBucketMissing
 		}
-		encoded, err := json.Marshal(x)
-		if err != nil {
-			return errors.Wrap(err, "error while marshaling json struct")
-		}
-		iK, err := utils.ToByte(key)
-		if err != nil {
-			return err
-		}
 		return b.Put(iK, encoded)
 	})
+
 	return err
 }
 
@@ -107,14 +118,16 @@ func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 	}
 	defer db.Close()
 
+	// if the passed key is not integer, don't open the db
+	iK, err := utils.ToByte(key)
+	if err != nil {
+		return returnBytes, err
+	}
+
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
 		if b == nil {
 			return ErrBucketMissing
-		}
-		iK, err := utils.ToByte(key)
-		if err != nil {
-			return err
 		}
 		x := b.Get(iK)
 		if x == nil {
