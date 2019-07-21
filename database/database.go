@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/pkg/errors"
 	"os"
+	"runtime"
 
 	utils "github.com/Varunram/essentials/utils"
 	"github.com/boltdb/bolt"
@@ -28,8 +29,8 @@ func CreateDirs(dirs ...string) {
 func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 	// we need to check and create this directory if it doesn't exist
 
-	// bolt.Open creates a db if it doens't exist yet
-	db, err := bolt.Open(dir, 0600, nil)
+	// OpenDB creates a db if it doens't exist yet
+	db, err := OpenDB(dir)
 	if err != nil {
 		return db, errors.New("Couldn't open database, exiting!")
 	}
@@ -50,6 +51,11 @@ func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 
 // OpenDB opens the database
 func OpenDB(dir string) (*bolt.DB, error) {
+	if runtime.GOOS == "linux" {
+		return bolt.Open(dir, 0600, &bolt.Options{
+			MmapFlags: 0x8000, // MAP_POPULATE = 0x8000
+		})
+	}
 	return bolt.Open(dir, 0600, nil)
 }
 
