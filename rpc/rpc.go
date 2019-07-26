@@ -36,8 +36,8 @@ func CheckOrigin(w http.ResponseWriter, r *http.Request) error {
 
 // CheckGet checks if the incoming request is a GET request
 func CheckGet(w http.ResponseWriter, r *http.Request) error {
-	err := CheckOrigin(w, r)
-	if err != nil || r.Method != "GET" {
+	//err := CheckOrigin(w, r)
+	if r.Method != "GET" {
 		ResponseHandler(w, StatusNotFound)
 		return errors.New("method not get or origin not localhost")
 	}
@@ -46,8 +46,8 @@ func CheckGet(w http.ResponseWriter, r *http.Request) error {
 
 // CheckPost checks whether the incoming request is a POST request
 func CheckPost(w http.ResponseWriter, r *http.Request) error {
-	err := CheckOrigin(w, r)
-	if err != nil || r.Method != "POST" {
+	//err := CheckOrigin(w, r)
+	if r.Method != "POST" {
 		ResponseHandler(w, StatusNotFound)
 		return errors.New("method not post or origin not localhost")
 	}
