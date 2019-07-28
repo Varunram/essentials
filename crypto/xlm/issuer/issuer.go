@@ -12,15 +12,15 @@ import (
 
 // issuer contains functions that can be called by asset issuers on Stellar
 
-// createPath returns the path of a specific project
-func createPath(path string, projIndex int) string {
+// GetPath returns the path of a specific project
+func GetPath(path string, projIndex int) string {
 	piS, _ := utils.ToString(projIndex)
 	return path + piS + ".key"
 }
 
 // CreateFile creates a new empty keyfile
 func CreateFile(issuerPath string, projIndex int) string {
-	path := createPath(issuerPath, projIndex)
+	path := GetPath(issuerPath, projIndex)
 	// we need to create this file
 	os.Create(path)
 	return path
@@ -44,14 +44,14 @@ func InitIssuer(issuerPath string, projIndex int, seedpwd string) error {
 
 // DeleteIssuer deletes the keyfile
 func DeleteIssuer(issuerPath string, projIndex int) error {
-	path := createPath(issuerPath, projIndex)
+	path := GetPath(issuerPath, projIndex)
 	return os.Remove(path)
 }
 
 // FundIssuer creates an issuer account and funds it with a second account
 func FundIssuer(issuerPath string, projIndex int, seedpwd string, funderSeed string) error {
 	// need to read the seed from the file using the seedpwd
-	path := createPath(issuerPath, projIndex)
+	path := GetPath(issuerPath, projIndex)
 	pubkey, seed, err := wallet.RetrieveSeed(path, seedpwd)
 	if err != nil {
 		return errors.Wrap(err, "Error while retrieving seed")
@@ -72,7 +72,7 @@ func FundIssuer(issuerPath string, projIndex int, seedpwd string, funderSeed str
 
 // FreezeIssuer freezes the issuer account
 func FreezeIssuer(issuerPath string, projIndex int, seedpwd string) (string, error) {
-	path := createPath(issuerPath, projIndex)
+	path := GetPath(issuerPath, projIndex)
 	_, seed, err := wallet.RetrieveSeed(path, seedpwd)
 	if err != nil {
 		return "", errors.Wrap(err, "Error while retrieving seed")

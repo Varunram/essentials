@@ -149,7 +149,7 @@ func GetAndSendJson(w http.ResponseWriter, body string, x interface{}) {
 	MarshalSend(w, x)
 }
 
-// GetAndSendByte is a handler that makes a get request and returns byte data. THis is used
+// GetAndSendByte is a handler that makes a get request and returns byte data. This is used
 // in cases for which we don't know the format of the returned data, so we can't parse it
 func GetAndSendByte(w http.ResponseWriter, body string) {
 	data, err := GetRequest(body)
