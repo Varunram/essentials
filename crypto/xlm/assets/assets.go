@@ -25,7 +25,7 @@ func CreateAsset(assetName string, PublicKey string) build.Asset {
 
 // TrustAsset trusts an asset issued by an account and signs a transaction with a
 // preset limit on how much it is willing to trust the issuer
-func TrustAsset(assetCode string, assetIssuer string, limitI float64, seed string) (string, error) {
+func TrustAsset(assetCode string, assetIssuer string, limitx interface{}, seed string) (string, error) {
 	// TRUST is FROM Seed TO assetIssuer
 	passphrase := network.TestNetworkPassphrase
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
@@ -33,19 +33,7 @@ func TrustAsset(assetCode string, assetIssuer string, limitI float64, seed strin
 		return "", err
 	}
 
-	/*
-	var limit string
-	switch limitInput.(type) {
-	case string:
-		limit = limitInput.(string)
-	case int:
-		limit, err = utils.ToString(limitInput.(int))
-		if err != nil {
-			return "", errors.New("could not convert limit to string")
-		}
-	}
-	*/
-	limit, err := utils.ToString(limitI)
+	limit, err := utils.ToString(limitx)
 	if err != nil {
 		return "", errors.New("could not convert limit to string")
 	}
@@ -71,13 +59,18 @@ func TrustAsset(assetCode string, assetIssuer string, limitI float64, seed strin
 }
 
 // SendAssetFromIssuer transfers an asset from the issuer to the desired publickey.
-func SendAssetFromIssuer(assetCode string, destination string, amount string,
+func SendAssetFromIssuer(assetCode string, destination string, amountx float64,
 	seed string, issuerPubkey string) (int32, string, error) {
 
 	passphrase := network.TestNetworkPassphrase
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
 	if err != nil {
 		return -1, "", err
+	}
+
+	amount, err := utils.ToString(amountx)
+	if err != nil {
+		return -1, "", errors.New("could not convert limit to string")
 	}
 
 	op := build.Payment{
@@ -97,13 +90,18 @@ func SendAssetFromIssuer(assetCode string, destination string, amount string,
 }
 
 // SendAssetToIssuer sends an asset back to the issuer
-func SendAssetToIssuer(assetCode string, destination string, amount string,
+func SendAssetToIssuer(assetCode string, destination string, amountx float64,
 	seed string) (int32, string, error) {
 
 	passphrase := network.TestNetworkPassphrase
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
 	if err != nil {
 		return -1, "", err
+	}
+
+	amount, err := utils.ToString(amountx)
+	if err != nil {
+		return -1, "", errors.New("could not convert limit to string")
 	}
 
 	op := build.Payment{
@@ -123,12 +121,17 @@ func SendAssetToIssuer(assetCode string, destination string, amount string,
 }
 
 // SendAsset sends an asset to a destination which has an established trustline with the issuer
-func SendAsset(assetCode string, issuerPubkey string, destination string, amount string,
+func SendAsset(assetCode string, issuerPubkey string, destination string, amountx float64,
 	seed string, memo string) (int32, string, error) {
 	passphrase := network.TestNetworkPassphrase
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
 	if err != nil {
 		return -1, "", err
+	}
+
+	amount, err := utils.ToString(amountx)
+	if err != nil {
+		return -1, "", errors.New("could not convert limit to string")
 	}
 
 	op := build.Payment{

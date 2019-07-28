@@ -12,7 +12,6 @@ import (
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
 	wallet "github.com/Varunram/essentials/crypto/xlm/wallet"
 	scan "github.com/Varunram/essentials/scan"
-	utils "github.com/Varunram/essentials/utils"
 	"github.com/pkg/errors"
 	horizon "github.com/stellar/go/clients/horizonclient"
 	"github.com/stellar/go/protocols/horizon/operations"
@@ -95,8 +94,7 @@ func ListenForPayments() {
 					xlmWorth := tickers.ExchangeXLMforUSD(amount)
 					log.Println("The deposited amount is worth: ", xlmWorth)
 					// now send the stableusd asset over to this guy
-					xlmWs, _ := utils.ToString(xlmWorth)
-					_, hash, err := assets.SendAssetFromIssuer(StablecoinCode, payee, xlmWs, StablecoinSeed, StablecoinPublicKey)
+					_, hash, err := assets.SendAssetFromIssuer(StablecoinCode, payee, xlmWorth, StablecoinSeed, StablecoinPublicKey)
 					if err != nil {
 						log.Println("Error while sending USD Assets back to payee: ", payee, err)
 						//  don't skip here, there's technically nothing we can do

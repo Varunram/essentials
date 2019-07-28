@@ -7,7 +7,6 @@ import (
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
 	multisig "github.com/Varunram/essentials/crypto/xlm/multisig"
 	wallet "github.com/Varunram/essentials/crypto/xlm/wallet"
-	utils "github.com/Varunram/essentials/utils"
 	"github.com/pkg/errors"
 )
 
@@ -48,9 +47,8 @@ func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string,
 // TransferFundsToEscrow transfers stablecoin to the escrow address from otherSeed
 func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string, otherSeed string) error {
 	// we have the wallet pubkey, transfer funds to the escrow now
-	aS, _ := utils.ToString(amount)
 	_, txhash, err := assets.SendAsset(stablecoin.StablecoinCode, stablecoin.StablecoinPublicKey, escrowPubkey,
-		aS, otherSeed, "escrow init")
+		amount, otherSeed, "escrow init")
 	if err != nil {
 		return errors.Wrap(err, "could not fund escrow, quitting!")
 	}

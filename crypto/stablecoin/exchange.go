@@ -12,7 +12,7 @@ import (
 )
 
 // Exchange exchanges xlm for STABLEUSD
-func Exchange(recipientPK string, recipientSeed string, convAmount string) error {
+func Exchange(recipientPK string, recipientSeed string, convAmount float64) error {
 
 	if !xlm.AccountExists(recipientPK) {
 		return errors.New("Account does not exist, quitting!")
@@ -25,8 +25,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 	}
 
 	bs, _ := utils.ToFloat(balance)
-	cs, _ := utils.ToFloat(convAmount)
-	if bs < cs {
+	if bs < convAmount {
 		return errors.New("insufficient balance")
 	}
 
@@ -38,8 +37,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 	}
 
 	tls, _ := utils.ToFloat(trustLimit)
-	cs1, _ := utils.ToFloat(convAmount)
-	if tls < cs1 && trustLimit != "0" {
+	if tls < convAmount && trustLimit != "0" {
 		return errors.Wrap(err, "trust limit doesn't warrant investment, please contact platform admin")
 	}
 
@@ -50,7 +48,8 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 	log.Println("tx hash for trusting stableUSD: ", hash)
 	// now send coins across and see if our tracker detects it
 	log.Println(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
-	_, hash, err = xlm.SendXLM(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
+	cs, _ := utils.ToString(convAmount)
+	_, hash, err = xlm.SendXLM(StablecoinPublicKey, cs, recipientSeed, "Exchange XLM for stablecoin")
 	if err != nil {
 		return errors.Wrap(err, "couldn't send xlm")
 	}
@@ -60,7 +59,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount string) error
 
 // OfferExchange offers to exchange user's xlm balance for stableusd if the user does not have enough
 // stableUSD to complete the payment
-func OfferExchange(publicKey string, seed string, invAmount string) error {
+func OfferExchange(publicKey string, seed string, invAmount float64) error {
 
 	balance, err := xlm.GetAssetBalance(publicKey, StablecoinCode)
 	if err != nil {
@@ -99,8 +98,7 @@ func OfferExchange(publicKey string, seed string, invAmount string) error {
 		// 1 xlm can fetch exchangeRate USD, how much xlm does diff USD need?
 		amountToExchange := diff / exchangeRate
 		log.Println(diff, exchangeRate, amountToExchange)
-		atss, _ := utils.ToString(amountToExchange)
-		err = Exchange(publicKey, seed, atss)
+		err = Exchange(publicKey, seed, amountToExchange)
 		if err != nil {
 			return errors.New("Unable to exchange XLM for USD and automate payment. Please get more STABLEUSD to fulfil the payment")
 		}
