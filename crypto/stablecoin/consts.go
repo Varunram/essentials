@@ -18,11 +18,11 @@ var (
 	// StableCoinAddress denotes the address of the stablecoin
 	StableCoinAddress = "GDJE64WOXDXLEK7RDURVYEJ5Y5XFHS6OQZCS3SHO4EEMTABEIJXF6SZ5"
 	// StablecoinTrustLimit denotes the trust limit of the stablecoin
-	StablecoinTrustLimit = "1000000000"
+	StablecoinTrustLimit = float64(1000000000)
 	// AnchorUSDCode is the code of Anchor's stablecoin
 	AnchorUSDCode = "USD"
 	// AnchorUSDAddress denotes the address of Anchor's stablecoin
 	AnchorUSDAddress = "GCKFBEIYV2U22IO2BJ4KVJOIP7XPWQGQFKKWXR6DOSJBV7STMAQSMTGG"
 	// AnchorUSDTrustLimit is the default trust limit for trusting Anchor
-	AnchorUSDTrustLimit = "1000000"
+	AnchorUSDTrustLimit = float64(1000000)
 )

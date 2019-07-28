@@ -14,7 +14,7 @@ import (
 // anchor implements stuff which is needed to interact with the anchor stablecoin
 
 // GetAnchorUSD gets anchorUSD from Anchor
-func GetAnchorUSD(recpSeed string, amountUSDs string) (string, error) {
+func GetAnchorUSD(recpSeed string, amountUSD float64) (string, error) {
 	txhash, err := assets.TrustAsset(AnchorUSDCode, AnchorUSDAddress, AnchorUSDTrustLimit, recpSeed)
 	// txhash, err := assets.TrustAsset(Code, StableCoinAddress, StablecoinTrustLimit, recpSeed)
 	if err != nil {
@@ -23,11 +23,6 @@ func GetAnchorUSD(recpSeed string, amountUSDs string) (string, error) {
 	log.Println("tx hash for trusting stableUSD: ", txhash)
 	// now send coins across and see if our tracker detects it
 	// the given amount is in USD, we need to convert it into XLM since we're sending XLM
-	amountUSD, err := utils.ToFloat(amountUSDs)
-	if err != nil {
-		return txhash, err
-	}
-
 	exchangeRate, err := tickers.XLMUSD()
 	if err != nil {
 		return txhash, errors.Wrap(err, "error in fetching price from oracle")

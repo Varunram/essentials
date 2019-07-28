@@ -2,6 +2,7 @@ package assets
 
 import (
 	//"log"
+	"github.com/pkg/errors"
 
 	xlm "github.com/Varunram/essentials/crypto/xlm"
 	utils "github.com/Varunram/essentials/utils"
@@ -24,12 +25,29 @@ func CreateAsset(assetName string, PublicKey string) build.Asset {
 
 // TrustAsset trusts an asset issued by an account and signs a transaction with a
 // preset limit on how much it is willing to trust the issuer
-func TrustAsset(assetCode string, assetIssuer string, limit string, seed string) (string, error) {
+func TrustAsset(assetCode string, assetIssuer string, limitI float64, seed string) (string, error) {
 	// TRUST is FROM Seed TO assetIssuer
 	passphrase := network.TestNetworkPassphrase
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
 	if err != nil {
 		return "", err
+	}
+
+	/*
+	var limit string
+	switch limitInput.(type) {
+	case string:
+		limit = limitInput.(string)
+	case int:
+		limit, err = utils.ToString(limitInput.(int))
+		if err != nil {
+			return "", errors.New("could not convert limit to string")
+		}
+	}
+	*/
+	limit, err := utils.ToString(limitI)
+	if err != nil {
+		return "", errors.New("could not convert limit to string")
 	}
 
 	op := build.ChangeTrust{
