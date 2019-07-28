@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	protocols "github.com/stellar/go/protocols/horizon"
+	utils "github.com/Varunram/essentials/utils"
 )
 
 // GetLedgerData gets the latest data from the ledger
@@ -90,8 +91,8 @@ func GetAccountData(a string) ([]byte, error) {
 }
 
 // GetNativeBalance gets the xlm balance of a specific account
-func GetNativeBalance(publicKey string) (string, error) {
-	var balance string
+func GetNativeBalance(publicKey string) (float64, error) {
+	var balance float64
 	var err error
 	b, err := GetAccountData(publicKey)
 	if err != nil {
@@ -104,16 +105,16 @@ func GetNativeBalance(publicKey string) (string, error) {
 	}
 	for _, balance := range x.Balances {
 		if balance.Asset.Type == "native" {
-			return balance.Balance, nil
+			return utils.ToFloat(balance.Balance)
 		}
 	}
-	// technically accounts on stellar can't exist without a balance, so it should never come here
+
 	return balance, errors.New("Native balance not found")
 }
 
 // GetAssetBalance gets the balance of the user in the specific asset
-func GetAssetBalance(publicKey string, assetName string) (string, error) {
-	var balance string
+func GetAssetBalance(publicKey string, assetName string) (float64, error) {
+	var balance float64
 	var err error
 	b, err := GetAccountData(publicKey)
 	if err != nil {
@@ -126,15 +127,15 @@ func GetAssetBalance(publicKey string, assetName string) (string, error) {
 	}
 	for _, balance := range x.Balances {
 		if balance.Asset.Code == assetName {
-			return balance.Balance, nil
+			return utils.ToFloat(balance.Balance)
 		}
 	}
 	return balance, errors.New("Asset balance not found")
 }
 
 // GetAssetTrustLimit gets the trust limit that the user has with an issuer
-func GetAssetTrustLimit(publicKey string, assetName string) (string, error) {
-	var balance string
+func GetAssetTrustLimit(publicKey string, assetName string) (float64, error) {
+	var balance float64
 	var err error
 	b, err := GetAccountData(publicKey)
 	if err != nil {
@@ -147,7 +148,7 @@ func GetAssetTrustLimit(publicKey string, assetName string) (string, error) {
 	}
 	for _, balance := range x.Balances {
 		if balance.Asset.Code == assetName {
-			return balance.Limit, nil
+			return utils.ToFloat(balance.Limit)
 		}
 	}
 	return balance, errors.New("Asset limit not found")

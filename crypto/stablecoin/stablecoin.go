@@ -12,6 +12,7 @@ import (
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
 	wallet "github.com/Varunram/essentials/crypto/xlm/wallet"
 	scan "github.com/Varunram/essentials/scan"
+	utils "github.com/Varunram/essentials/utils"
 	"github.com/pkg/errors"
 	horizon "github.com/stellar/go/clients/horizonclient"
 	"github.com/stellar/go/protocols/horizon/operations"
@@ -89,7 +90,7 @@ func ListenForPayments() {
 				log.Println("CHECK THIS OUT: ", payment.Asset.Type)
 				if payment.Asset.Type == "native" { // native asset
 					payee := payment.From
-					amount := payment.Amount
+					amount, _ := utils.ToFloat(payment.Amount)
 					log.Printf("Received request for stablecoin from %s worth %s", payee, amount)
 					xlmWorth := tickers.ExchangeXLMforUSD(amount)
 					log.Println("The deposited amount is worth: ", xlmWorth)

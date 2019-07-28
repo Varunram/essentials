@@ -29,15 +29,14 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 		return errors.New("insufficient balance")
 	}
 
-	var trustLimit string
+	var trustLimit float64
 	trustLimit, err = xlm.GetAssetTrustLimit(recipientPK, StablecoinCode)
 	if err != nil {
 		// asset doesn't exist
-		trustLimit = "0"
+		trustLimit = 0
 	}
 
-	tls, _ := utils.ToFloat(trustLimit)
-	if tls < convAmount && trustLimit != "0" {
+	if trustLimit < convAmount && trustLimit != 0 {
 		return errors.Wrap(err, "trust limit doesn't warrant investment, please contact platform admin")
 	}
 
@@ -64,23 +63,14 @@ func OfferExchange(publicKey string, seed string, invAmount float64) error {
 	balance, err := xlm.GetAssetBalance(publicKey, StablecoinCode)
 	if err != nil {
 		// the user does not have a balance in STABLEUSD
-		balance = "0"
+		balance = 0
 	}
 
-	balF, err := utils.ToFloat(balance)
-	if err != nil {
-		return err
-	}
-	invF, err := utils.ToFloat(invAmount)
-	if err != nil {
-		return err
-	}
-
-	if balF < invF {
+	if balance < invAmount {
 		log.Println("Offering xlm to stableusd exchange to investor")
 		// user's stablecoin balance is less than the amount he wishes to invest, get stablecoin
 		// equal to the amount he wishes to exchange
-		diff := invF - balF + 10 // the extra 1 is to cover for fees
+		diff := invAmount - balance + 10 // the extra 1 is to cover for fees
 		// checking whether the user has enough xlm balance to cover for the exchange is done by Exchange()
 		xlmBalance, err := xlm.GetNativeBalance(publicKey)
 		if err != nil {
@@ -94,7 +84,7 @@ func OfferExchange(publicKey string, seed string, invAmount float64) error {
 		}
 
 		// now we need to exchange XLM equal to diff in stablecoin
-		exchangeRate := tickers.ExchangeXLMforUSD("1")
+		exchangeRate := tickers.ExchangeXLMforUSD(1)
 		// 1 xlm can fetch exchangeRate USD, how much xlm does diff USD need?
 		amountToExchange := diff / exchangeRate
 		log.Println(diff, exchangeRate, amountToExchange)

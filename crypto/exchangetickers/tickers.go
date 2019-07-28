@@ -242,10 +242,9 @@ func XLMUSD() (float64, error) {
 }
 
 // ExchangeXLMforUSD retrieves the current price of XLM/USD and then returns the USD amount
-func ExchangeXLMforUSD(amount string) float64 {
+func ExchangeXLMforUSD(amount float64) float64 {
 	// defines the rate for 1 usd = x XLM. Currently hardcoded to 10
-	amountF, _ := utils.ToFloat(amount)
 	// exchangeRate := 0.1 // hardcode for now, can query cmc apis later
 	exchangeRate := 10000000.0 // rig the exchange rate so that we can test some stuff
-	return amountF * exchangeRate
+	return amount * exchangeRate
 }
