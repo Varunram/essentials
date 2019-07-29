@@ -8,7 +8,6 @@ import (
 	tickers "github.com/Varunram/essentials/crypto/exchangetickers"
 	xlm "github.com/Varunram/essentials/crypto/xlm"
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
-	utils "github.com/Varunram/essentials/utils"
 )
 
 // anchor implements stuff which is needed to interact with the anchor stablecoin
@@ -30,8 +29,7 @@ func GetAnchorUSD(recpSeed string, amountUSD float64) (string, error) {
 	amountXLM := exchangeRate * amountUSD
 
 	log.Println("Exchanging: ", amountXLM, " XLM for anchorUSD")
-	amountXLMS, _ := utils.ToString(amountXLM)
-	_, txhash, err = xlm.SendXLM(AnchorUSDAddress, amountXLMS, recpSeed, "Exchange XLM for anchorUSD")
+	_, txhash, err = xlm.SendXLM(AnchorUSDAddress, amountXLM, recpSeed, "Exchange XLM for anchorUSD")
 	if err != nil {
 		return txhash, errors.Wrap(err, "couldn't send xlm")
 	}

@@ -47,8 +47,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 	log.Println("tx hash for trusting stableUSD: ", hash)
 	// now send coins across and see if our tracker detects it
 	log.Println(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
-	cs, _ := utils.ToString(convAmount)
-	_, hash, err = xlm.SendXLM(StablecoinPublicKey, cs, recipientSeed, "Exchange XLM for stablecoin")
+	_, hash, err = xlm.SendXLM(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
 	if err != nil {
 		return errors.Wrap(err, "couldn't send xlm")
 	}

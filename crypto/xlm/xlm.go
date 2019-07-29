@@ -46,11 +46,16 @@ func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
 }
 
 // SendXLMCreateAccount creates and sends XLM to a new account
-func SendXLMCreateAccount(destination string, amount string, seed string) (int32, string, error) {
+func SendXLMCreateAccount(destination string, amountx float64, seed string) (int32, string, error) {
 	// don't check if the account exists or not, hopefully it does
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
 	if err != nil {
 		return -1, "", errors.Wrap(err, "could not get source account of seed")
+	}
+
+	amount, err := utils.ToString(amountx)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not convert amount to string")
 	}
 
 	op := build.CreateAccount{
@@ -99,11 +104,16 @@ func ReturnSourceAccountPubkey(pubkey string) (horizonprotocol.Account, error) {
 }
 
 // SendXLM sends xlm to a destination address
-func SendXLM(destination string, amount string, seed string, memo string) (int32, string, error) {
+func SendXLM(destination string, amountx float64, seed string, memo string) (int32, string, error) {
 	// don't check if the account exists or not, hopefully it does
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
 	if err != nil {
 		return -1, "", errors.Wrap(err, "could not return source account")
+	}
+
+	amount, err := utils.ToString(amountx)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not convert amount to string")
 	}
 
 	op := build.Payment{

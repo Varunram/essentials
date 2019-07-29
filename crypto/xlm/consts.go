@@ -19,4 +19,4 @@ var TestNetClient = &horizon.Client{
 var Passphrase = network.TestNetworkPassphrase
 
 // RefillAmount defines the default stellar refill amount
-var RefillAmount = "10"
+var RefillAmount = float64(10)

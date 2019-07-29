@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	protocols "github.com/stellar/go/protocols/horizon"
 	utils "github.com/Varunram/essentials/utils"
+	protocols "github.com/stellar/go/protocols/horizon"
 )
 
 // GetLedgerData gets the latest data from the ledger

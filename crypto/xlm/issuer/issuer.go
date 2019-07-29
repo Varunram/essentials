@@ -57,7 +57,7 @@ func FundIssuer(issuerPath string, projIndex int, seedpwd string, funderSeed str
 		return errors.Wrap(err, "Error while retrieving seed")
 	}
 	log.Printf("Project Index: %d, Seed: %s, Address: %s", projIndex, seed, pubkey)
-	_, txhash, err := xlm.SendXLMCreateAccount(pubkey, "100", funderSeed)
+	_, txhash, err := xlm.SendXLMCreateAccount(pubkey, 100, funderSeed)
 	if err != nil {
 		return errors.Wrap(err, "Error while sending xlm to create account")
 	}

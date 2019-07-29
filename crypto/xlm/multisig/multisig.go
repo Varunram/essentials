@@ -5,6 +5,7 @@ import (
 	"log"
 
 	xlm "github.com/Varunram/essentials/crypto/xlm"
+	utils "github.com/Varunram/essentials/utils"
 	"github.com/stellar/go/keypair"
 	build "github.com/stellar/go/txnbuild"
 )
@@ -140,10 +141,15 @@ func SendTx(txXdr string) (int32, string, error) {
 }
 
 // Tx2of2 constructs a tx where the source account pubkey1 is the 2of2 account, we need 2 signers for this tx
-func Tx2of2(pubkey1 string, destination string, signer1 string, signer2 string, amount string, memo string) error {
+func Tx2of2(pubkey1 string, destination string, signer1 string, signer2 string, amountx float64, memo string) error {
 	sourceAccount, err := xlm.ReturnSourceAccountPubkey(pubkey1)
 	if err != nil {
 		return errors.Wrap(err, "could not load account details, quitting")
+	}
+
+	amount, err := utils.ToString(amountx)
+	if err != nil {
+		return errors.Wrap(err, "could not convert to float, quitting")
 	}
 
 	op := build.Payment{
