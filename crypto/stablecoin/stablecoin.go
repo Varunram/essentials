@@ -91,7 +91,7 @@ func ListenForPayments() {
 				if payment.Asset.Type == "native" { // native asset
 					payee := payment.From
 					amount, _ := utils.ToFloat(payment.Amount)
-					log.Printf("Received request for stablecoin from %s worth %s", payee, amount)
+					log.Println("Received request for stablecoin from", payee, ",worth", amount)
 					xlmWorth := tickers.ExchangeXLMforUSD(amount)
 					log.Println("The deposited amount is worth: ", xlmWorth)
 					// now send the stableusd asset over to this guy

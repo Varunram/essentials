@@ -78,7 +78,7 @@ func TestBalances(t *testing.T) {
 		t.Fatalf("Can return data with invalid url, quitting!")
 	}
 	TestNetClient.HorizonURL = oldTc
-	if balance != "5.9996700" {
+	if balance != 5.999670028686523 {
 		log.Println("CHECKBAL:", balance)
 		t.Fatalf("Balance doesn't match with remote API, quitting!")
 	}
@@ -94,7 +94,7 @@ func TestBalances(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Asset doesn't exist, quitting!")
 	}
-	if balance != "120.0000000" {
+	if balance != 120.0000000 {
 		t.Fatalf("Balance doesn't match with remote API, quitting!")
 	}
 	_, err = GetAllBalances("GAMTX6MDG65OFU42WGZH2W73AODEKILBW3IWZYPY5SMIVSDSMYXGTTUH")

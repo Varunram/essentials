@@ -11,6 +11,7 @@ import (
 )
 
 func TestXLM(t *testing.T) {
+	RefillAmount = 10
 	seed, address, err := GetKeyPair()
 	if err != nil {
 		t.Fatal(err)
@@ -29,30 +30,30 @@ func TestXLM(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = SendXLMCreateAccount(destPubKey, "2", "wrong seed")
+	_, _, err = SendXLMCreateAccount(destPubKey, 2, "wrong seed")
 	// create the destinations account by sendignb some coins to bootstrap
 	if err == nil {
 		t.Fatalf("Wrong seed, shouldn't work!")
 	}
-	_, _, err = SendXLMCreateAccount("wrong pubkey", "2", seed)
+	_, _, err = SendXLMCreateAccount("wrong pubkey", 2, seed)
 	// create the destinations account by sendignb some coins to bootstrap
 	if err == nil {
 		t.Fatalf("Wrong pubkey, shouldn't work!")
 	}
-	_, _, err = SendXLMCreateAccount(destPubKey, "2", seed)
+	_, _, err = SendXLMCreateAccount(destPubKey, 2, seed)
 	// create the destinations account by sendignb some coins to bootstrap
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = SendXLM(destPubKey, "1", seed, "")
+	_, _, err = SendXLM(destPubKey, 1, seed, "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = SendXLM(destPubKey, "1", "wrong seed", "")
+	_, _, err = SendXLM(destPubKey, 1, "wrong seed", "")
 	if err == nil {
 		t.Fatalf("Wrong seed, shouldn't work!")
 	}
-	_, _, err = SendXLM("wrong pubkey", "1", seed, "")
+	_, _, err = SendXLM("wrong pubkey", 1, seed, "")
 	if err == nil {
 		t.Fatalf("Wrong pubkey, shouldn't work!")
 	}
@@ -84,7 +85,7 @@ func TestXLM(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _, err = SendXLM(destPubKey, "9998", testseed, "")
+	_, _, err = SendXLM(destPubKey, 9998, testseed, "")
 	if err != nil {
 		t.Fatal(err)
 	}
