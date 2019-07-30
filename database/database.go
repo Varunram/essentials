@@ -177,3 +177,35 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	})
 	return arr, err
 }
+
+// RetrieveAllKeys retrieves all key value pairs from the database
+func RetrieveAllKeysLim(dir string, bucketName []byte, lim int) ([][]byte, error) {
+	var arr [][]byte
+	db, err := OpenDB(dir)
+	if err != nil {
+		return arr, errors.Wrap(err, "could not open database")
+	}
+	defer db.Close()
+
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucketName)
+		if b == nil {
+			return ErrBucketMissing
+		}
+		for i := 1; i <= lim; i++ {
+			iB, err := utils.ToByte(i)
+			if err != nil {
+				return err
+			}
+			x := b.Get(iB)
+			if x == nil {
+				continue
+			}
+			temp := make([]byte, len(x))
+			copy(temp, x)
+			arr = append(arr, temp)
+		}
+		return nil
+	})
+	return arr, err
+}
