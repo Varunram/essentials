@@ -1,6 +1,7 @@
 package xlm
 
 import (
+	"log"
 	"net/http"
 
 	horizon "github.com/stellar/go/clients/horizonclient"
@@ -25,6 +26,7 @@ func SetConsts(amount float64, mainnet bool) {
 	RefillAmount = amount
 
 	if mainnet {
+		log.Println("Pointing horizon to mainnet")
 		TestNetClient = &horizon.Client{
 			HorizonURL: "https://horizon.stellar.org/", // switch to mainnet horizon
 			HTTP:       http.DefaultClient,

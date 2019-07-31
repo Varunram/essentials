@@ -36,9 +36,6 @@ func InitStableCoin(mainnet bool) error {
 		if err != nil {
 			return err
 		}
-		if !xlm.AccountExists(publicKey) {
-			return errors.New("please refill your account" + publicKey + " with funds to setup a stellar account")
-		}
 	} else {
 		// stablecoin doesn't exist yet
 		fmt.Println("Enter a password to encrypt your stablecoin's master seed. Please store this in a very safe place. This prompt will not ask to confirm your password")
@@ -55,10 +52,13 @@ func InitStableCoin(mainnet bool) error {
 			if err != nil {
 				return err
 			}
-		} else {
-			return errors.New("stablecoin pubkey: " + publicKey + " just setup, please refill account")
 		}
 	}
+
+	if !xlm.AccountExists(publicKey) {
+		return errors.New("please refill your account: " + publicKey + " with funds to setup a stellar account. Your seed is: "+ seed)
+	}
+
 	// the user doesn't have seed, so create a new platform
 	StablecoinPublicKey = publicKey
 	StablecoinSeed = seed
