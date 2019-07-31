@@ -21,6 +21,13 @@ var Passphrase = network.TestNetworkPassphrase
 // RefillAmount defines the default stellar refill amount
 var RefillAmount float64
 
-func SetConsts(amount float64) {
+func SetConsts(amount float64, mainnet bool) {
 	RefillAmount = amount
+
+	if mainnet {
+		TestNetClient = &horizon.Client{
+			HorizonURL: "https://horizon.stellar.org/", // switch to mainnet horizon
+			HTTP:       http.DefaultClient,
+		}
+	}
 }

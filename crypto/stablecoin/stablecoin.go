@@ -21,7 +21,7 @@ import (
 // Package stablecoin implements a stablecoin with code STABLEUSD built on Stellar.
 
 // InitStableCoin starts the stablecoin daemon
-func InitStableCoin() error {
+func InitStableCoin(mainnet bool) error {
 	var publicKey string
 	var seed string
 	// now we can be sure we have the directory, check for seed
@@ -33,11 +33,14 @@ func InitStableCoin() error {
 			return errors.Wrap(err, "couldn't scan raw password")
 		}
 		publicKey, seed, err = wallet.RetrieveSeed(StableCoinSeedFile, password)
-		// catch error here due to scope sharing
 		if err != nil {
 			return err
 		}
+		if !xlm.AccountExists(publicKey) {
+			return errors.New("please refill your account" + publicKey + " with funds to setup a stellar account")
+		}
 	} else {
+		// stablecoin doesn't exist yet
 		fmt.Println("Enter a password to encrypt your stablecoin's master seed. Please store this in a very safe place. This prompt will not ask to confirm your password")
 		password, err := scan.ScanRawPassword()
 		if err != nil {
@@ -47,9 +50,13 @@ func InitStableCoin() error {
 		if err != nil {
 			return err
 		}
-		err = xlm.GetXLM(publicKey)
-		if err != nil {
-			return err
+		if !mainnet {
+			err = xlm.GetXLM(publicKey)
+			if err != nil {
+				return err
+			}
+		} else {
+			return errors.New("stablecoin pubkey: " + publicKey + " just setup, please refill account")
 		}
 	}
 	// the user doesn't have seed, so create a new platform

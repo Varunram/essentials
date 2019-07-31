@@ -25,8 +25,12 @@ func GetKeyPair() (string, string, error) {
 
 // AccountExists checks whether an account exists
 func AccountExists(publicKey string) bool {
-	_, err := ReturnSourceAccountPubkey(publicKey)
-	return !(err != nil)
+	x, err := ReturnSourceAccountPubkey(publicKey)
+	if err != nil {
+		// error in the horizon api call
+		return false
+	}
+	return x.Sequence != "0" // if the sequence is zero, the account doesn't exist yet. This equals to the ledger number at which the account was created
 }
 
 // SendTx signs and broadcasts a given stellar tx
