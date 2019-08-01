@@ -139,6 +139,9 @@ func SendXLM(destination string, amountx float64, seed string, memo string) (int
 
 // RefillAccount refills an account
 func RefillAccount(publicKey string, refillSeed string) error {
+	if Mainnet {
+		return errors.New("can't give free xlm on mainnet, quitting")
+	}
 	var err error
 	if !AccountExists(publicKey) {
 		// there is no account under the user's name

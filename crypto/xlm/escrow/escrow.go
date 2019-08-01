@@ -64,6 +64,5 @@ func initMultisigEscrow(pubkey1 string, pubkey2 string) (string, error) {
 
 // SendFundsFromEscrow sends funds to a destination address from the project escrow
 func SendFundsFromEscrow(escrowPubkey string, destination string, signer1 string, signer2 string, amount float64, memo string) error {
-	log.Println("ESCROW PUBKEY: ", escrowPubkey, "destination: ", destination, "signer1: ", signer1, "amount: ", amount, "memo: ", memo)
 	return multisig.Tx2of2(escrowPubkey, destination, signer1, signer2, amount, memo)
 }
