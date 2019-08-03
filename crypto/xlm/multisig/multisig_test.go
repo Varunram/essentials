@@ -9,7 +9,10 @@ import (
 	xlm "github.com/Varunram/essentials/crypto/xlm"
 )
 
+var stablecoinPublicKey = "GDPCLB35E4JBVCL2OI6GCM7XK6PLTSKD5EDLRRKFHEI5L4FDKGL4CLIS"
+
 func TestMultisig2of2(t *testing.T) {
+	xlm.SetConsts(10, false)
 	seed1, pubkey1, err := xlm.GetKeyPair()
 	if err != nil {
 		log.Println(err)
@@ -49,7 +52,7 @@ func TestMultisig2of2(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = TrustAssetTx("STABLEUSD", "GDJE64WOXDXLEK7RDURVYEJ5Y5XFHS6OQZCS3SHO4EEMTABEIJXF6SZ5", "10000", pubkey1, seed1, seed2)
+	err = TrustAssetTx("STABLEUSD", stablecoinPublicKey, "10000", pubkey1, seed1, seed2)
 	if err != nil {
 		t.Fatal(err)
 	}

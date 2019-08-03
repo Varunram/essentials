@@ -10,6 +10,7 @@ import (
 )
 
 func TestIssuer(t *testing.T) {
+	xlm.SetConsts(10, false)
 	var err error
 	wd, err := os.Getwd()
 	if err != nil {
