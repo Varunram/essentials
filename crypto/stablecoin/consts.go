@@ -19,10 +19,12 @@ var (
 	AnchorUSDAddress string
 	// AnchorUSDTrustLimit is the default trust limit for trusting Anchor
 	AnchorUSDTrustLimit float64
+	// Mainnet is a boolena value that should be set to switch to the mainnet Anchor API
+	Mainnet bool
 )
 
 func SetConsts(code string, pubkey string, seed string, seedfile string, trustLimit float64,
-	anchorUSDCode string, anchorUSDAddress string, anchorUSDTrustLimit float64) {
+	anchorUSDCode string, anchorUSDAddress string, anchorUSDTrustLimit float64, mainnet bool) {
 
 	StablecoinCode = code
 	StablecoinPublicKey = pubkey
@@ -32,4 +34,5 @@ func SetConsts(code string, pubkey string, seed string, seedfile string, trustLi
 	AnchorUSDCode = anchorUSDCode
 	AnchorUSDAddress = anchorUSDAddress
 	AnchorUSDTrustLimit = anchorUSDTrustLimit
+	Mainnet = mainnet
 }

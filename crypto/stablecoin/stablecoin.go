@@ -22,6 +22,9 @@ import (
 
 // InitStableCoin starts the stablecoin daemon
 func InitStableCoin(mainnet bool) error {
+	if Mainnet {
+		return errors.New("Stablecoin in mainnet defaults to AnchorUSD")
+	}
 	var publicKey string
 	var seed string
 	// now we can be sure we have the directory, check for seed

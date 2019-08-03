@@ -14,6 +14,10 @@ import (
 // Exchange exchanges xlm for STABLEUSD
 func Exchange(recipientPK string, recipientSeed string, convAmount float64) error {
 
+	if Mainnet {
+		return errors.New("Exchange in mainent needs to be done through dex")
+	}
+
 	if !xlm.AccountExists(recipientPK) {
 		return errors.New("Account does not exist, quitting!")
 	}
@@ -58,6 +62,10 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 // OfferExchange offers to exchange user's xlm balance for stableusd if the user does not have enough
 // stableUSD to complete the payment
 func OfferExchange(publicKey string, seed string, invAmount float64) error {
+
+	if Mainnet {
+		return errors.New("Exchange offers in mainent need to be done through dex")
+	}
 
 	balance, err := xlm.GetAssetBalance(publicKey, StablecoinCode)
 	if err != nil {

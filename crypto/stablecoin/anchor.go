@@ -12,10 +12,10 @@ import (
 
 // anchor implements stuff which is needed to interact with the anchor stablecoin
 
-// GetAnchorUSD gets anchorUSD from Anchor
+// GetAnchorUSDe exchanges XLM for AnchorUSD
 func GetAnchorUSD(recpSeed string, amountUSD float64) (string, error) {
+
 	txhash, err := assets.TrustAsset(AnchorUSDCode, AnchorUSDAddress, AnchorUSDTrustLimit, recpSeed)
-	// txhash, err := assets.TrustAsset(Code, StableCoinAddress, StablecoinTrustLimit, recpSeed)
 	if err != nil {
 		return txhash, errors.Wrap(err, "couldn't trust anchorUSD")
 	}
