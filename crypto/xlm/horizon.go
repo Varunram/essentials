@@ -12,9 +12,15 @@ import (
 )
 
 // GetLedgerData gets the latest data from the ledger
-func GetLedgerData(blockNumber string) ([]byte, error) {
+func GetLedgerData(blockNumberx int) ([]byte, error) {
 	var err error
 	var data []byte
+
+	blockNumber, err := utils.ToString(blockNumberx)
+	if err != nil {
+		return data, err
+	}
+
 	resp, err := http.Get(TestNetClient.HorizonURL + "/ledgers/" + blockNumber)
 	if err != nil || resp.Status != "200 OK" {
 		return data, errors.New("API Request did not succeed")
@@ -25,9 +31,10 @@ func GetLedgerData(blockNumber string) ([]byte, error) {
 }
 
 // GetBlockHash gets the block hash corresponding to a block number
-func GetBlockHash(blockNumber string) (string, error) {
+func GetBlockHash(blockNumber int) (string, error) {
 	var err error
 	var hash string
+
 	b, err := GetLedgerData(blockNumber)
 	if err != nil {
 		return hash, errors.Wrap(err, "could not get updated ledger data")

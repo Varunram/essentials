@@ -10,18 +10,23 @@ import (
 	protocols "github.com/stellar/go/protocols/horizon"
 )
 
+var blockNumber = 47730
+var blockHash = "e0b2b2cff90312b60e55365914a9e8d550ed05aba50bf926312577d71e08546c"
+var txhash = "7532311a4816a4d61eccb6087704880108b57e27628299e0129267f197d3c5f1"
+var txHashNumber = 48046
+
 func TestApi(t *testing.T) {
+	SetConsts(10, false)
 	// test out stuff here
-	blockNumber := "2"
 	hash, err := GetBlockHash(blockNumber)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if hash != "3c46ced6f9bf63bc6c2de5f9a5386445ff04340697c61699d91be92da91b9a45" {
+	if hash != blockHash {
 		t.Fatalf("Hashes don't match, quitting!")
 	}
 	log.Println(hash)
-	_, err = GetBlockHash("-1")
+	_, err = GetBlockHash(-1)
 	if err == nil {
 		t.Fatalf("Can get data for negative block number, quitting!")
 	}
@@ -29,7 +34,7 @@ func TestApi(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = GetLedgerData("-1")
+	_, err = GetLedgerData(-1)
 	if err == nil {
 		t.Fatal("Can get data for negative block number, quitting!")
 	}
@@ -38,7 +43,7 @@ func TestApi(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if x.ID != "3c46ced6f9bf63bc6c2de5f9a5386445ff04340697c61699d91be92da91b9a45" {
+	if x.ID != blockHash {
 		t.Fatal(err)
 	}
 	_, err = GetLatestBlockHash()
@@ -55,7 +60,9 @@ func TestApi(t *testing.T) {
 }
 
 func TestBalances(t *testing.T) {
-	balance, err := GetNativeBalance("GAMTX6MDG65OFU42WGZH2W73AODEKILBW3IWZYPY5SMIVSDSMYXGTTUH")
+	account := "GDRGIFNANGDI5CIWAAVA6H2DZJTQQZQMXVRI42NNDQSQCJI575QS4NHE"
+
+	balance, err := GetNativeBalance(account)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -63,7 +70,7 @@ func TestBalances(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Account doesn't exist, quitting!")
 	}
-	_, err = GetAccountData("GAMTX6MDG65OFU42WGZH2W73AODEKILBW3IWZYPY5SMIVSDSMYXGTTUH")
+	_, err = GetAccountData(account)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,26 +85,27 @@ func TestBalances(t *testing.T) {
 		t.Fatalf("Can return data with invalid url, quitting!")
 	}
 	TestNetClient.HorizonURL = oldTc
-	if balance != 5.999670028686523 {
+	if balance != 10000 {
 		log.Println("CHECKBAL:", balance)
 		t.Fatalf("Balance doesn't match with remote API, quitting!")
 	}
-	balance, err = GetAssetBalance("GAMTX6MDG65OFU42WGZH2W73AODEKILBW3IWZYPY5SMIVSDSMYXGTTUH", "OXAc6989b60f")
+	balance, err = GetAssetBalance(account, "STABLEUSD")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = GetAssetBalance("blah", "OXAc6989b60f")
+	if balance != 10.0000000 {
+		log.Println("CHECKBALASSET: ", balance)
+		t.Fatalf("Balance doesn't match with remote API, quitting!")
+	}
+	_, err = GetAssetBalance("blah", "STABLEUSD")
 	if err == nil {
 		t.Fatalf("Account doesn't exist, quitting!")
 	}
-	_, err = GetAssetBalance("GAMTX6MDG65OFU42WGZH2W73AODEKILBW3IWZYPY5SMIVSDSMYXGTTUH", "blah")
+	_, err = GetAssetBalance(account, "blah")
 	if err == nil {
 		t.Fatalf("Asset doesn't exist, quitting!")
 	}
-	if balance != 120.0000000 {
-		t.Fatalf("Balance doesn't match with remote API, quitting!")
-	}
-	_, err = GetAllBalances("GAMTX6MDG65OFU42WGZH2W73AODEKILBW3IWZYPY5SMIVSDSMYXGTTUH")
+	_, err = GetAllBalances(account)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,9 +113,9 @@ func TestBalances(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Account doesn't exist, quitting!")
 	}
-	if !HasStableCoin("GAMTX6MDG65OFU42WGZH2W73AODEKILBW3IWZYPY5SMIVSDSMYXGTTUH") {
+	if !HasStableCoin(account) {
 		// no token balance, should error out
-		t.Fatal("Stablecoin not present on an address which should have no stablecoin associated with it")
+		t.Fatal("Stablecoin not present on an address which should have stablecoin associated with it")
 	}
 	if HasStableCoin("blah") {
 		t.Fatalf("Balance exists on something that ideally shouldn't have balance!")
@@ -118,7 +126,7 @@ func TestBalances(t *testing.T) {
 // if not, this quits immediately
 func TestAPIs(t *testing.T) {
 	var err error
-	height, err := GetTransactionHeight("bea5f00c6327a2d76dbe427c242c5087230191a9c83778b68f3d1fda5a7534a8")
+	height, err := GetTransactionHeight(txhash)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -126,10 +134,10 @@ func TestAPIs(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Shouldn't work, invalid tx hash")
 	}
-	if height != 2452 {
+	if height != txHashNumber {
 		t.Fatalf("Heights don't match, quitting!")
 	}
-	_, err = GetTransactionData("bea5f00c6327a2d76dbe427c242c5087230191a9c83778b68f3d1fda5a7534a8")
+	_, err = GetTransactionData(txhash)
 	if err != nil {
 		t.Fatal(err)
 	}
