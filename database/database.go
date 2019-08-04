@@ -115,7 +115,7 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	return err
 }
 
-// Retrieve retrieves a byteStringf rom the database
+// Retrieve retrieves a byteString from the database
 func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 	var returnBytes []byte
 	db, err := OpenDB(dir)
@@ -161,29 +161,23 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 		if b == nil {
 			return ErrBucketMissing
 		}
-		for i := 1; ; i++ {
-			iB, err := utils.ToByte(i)
-			if err != nil {
-				return err
-			}
-			x := b.Get(iB)
-			if x == nil {
-				return nil
-			}
+		err := b.ForEach(func(k, x []byte) error {
 			temp := make([]byte, len(x))
 			copy(temp, x)
 			arr = append(arr, temp)
-		}
+			return nil
+		})
+		return err
 	})
 	return arr, err
 }
 
 // RetrieveAllKeys retrieves all key value pairs from the database
-func RetrieveAllKeysLim(dir string, bucketName []byte, lim int) ([][]byte, error) {
-	var arr [][]byte
+func RetrieveAllKeysLim(dir string, bucketName []byte) (int, error) {
+	lim := 0
 	db, err := OpenDB(dir)
 	if err != nil {
-		return arr, errors.Wrap(err, "could not open database")
+		return lim, errors.Wrap(err, "could not open database")
 	}
 	defer db.Close()
 
@@ -192,20 +186,13 @@ func RetrieveAllKeysLim(dir string, bucketName []byte, lim int) ([][]byte, error
 		if b == nil {
 			return ErrBucketMissing
 		}
-		for i := 1; i <= lim; i++ {
-			iB, err := utils.ToByte(i)
-			if err != nil {
-				return err
-			}
-			x := b.Get(iB)
-			if x == nil {
-				continue
-			}
-			temp := make([]byte, len(x))
-			copy(temp, x)
-			arr = append(arr, temp)
-		}
+
+		x := b.Stats().KeyN
+		var temp int
+		temp = x // weird pointer stuff thanks to boltdb
+
+		lim = temp
 		return nil
 	})
-	return arr, err
+	return lim, err
 }
