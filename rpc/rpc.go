@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 // package rpc contains stuff that one would most likely define for their own database
@@ -68,7 +67,7 @@ func CheckPut(w http.ResponseWriter, r *http.Request) error {
 func GetRequest(url string) ([]byte, error) {
 	var dummy []byte
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: TimeoutVal,
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {

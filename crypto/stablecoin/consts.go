@@ -9,8 +9,6 @@ var (
 	StablecoinSeed string
 	// StableCoinSeedFile denotes the file location of the stablecoin's seed file
 	StableCoinSeedFile string
-	// StableCoinAddress denotes the address of the stablecoin
-	StableCoinAddress string
 	// StablecoinTrustLimit denotes the trust limit of the stablecoin
 	StablecoinTrustLimit float64
 	// AnchorUSDCode is the code of Anchor's stablecoin

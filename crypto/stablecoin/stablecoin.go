@@ -73,7 +73,7 @@ func InitStableCoin(mainnet bool) (string, string, error) {
 // ListenForPayments listens to all payments to/from the stablecoin address
 func ListenForPayments() {
 	client := xlm.TestNetClient
-	opRequest := horizon.OperationRequest{ForAccount: StableCoinAddress}
+	opRequest := horizon.OperationRequest{ForAccount: StablecoinPublicKey}
 
 	ctx, cancel := context.WithCancel(context.Background()) // cancel
 	defer cancel()
