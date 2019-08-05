@@ -58,8 +58,15 @@ func InitStableCoin(mainnet bool) (string, string, error) {
 		}
 	}
 
-	if !xlm.AccountExists(publicKey) {
-		return "", "", errors.New("please refill your account: " + publicKey + " with funds to setup a stellar account. Your seed is: " + seed)
+	if Mainnet {
+		if !xlm.AccountExists(publicKey) {
+			return "", "", errors.New("please refill your account: " + publicKey + " with funds to setup a stellar account. Your seed is: " + seed)
+		} else {
+			err := xlm.GetXLM(publicKey)
+			if err != nil {
+				return "", "", err
+			}
+		}
 	}
 
 	// the user doesn't have seed, so create a new platform
