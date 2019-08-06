@@ -112,6 +112,10 @@ func ToByte(x interface{}) ([]byte, error) {
 		a := make([]byte, 2)
 		binary.BigEndian.PutUint16(a, x.(uint16))
 		return a[1:], nil
+	case uint64:
+		b := make([]byte, 8)
+		binary.LittleEndian.PutUint64(b, x.(uint64))
+		return b, nil
 	}
 	return nil, ErrTypeNotSupported
 }
