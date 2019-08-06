@@ -8,7 +8,7 @@ import (
 	tickers "github.com/Varunram/essentials/crypto/exchangetickers"
 	xlm "github.com/Varunram/essentials/crypto/xlm"
 	assets "github.com/Varunram/essentials/crypto/xlm/assets"
-	utils "github.com/Varunram/essentials/utils"
+	// utils "github.com/Varunram/essentials/utils"
 )
 
 // Exchange exchanges xlm for STABLEUSD
@@ -28,9 +28,8 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 		return errors.Wrap(err, "couldn't get native balance from api")
 	}
 
-	bs, _ := utils.ToFloat(balance)
-	if bs < convAmount {
-		return errors.New("insufficient balance")
+	if balance < convAmount {
+		return errors.New("balance is less than amount requested")
 	}
 
 	var trustLimit float64
@@ -64,7 +63,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 func OfferExchange(publicKey string, seed string, invAmount float64) error {
 
 	if Mainnet {
-		return errors.New("Exchange offers in mainent need to be done through dex")
+		return errors.New("Exchange offers in mainnet need to be done through dex")
 	}
 
 	balance, err := xlm.GetAssetBalance(publicKey, StablecoinCode)
@@ -97,7 +96,7 @@ func OfferExchange(publicKey string, seed string, invAmount float64) error {
 		log.Println(diff, exchangeRate, amountToExchange)
 		err = Exchange(publicKey, seed, amountToExchange)
 		if err != nil {
-			return errors.New("Unable to exchange XLM for USD and automate payment. Please get more STABLEUSD to fulfil the payment")
+			return errors.Wrap(err, "Unable to exchange XLM for USD and automate payment. Please get more STABLEUSD to fulfil the payment")
 		}
 		time.Sleep(10 * time.Second) // 5 seconds for issuing stalbeusd to the person who's requested for it
 	} else {
