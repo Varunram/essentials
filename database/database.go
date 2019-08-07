@@ -37,10 +37,7 @@ func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 	for _, bucket := range buckets {
 		err = db.Update(func(tx *bolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists(bucket)
-			if err != nil {
-				return err
-			}
-			return nil
+			return err
 		})
 		if err != nil {
 			return db, errors.Wrap(err, "could not create bucket")
@@ -105,9 +102,9 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 
 	// open the db only to insert the element and don't check for other stuff
 	err = db.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(bucketName)
-		if b == nil {
-			return ErrBucketMissing
+		b, err := tx.CreateBucketIfNotExists(bucketName)
+		if err != nil {
+			return err
 		}
 		return b.Put(iK, encoded)
 	})
