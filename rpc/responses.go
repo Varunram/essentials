@@ -31,32 +31,46 @@ func ResponseHandler(w http.ResponseWriter, status int) {
 	response.Code = status
 	switch status {
 	case StatusOK:
+		w.WriteHeader(StatusOK)
 		response.Status = "OK"
 	case StatusCreated:
+		w.WriteHeader(StatusCreated)
 		response.Status = "Method Created"
 	case StatusMovedPermanently:
+		w.WriteHeader(StatusMovedPermanently)
 		response.Status = "Endpoint moved permanently"
 	case StatusBadRequest:
+		w.WriteHeader(StatusBadRequest)
 		response.Status = "Bad Request error!"
 	case StatusUnauthorized:
+		w.WriteHeader(StatusUnauthorized)
 		response.Status = "You are unauthorized to make this request"
 	case StatusPaymentRequired:
+		w.WriteHeader(StatusPaymentRequired)
 		response.Status = "Payment required before you can access this endpoint"
 	case StatusNotFound:
+		w.WriteHeader(StatusNotFound)
 		response.Status = "404 Error Not Found!"
 	case StatusInternalServerError:
+		w.WriteHeader(StatusInternalServerError)
 		response.Status = "Internal Server Error"
 	case StatusLocked:
+		w.WriteHeader(StatusLocked)
 		response.Status = "Endpoint locked until further notice"
 	case StatusTooManyRequests:
+		w.WriteHeader(StatusTooManyRequests)
 		response.Status = "Too many requests made, try again later"
 	case StatusBadGateway:
+		w.WriteHeader(StatusBadGateway)
 		response.Status = "Bad Gateway Error"
 	case StatusServiceUnavailable:
+		w.WriteHeader(StatusServiceUnavailable)
 		response.Status = "Service Unavailable error"
 	case StatusGatewayTimeout:
+		w.WriteHeader(StatusGatewayTimeout)
 		response.Status = "Gateway Timeout Error"
 	case StatusNotAcceptable:
+		w.WriteHeader(StatusNotAcceptable)
 		response.Status = "Not accepted"
 	default:
 		response.Status = "404 Page Not Found"
