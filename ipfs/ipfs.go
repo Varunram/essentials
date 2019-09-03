@@ -82,12 +82,12 @@ func IpfsAddBytes(data []byte) (string, error) {
 // in the required extension format. This has to match with the extension
 // format that the original file had or else one would not be able to view
 // the file
-func IpfsGetFile(hash string, extension string) error {
+func IpfsGetFile(hash string, extension string) (string, error) {
 	// extension can be pdf, txt, ppt and others
 	sh := RetrieveShell()
 	// generate a random fileName and then return the file to the user
 	fileName := utils.GetRandomString(IpfsFileLength) + "." + extension
-	return sh.Get(hash, fileName)
+	return fileName, sh.Get(hash, fileName)
 }
 
 // IpfsGetString gets back the contents of an ipfs hash as a string

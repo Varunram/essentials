@@ -48,7 +48,7 @@ func CheckPost(w http.ResponseWriter, r *http.Request) error {
 	//err := CheckOrigin(w, r)
 	if r.Method != "POST" {
 		ResponseHandler(w, StatusNotFound)
-		return errors.New("method not post or origin not localhost")
+		return errors.New("method not post")
 	}
 	return nil
 }
@@ -128,6 +128,18 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 	}
 
 	return x, nil
+}
+
+// PostForm is a handler that makes it easy to send out POST form requests
+func PostForm(body string, postdata url.Values) ([]byte, error) {
+
+	httpdata, err := http.PostForm(body, postdata)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not relay get request")
+	}
+
+	defer httpdata.Body.Close()
+	return ioutil.ReadAll(httpdata.Body)
 }
 
 // GetAndSendJson is a handler that makes a get request and returns json data
