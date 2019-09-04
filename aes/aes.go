@@ -63,9 +63,17 @@ func EncryptFile(filename string, data []byte, passphrase string) error {
 	if err != nil {
 		return errors.Wrap(err, "Error while creating file")
 	}
-	defer f.Close()
+
+	defer func() {
+		if ferr := f.Close() ; ferr != nil {
+			err = ferr
+			os.Remove(filename)
+		}
+	}()
+
 	data, err = Encrypt(data, passphrase)
 	if err != nil {
+		os.Remove(filename)
 		return errors.Wrap(err, "Error while encrypting file")
 	}
 	f.Write(data)

@@ -62,7 +62,12 @@ func DeleteKeyFromBucket(dir string, key int, bucketName []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "could not open database")
 	}
-	defer db.Close()
+
+	defer func() {
+		if ferr := db.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
 
 	// if the passed key is not integer, don't open the db
 	iK, err := utils.ToByte(key)
@@ -86,7 +91,12 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	if err != nil {
 		return errors.Wrap(err, "could not open database")
 	}
-	defer db.Close()
+
+	defer func() {
+		if ferr := db.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
 
 	// if x is not interace, don't open the database
 	encoded, err := json.Marshal(x)
@@ -119,7 +129,12 @@ func Retrieve(dir string, bucketName []byte, key int) ([]byte, error) {
 	if err != nil {
 		return returnBytes, errors.Wrap(err, "could not open database")
 	}
-	defer db.Close()
+
+	defer func() {
+		if ferr := db.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
 
 	// if the passed key is not integer, don't open the db
 	iK, err := utils.ToByte(key)
@@ -151,7 +166,12 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	if err != nil {
 		return arr, errors.Wrap(err, "could not open database")
 	}
-	defer db.Close()
+
+	defer func() {
+		if ferr := db.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
 
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)
@@ -176,7 +196,12 @@ func RetrieveAllKeysLim(dir string, bucketName []byte) (int, error) {
 	if err != nil {
 		return lim, errors.Wrap(err, "could not open database")
 	}
-	defer db.Close()
+
+	defer func() {
+		if ferr := db.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
 
 	err = db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(bucketName)

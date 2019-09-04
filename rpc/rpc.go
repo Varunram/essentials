@@ -78,7 +78,13 @@ func GetRequest(url string) ([]byte, error) {
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not make request")
 	}
-	defer res.Body.Close()
+
+	defer func() {
+		if ferr := res.Body.Close() ; ferr != nil {
+			err = ferr
+		}
+	}()
+
 	return ioutil.ReadAll(res.Body)
 }
 
@@ -98,7 +104,12 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 		return dummy, errors.Wrap(err, "did not make request")
 	}
 
-	defer res.Body.Close()
+	defer func() {
+		if ferr := res.Body.Close() ; ferr != nil {
+			err = ferr
+		}
+	}()
+
 	x, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not read from ioutil")
@@ -121,7 +132,13 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 		return dummy, errors.Wrap(err, "did not make request")
 	}
 
-	defer res.Body.Close()
+	defer func() {
+		if ferr := res.Body.Close() ; ferr != nil {
+			err = ferr
+		}
+	}()
+
+
 	x, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not read from ioutil")
@@ -138,7 +155,12 @@ func PostForm(body string, postdata url.Values) ([]byte, error) {
 		return nil, errors.Wrap(err, "could not relay get request")
 	}
 
-	defer httpdata.Body.Close()
+	defer func() {
+		if ferr := httpdata.Body.Close() ; ferr != nil {
+			err = ferr
+		}
+	}()
+
 	return ioutil.ReadAll(httpdata.Body)
 }
 
