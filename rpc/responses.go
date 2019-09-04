@@ -29,6 +29,10 @@ const (
 func ResponseHandler(w http.ResponseWriter, status int) {
 	var response StatusResponse
 	response.Code = status
+	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
+	w.Header().Add("Access-Control-Allow-Methods", "*")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
 	switch status {
 	case StatusOK:
 		w.WriteHeader(StatusOK)
