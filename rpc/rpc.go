@@ -69,11 +69,13 @@ func GetRequest(url string) ([]byte, error) {
 	client := &http.Client{
 		Timeout: TimeoutVal,
 	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not create new GET request")
 	}
 	req.Header.Set("Origin", "localhost")
+
 	res, err := client.Do(req)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not make request")
@@ -92,14 +94,18 @@ func GetRequest(url string) ([]byte, error) {
 func PutRequest(body string, payload io.Reader) ([]byte, error) {
 	// the body must be the param that you usually pass to curl's -d option
 	var dummy []byte
+	client := &http.Client{
+		Timeout: TimeoutVal,
+	}
+
 	req, err := http.NewRequest("PUT", body, payload)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not create new PUT request")
 	}
-	// need to add this header or we'll get a negative response sometimes
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+	req.Header.Set("Origin", "localhost")
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not make request")
 	}
@@ -122,12 +128,17 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 func PostRequest(body string, payload io.Reader) ([]byte, error) {
 	// the body must be the param that you usually pass to curl's -d option
 	var dummy []byte
+	client := &http.Client{
+		Timeout: TimeoutVal,
+	}
+
 	req, err := http.NewRequest("POST", body, payload)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not create new POST request")
 	}
+	req.Header.Set("Origin", "localhost")
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := client.Do(req)
 	if err != nil {
 		return dummy, errors.Wrap(err, "did not make request")
 	}
@@ -150,18 +161,18 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 // PostForm is a handler that makes it easy to send out POST form requests
 func PostForm(body string, postdata url.Values) ([]byte, error) {
 
-	httpdata, err := http.PostForm(body, postdata)
+	data, err := http.PostForm(body, postdata)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not relay get request")
 	}
 
 	defer func() {
-		if ferr := httpdata.Body.Close() ; ferr != nil {
+		if ferr := data.Body.Close() ; ferr != nil {
 			err = ferr
 		}
 	}()
 
-	return ioutil.ReadAll(httpdata.Body)
+	return ioutil.ReadAll(data.Body)
 }
 
 // GetAndSendJson is a handler that makes a get request and returns json data
