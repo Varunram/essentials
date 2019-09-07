@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"crypto/x509"
+	"crypto/tls"
 )
 
 // package rpc contains stuff that one would most likely define for their own database
@@ -156,6 +158,73 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 	}
 
 	return x, nil
+}
+
+// SetupLocalHttpsClient can be used to setup a local client configured to accept a user generated cert
+func SetupLocalHttpsClient(path string) *http.Client {
+	rootCAs, _ := x509.SystemCertPool()
+	if rootCAs == nil {
+		rootCAs = x509.NewCertPool()
+	}
+
+	certs, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalf("Failed to append", err)
+	}
+
+	// Append our cert to the system pool
+	if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+		log.Println("No certs appended, using system certs only")
+	}
+
+	config := &tls.Config{
+		RootCAs: rootCAs,
+	}
+
+	tr := &http.Transport{TLSClientConfig: config}
+	return &http.Client{Transport: tr}
+}
+
+// HttpsGet is a function that should only be used on localhost with a client configured to accept a user generated cert
+func HttpsGet(client *http.Client, url string) ([]byte, error) {
+	// Read in the cert file
+	res, err := client.Get(url)
+	if err != nil {
+		return nil, errors.Wrap(err, "did not make request")
+	}
+
+	defer func() {
+		if ferr := res.Body.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return data, err
+	}
+	return data, err
+}
+
+// HttpsPost is a function that should only be used on localhost with a client configured to accept a user generated cert
+func HttpsPost(client *http.Client, url string, postdata url.Values) ([]byte, error) {
+	// Read in the cert file
+	res, err := client.PostForm(url, postdata)
+	if err != nil {
+		return nil, errors.Wrap(err, "did not make request")
+	}
+
+	defer func() {
+		if ferr := res.Body.Close(); ferr != nil {
+			err = ferr
+		}
+	}()
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return data, err
+	}
+	return data, err
 }
 
 // PostForm is a handler that makes it easy to send out POST form requests
