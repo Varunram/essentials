@@ -15,6 +15,8 @@ import (
 	"math/big"
 )
 
+// ref: https://ericchiang.github.io/post/go-tls/
+
 // helper function to create a cert template with a serial number and other required fields
 func CertTemplate() (*x509.Certificate, error) {
 	// generate a random serial number (a real cert authority would have some logic behind this)
