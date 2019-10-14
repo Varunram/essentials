@@ -1,6 +1,8 @@
 package rpc
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"io"
@@ -9,8 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"crypto/x509"
-	"crypto/tls"
+	"time"
 )
 
 // package rpc contains stuff that one would most likely define for their own database
@@ -84,7 +85,7 @@ func GetRequest(url string) ([]byte, error) {
 	}
 
 	defer func() {
-		if ferr := res.Body.Close() ; ferr != nil {
+		if ferr := res.Body.Close(); ferr != nil {
 			err = ferr
 		}
 	}()
@@ -113,7 +114,7 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 	}
 
 	defer func() {
-		if ferr := res.Body.Close() ; ferr != nil {
+		if ferr := res.Body.Close(); ferr != nil {
 			err = ferr
 		}
 	}()
@@ -146,11 +147,10 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 	}
 
 	defer func() {
-		if ferr := res.Body.Close() ; ferr != nil {
+		if ferr := res.Body.Close(); ferr != nil {
 			err = ferr
 		}
 	}()
-
 
 	x, err := ioutil.ReadAll(res.Body)
 	if err != nil {
@@ -161,7 +161,7 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 }
 
 // SetupLocalHttpsClient can be used to setup a local client configured to accept a user generated cert
-func SetupLocalHttpsClient(path string) *http.Client {
+func SetupLocalHttpsClient(path string, timeout time.Duration) *http.Client {
 	rootCAs, _ := x509.SystemCertPool()
 	if rootCAs == nil {
 		rootCAs = x509.NewCertPool()
@@ -182,7 +182,7 @@ func SetupLocalHttpsClient(path string) *http.Client {
 	}
 
 	tr := &http.Transport{TLSClientConfig: config}
-	return &http.Client{Transport: tr}
+	return &http.Client{Transport: tr, Timeout: timeout}
 }
 
 // HttpsGet is a function that should only be used on localhost with a client configured to accept a user generated cert
@@ -236,7 +236,7 @@ func PostForm(body string, postdata url.Values) ([]byte, error) {
 	}
 
 	defer func() {
-		if ferr := data.Body.Close() ; ferr != nil {
+		if ferr := data.Body.Close(); ferr != nil {
 			err = ferr
 		}
 	}()

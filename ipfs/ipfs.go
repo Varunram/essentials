@@ -103,6 +103,6 @@ func IpfsGetString(hash string) (string, error) {
 		log.Println("Error while reading file", err)
 		return "", err
 	}
-	os.Remove(tmpFileDir)
-	return string(data), nil
+	err = os.Remove(tmpFileDir)
+	return string(data), err
 }
