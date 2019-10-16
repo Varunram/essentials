@@ -32,11 +32,11 @@ func SetPath(newPath string) {
 
 // ReadfromFile reads a pdf and returns the datastream
 func ReadfromFile(filepath string) ([]byte, error) {
-	err = ioutil.ReadFile(filepath)
+	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		log.Println("error while reading file")
 	}
-	return err
+	return data, err
 }
 
 // IpfsAddString stores the passed string in ipfs and returns the hash
@@ -69,7 +69,6 @@ func IpfsAddFile(filepath string) (string, error) {
 
 // IpfsAddBytes hashes a byte string
 func IpfsAddBytes(data []byte) (string, error) {
-	var dummy string
 	reader := bytes.NewReader(data)
 	sh := RetrieveShell()
 	hash, err := sh.Add(reader)

@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
+	"log"
 
 	utils "github.com/Varunram/essentials/utils"
 )
@@ -20,6 +21,7 @@ func Encrypt(data []byte, passphrase string) ([]byte, error) {
 	block, _ := aes.NewCipher(key)
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
+		log.Println("Error while opening new GCM block")
 		return nil, errors.Wrap(err, "Error while opening new GCM block")
 	}
 
@@ -32,6 +34,7 @@ func Encrypt(data []byte, passphrase string) ([]byte, error) {
 // Decrypt decrypts a given data stream with a given passphrase
 func Decrypt(data []byte, passphrase string) ([]byte, error) {
 	if len(data) == 0 || len(passphrase) == 0 {
+		log.Println("length of data is zero, can't decrypt")
 		return data, errors.New("Length of data is zero, can't decrpyt!")
 	}
 
@@ -39,11 +42,13 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 	key := []byte(sha3Hash[0:32])
 	block, err := aes.NewCipher(key)
 	if err != nil {
+		log.Println("Error while initializing new cipher")
 		return data, errors.Wrap(err, "Error while initializing new cipher")
 	}
 
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
+		log.Println("failed to initialize new gcm block")
 		return data, errors.Wrap(err, "failed to initialize new gcm block")
 	}
 
@@ -51,6 +56,7 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 
 	plaintext, err := gcm.Open(nil, nonce, data, nil)
 	if err != nil {
+		log.Println("failed to decrypt data")
 		return plaintext, errors.Wrap(err, "failed to decrypt data")
 	}
 
@@ -61,11 +67,12 @@ func Decrypt(data []byte, passphrase string) ([]byte, error) {
 func EncryptFile(filename string, data []byte, passphrase string) error {
 	f, err := os.Create(filename)
 	if err != nil {
+		log.Println("Error while creating file")
 		return errors.Wrap(err, "Error while creating file")
 	}
 
 	defer func() {
-		if ferr := f.Close() ; ferr != nil {
+		if ferr := f.Close(); ferr != nil {
 			err = ferr
 			os.Remove(filename)
 		}
@@ -73,15 +80,29 @@ func EncryptFile(filename string, data []byte, passphrase string) error {
 
 	data, err = Encrypt(data, passphrase)
 	if err != nil {
-		os.Remove(filename)
+		log.Println("Error while encrypting file")
+		err = os.Remove(filename)
+		if err != nil {
+			log.Println("could not delete file: ", filename)
+			panic(err) // panic since we can't return
+		}
 		return errors.Wrap(err, "Error while encrypting file")
 	}
+
 	f.Write(data)
 	return nil
 }
 
 // DecryptFile encrypts a given file with the given passphrase
 func DecryptFile(filename string, passphrase string) ([]byte, error) {
-	data, _ := ioutil.ReadFile(filename)
-	return Decrypt(data, passphrase)
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		log.Println("could not read from file: ", err)
+		return data, err
+	}
+	dData, err := Decrypt(data, passphrase)
+	if err != nil {
+		log.Println("could not decrypt data: ", err)
+	}
+	return dData, err
 }

@@ -258,11 +258,11 @@ func PostForm(body string, postdata url.Values) ([]byte, error) {
 		}
 	}()
 
-	err = ioutil.ReadAll(data.Body)
+	rData, err := ioutil.ReadAll(data.Body)
 	if err != nil {
 		log.Println(err)
 	}
-	return err
+	return rData, err
 }
 
 // GetAndSendJson is a handler that makes a get request and returns json data

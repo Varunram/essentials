@@ -2,7 +2,7 @@ package rpc
 
 import (
 	"encoding/json"
-	//"log"
+	"log"
 	"net/http"
 )
 
