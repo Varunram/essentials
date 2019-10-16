@@ -183,7 +183,7 @@ func SetupLocalHttpsClient(path string, timeout time.Duration) *http.Client {
 	certs, err := ioutil.ReadFile(path)
 	if err != nil {
 		log.Println("failed to read from file: ", err)
-		log.Fatalf("Failed to append", err)
+		panic(err)
 	}
 
 	// Append our cert to the system pool
