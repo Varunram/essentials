@@ -3,6 +3,7 @@ package database
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
+	"log"
 	"os"
 	"runtime"
 
@@ -32,14 +33,17 @@ func CreateDB(dir string, buckets ...[]byte) (*bolt.DB, error) {
 	// OpenDB creates a db if it doens't exist yet
 	db, err := OpenDB(dir)
 	if err != nil {
-		return db, errors.New("Couldn't open database, exiting!")
+		log.Println("couldn't open database, exiting: ", err)
+		return db, errors.New("couldn't open database, exiting")
 	}
+
 	for _, bucket := range buckets {
 		err = db.Update(func(tx *bolt.Tx) error {
 			_, err := tx.CreateBucketIfNotExists(bucket)
 			return err
 		})
 		if err != nil {
+			log.Println("could not create bucket: ", err)
 			return db, errors.Wrap(err, "could not create bucket")
 		}
 	}
@@ -101,6 +105,7 @@ func Save(dir string, bucketName []byte, x interface{}, key int) error {
 	// if x is not interace, don't open the database
 	encoded, err := json.Marshal(x)
 	if err != nil {
+		log.Println("error while marshaling json struct: ", err)
 		return errors.Wrap(err, "error while marshaling json struct")
 	}
 
@@ -216,5 +221,10 @@ func RetrieveAllKeysLim(dir string, bucketName []byte) (int, error) {
 		lim = temp
 		return nil
 	})
+
+	if err != nil {
+		log.Println("could not open db for reading: ", err)
+	}
+
 	return lim, err
 }

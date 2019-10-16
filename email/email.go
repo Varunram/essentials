@@ -1,7 +1,7 @@
 package email
 
 import (
-	"github.com/pkg/errors"
+	"log"
 	"net/smtp"
 )
 
@@ -16,7 +16,8 @@ func SendMail(body string, to string) error {
 
 	err = smtp.SendMail("smtp.gmail.com:587", auth, From, []string{to}, []byte(msg))
 	if err != nil {
-		return errors.Wrap(err, "smtp error")
+		log.Println(err)
 	}
+
 	return nil
 }

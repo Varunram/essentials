@@ -31,6 +31,8 @@ func SetupBasicHandlers() {
 // CheckOrigin checks if the origin of the incoming request is localhost
 func CheckOrigin(w http.ResponseWriter, r *http.Request) error {
 	if !strings.Contains(r.Header.Get("Origin"), "localhost") {
+		ResponseHandler(w, StatusNotFound)
+		log.Println("origin not localhost")
 		return errors.New("origin not localhost")
 	}
 	return nil
@@ -41,6 +43,7 @@ func CheckGet(w http.ResponseWriter, r *http.Request) error {
 	//err := CheckOrigin(w, r)
 	if r.Method != "GET" {
 		ResponseHandler(w, StatusNotFound)
+		log.Println("method not get or origin not localhost")
 		return errors.New("method not get or origin not localhost")
 	}
 	return nil
@@ -51,6 +54,7 @@ func CheckPost(w http.ResponseWriter, r *http.Request) error {
 	//err := CheckOrigin(w, r)
 	if r.Method != "POST" {
 		ResponseHandler(w, StatusNotFound)
+		log.Println("method not post")
 		return errors.New("method not post")
 	}
 	return nil
@@ -61,6 +65,7 @@ func CheckPut(w http.ResponseWriter, r *http.Request) error {
 	err := CheckOrigin(w, r)
 	if err != nil || r.Method != "PUT" {
 		ResponseHandler(w, StatusNotFound)
+		log.Println("method not put or origin not localhost")
 		return errors.New("method not put or origin not localhost")
 	}
 	return nil
@@ -75,12 +80,14 @@ func GetRequest(url string) ([]byte, error) {
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
+		log.Println("did not create new GET request: ", err)
 		return dummy, errors.Wrap(err, "did not create new GET request")
 	}
 	req.Header.Set("Origin", "localhost")
 
 	res, err := client.Do(req)
 	if err != nil {
+		log.Println("did not make request: ", err)
 		return dummy, errors.Wrap(err, "did not make request")
 	}
 
@@ -103,6 +110,7 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 
 	req, err := http.NewRequest("PUT", body, payload)
 	if err != nil {
+		log.Println("did not create new PUT request: ", err)
 		return dummy, errors.Wrap(err, "did not create new PUT request")
 	}
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
@@ -110,6 +118,7 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 
 	res, err := client.Do(req)
 	if err != nil {
+		log.Println("did not make request: ", err)
 		return dummy, errors.Wrap(err, "did not make request")
 	}
 
@@ -121,6 +130,7 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 
 	x, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		log.Println("did not read from ioutil: ", err)
 		return dummy, errors.Wrap(err, "did not read from ioutil")
 	}
 
@@ -137,12 +147,14 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 
 	req, err := http.NewRequest("POST", body, payload)
 	if err != nil {
+		log.Println("did not create new POST request: ", err)
 		return dummy, errors.Wrap(err, "did not create new POST request")
 	}
 	req.Header.Set("Origin", "localhost")
 
 	res, err := client.Do(req)
 	if err != nil {
+		log.Println("did not make request: ", err)
 		return dummy, errors.Wrap(err, "did not make request")
 	}
 
@@ -154,6 +166,7 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 
 	x, err := ioutil.ReadAll(res.Body)
 	if err != nil {
+		log.Println("did not read from ioutil: ", err)
 		return dummy, errors.Wrap(err, "did not read from ioutil")
 	}
 
@@ -169,7 +182,8 @@ func SetupLocalHttpsClient(path string, timeout time.Duration) *http.Client {
 
 	certs, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Fatalf("Failed to append", err)
+		log.Println("failed to read from file: ", err)
+		panic(err)
 	}
 
 	// Append our cert to the system pool
@@ -190,6 +204,7 @@ func HttpsGet(client *http.Client, url string) ([]byte, error) {
 	// Read in the cert file
 	res, err := client.Get(url)
 	if err != nil {
+		log.Println("did not make request: ", err)
 		return nil, errors.Wrap(err, "did not make request")
 	}
 
@@ -201,7 +216,7 @@ func HttpsGet(client *http.Client, url string) ([]byte, error) {
 
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return data, err
+		log.Println(err)
 	}
 	return data, err
 }
@@ -211,6 +226,7 @@ func HttpsPost(client *http.Client, url string, postdata url.Values) ([]byte, er
 	// Read in the cert file
 	res, err := client.PostForm(url, postdata)
 	if err != nil {
+		log.Println("did not make request: ", err)
 		return nil, errors.Wrap(err, "did not make request")
 	}
 
@@ -222,7 +238,7 @@ func HttpsPost(client *http.Client, url string, postdata url.Values) ([]byte, er
 
 	data, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return data, err
+		log.Println(err)
 	}
 	return data, err
 }
@@ -232,6 +248,7 @@ func PostForm(body string, postdata url.Values) ([]byte, error) {
 
 	data, err := http.PostForm(body, postdata)
 	if err != nil {
+		log.Println("could not relay get request: ", err)
 		return nil, errors.Wrap(err, "could not relay get request")
 	}
 
@@ -241,21 +258,25 @@ func PostForm(body string, postdata url.Values) ([]byte, error) {
 		}
 	}()
 
-	return ioutil.ReadAll(data.Body)
+	rData, err := ioutil.ReadAll(data.Body)
+	if err != nil {
+		log.Println(err)
+	}
+	return rData, err
 }
 
 // GetAndSendJson is a handler that makes a get request and returns json data
 func GetAndSendJson(w http.ResponseWriter, body string, x interface{}) {
 	data, err := GetRequest(body)
 	if err != nil {
-		log.Println("did not get response:", err)
+		log.Println("did not get response: ", err)
 		ResponseHandler(w, StatusBadRequest)
 		return
 	}
 	// now data is in byte, we need the other structure now
 	err = json.Unmarshal(data, &x)
 	if err != nil {
-		log.Println("did not unmarshal json", err)
+		log.Println("did not unmarshal json: ", err)
 		ResponseHandler(w, StatusInternalServerError)
 		return
 	}
@@ -267,7 +288,7 @@ func GetAndSendJson(w http.ResponseWriter, body string, x interface{}) {
 func GetAndSendByte(w http.ResponseWriter, body string) {
 	data, err := GetRequest(body)
 	if err != nil {
-		log.Println("did not get response", err)
+		log.Println("did not get response: ", err)
 		ResponseHandler(w, StatusBadRequest)
 		return
 	}
@@ -283,6 +304,7 @@ func PutAndSend(w http.ResponseWriter, body string, payload io.Reader) {
 		ResponseHandler(w, StatusBadRequest)
 		return
 	}
+
 	var x interface{}
 	err = json.Unmarshal(data, &x)
 	if err != nil {
@@ -322,10 +344,12 @@ func SetupPingHandler() {
 func CheckHTTPSRedirect(urlString string) (bool, error) {
 	url, err := url.Parse(urlString)
 	if err != nil {
+		log.Println(err)
 		return false, errors.Wrap(err, "could not parse url string")
 	}
 	req, err := http.NewRequest("GET", url.String(), nil)
 	if err != nil {
+		log.Println(err)
 		return false, errors.Wrap(err, "errros while constructing new get request")
 	}
 
@@ -346,6 +370,8 @@ func CheckHTTPSRedirect(urlString string) (bool, error) {
 				if redirURL.Host == url.Host && redirURL.Scheme == "https" {
 					return true, nil
 				}
+			} else {
+				log.Println(err)
 			}
 		}
 	}

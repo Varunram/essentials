@@ -6,6 +6,7 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"net/url"
 	"sort"
 	"strconv"
@@ -98,6 +99,7 @@ func (c *OTPConfig) Authenticate(password string) (bool, error) {
 	code, err := strconv.Atoi(password)
 
 	if err != nil {
+		log.Println("invalid code")
 		return false, fmt.Errorf("invalid code, exiting")
 	}
 
