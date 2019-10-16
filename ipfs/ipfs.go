@@ -32,7 +32,11 @@ func SetPath(newPath string) {
 
 // ReadfromFile reads a pdf and returns the datastream
 func ReadfromFile(filepath string) ([]byte, error) {
-	return ioutil.ReadFile(filepath)
+	err = ioutil.ReadFile(filepath)
+	if err != nil {
+		log.Println("error while reading file")
+	}
+	return err
 }
 
 // IpfsAddString stores the passed string in ipfs and returns the hash
@@ -40,10 +44,9 @@ func IpfsAddString(a string) (string, error) {
 	sh := RetrieveShell()
 	hash, err := sh.Add(strings.NewReader(a)) // input must be an io.Reader
 	if err != nil {
-		log.Println("Error while adding string to ipfs", err)
-		return "", err
+		log.Println("Error while adding string to ipfs: ", err)
 	}
-	return hash, nil
+	return hash, err
 }
 
 // IpfsAddFile returns the ipfs hash of a file
@@ -60,9 +63,8 @@ func IpfsAddFile(filepath string) (string, error) {
 	hash, err := sh.Add(reader)
 	if err != nil {
 		log.Println("Error while adding string to ipfs", err)
-		return dummy, err
 	}
-	return hash, nil
+	return hash, err
 }
 
 // IpfsAddBytes hashes a byte string
@@ -73,9 +75,8 @@ func IpfsAddBytes(data []byte) (string, error) {
 	hash, err := sh.Add(reader)
 	if err != nil {
 		log.Println("Error while adding string to ipfs", err)
-		return dummy, err
 	}
-	return hash, nil
+	return hash, err
 }
 
 // IpfsGetFile gets back the contents of an ipfs hash and stores them
@@ -104,5 +105,8 @@ func IpfsGetString(hash string) (string, error) {
 		return "", err
 	}
 	err = os.Remove(tmpFileDir)
+	if err != nil {
+		log.Println("error while removing file")
+	}
 	return string(data), err
 }

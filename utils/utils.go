@@ -38,6 +38,9 @@ func SHA3hash(inputString string) string {
 // GetHomeDir gets the home directory of the user
 func GetHomeDir() (string, error) {
 	usr, err := user.Current()
+	if err != nil {
+		log.Println("error while getting current directory")
+	}
 	return usr.HomeDir, err
 }
 
@@ -117,6 +120,8 @@ func ToByte(x interface{}) ([]byte, error) {
 		binary.LittleEndian.PutUint64(b, x.(uint64))
 		return b, nil
 	}
+
+	log.Println("type conversion not supported")
 	return nil, ErrTypeNotSupported
 }
 
@@ -130,6 +135,8 @@ func ToString(x interface{}) (string, error) {
 	case int:
 		return strconv.Itoa(x.(int)), nil
 	}
+
+	log.Println("type conversion not supported")
 	return "", ErrTypeNotSupported
 }
 
@@ -141,6 +148,8 @@ func ToInt(x interface{}) (int, error) {
 	case []byte:
 		return strconv.Atoi(string(x.([]byte)))
 	}
+
+	log.Println("type conversion not supported")
 	return -1, ErrTypeNotSupported
 }
 
@@ -153,6 +162,7 @@ func ToFloat(x interface{}) (float64, error) {
 		return float64(x.(int)), nil
 	}
 
+	log.Println("type conversion not supported")
 	return -1, ErrTypeNotSupported
 }
 
@@ -167,5 +177,7 @@ func ToUint16(x interface{}) (uint16, error) {
 		}
 		return binary.BigEndian.Uint16(b), nil
 	}
+
+	log.Println("type conversion not supported")
 	return 0, ErrTypeNotSupported
 }

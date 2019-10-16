@@ -86,6 +86,7 @@ func ResponseHandler(w http.ResponseWriter, status int) {
 func MarshalSend(w http.ResponseWriter, x interface{}) {
 	xJson, err := json.Marshal(x)
 	if err != nil {
+		log.Println("could not marshal json: ", err)
 		WriteToHandler(w, []byte("did not marshal json"))
 		return
 	}
