@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/pkg/errors"
+	"log"
 	"os"
 	"strconv"
 	"syscall"
@@ -22,7 +23,7 @@ func ScanInt() (int, error) {
 		return -1, errors.New("Couldn't read user input")
 	}
 	num := scanner.Text()
-	numI, err := strconv.Atoi(num)
+	numI, err := utils.ToInt(num)
 	if err != nil {
 		return -1, errors.New("Input not a number")
 	}
@@ -61,7 +62,7 @@ func ScanStringCheckInt() (string, error) {
 		return "", errors.New("Couldn't read user input")
 	}
 	inputString := scanner.Text()
-	_, err := strconv.Atoi(inputString)
+	_, err := utils.ToInt(inputString)
 	if err != nil {
 		return "", err
 	}
@@ -78,7 +79,6 @@ func ScanStringCheckFloat() (string, error) {
 	inputString := scanner.Text()
 	_, err := utils.ToFloat(inputString)
 	if err != nil {
-		fmt.Println("Amount entered is not a float, quitting")
 		return "", errors.New("Amount entered is not a float, quitting")
 	}
 	return inputString, nil
@@ -89,6 +89,7 @@ func ScanPassword() (string, error) {
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Println()
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 	tempString := string(bytePassword)
@@ -101,6 +102,7 @@ func ScanRawPassword() (string, error) {
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Println()
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 	password := string(bytePassword)
