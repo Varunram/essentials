@@ -12,3 +12,6 @@ crypto/btc/statechain/statechain
 essentials
 test.db
 crypto/xlm/issuer/test1.key
+ci/ci
+lastbuilt.txt
+secret.txt
