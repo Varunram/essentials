@@ -2,10 +2,11 @@ package xlm
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
 	protocols "github.com/stellar/go/protocols/horizon"
@@ -199,8 +200,11 @@ func GetAssetBalance(publicKey string, assetName string) (float64, error) {
 		}
 	}
 
+	// if the asset does not exist, the balance associated is zero
+	// but to differentiate between not having the asset and never
+	// having had the asset, we return -1
 	log.Println("Asset balance not found")
-	return balance, errors.New("Asset balance not found")
+	return -1, nil
 }
 
 // GetAssetTrustLimit gets the trust limit that the user has with an issuer

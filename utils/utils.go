@@ -5,12 +5,13 @@ import (
 	"crypto/rand"
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/pkg/errors"
 	"log"
 	"math/big"
 	"os/user"
 	"strconv"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"golang.org/x/crypto/sha3"
 )
