@@ -5,9 +5,9 @@ import (
 	"log"
 	// "time"
 
+	tickers "github.com/Varunram/essentials/exchangetickers"
 	xlm "github.com/Varunram/essentials/xlm"
 	assets "github.com/Varunram/essentials/xlm/assets"
-	tickers "github.com/Varunram/essentials/exchangetickers"
 )
 
 // anchor implements stuff which is needed to interact with the anchor stablecoin

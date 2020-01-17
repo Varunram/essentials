@@ -60,7 +60,8 @@ func FundIssuer(issuerPath string, projIndex int, seedpwd string, funderSeed str
 	log.Printf("Project Index: %d, Seed: %s, Address: %s", projIndex, seed, pubkey)
 	_, txhash, err := xlm.SendXLMCreateAccount(pubkey, 5, funderSeed)
 	if err != nil {
-		return errors.Wrap(err, "Error while sending xlm to create account")
+		log.Println("FUNDER SEED: ", funderSeed)
+		return errors.Wrap(err, "Error while sending xlm to create issuer")
 	}
 	log.Printf("Txhash for setting up Project Issuer for project %d is %s", projIndex, txhash)
 	_, txhash, err = xlm.SetAuthImmutable(seed)

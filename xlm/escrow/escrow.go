@@ -3,10 +3,10 @@ package escrow
 import (
 	"log"
 
-	stablecoin "github.com/Varunram/essentials/xlm/stablecoin"
 	xlm "github.com/Varunram/essentials/xlm"
 	assets "github.com/Varunram/essentials/xlm/assets"
 	multisig "github.com/Varunram/essentials/xlm/multisig"
+	stablecoin "github.com/Varunram/essentials/xlm/stablecoin"
 	wallet "github.com/Varunram/essentials/xlm/wallet"
 	consts "github.com/YaleOpenLab/openx/consts"
 	"github.com/pkg/errors"

@@ -2,6 +2,8 @@ package assets
 
 import (
 	//"log"
+	"log"
+
 	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
@@ -34,13 +36,16 @@ func TrustAsset(assetCode string, assetIssuer string, limitx float64, seed strin
 		passphrase = network.TestNetworkPassphrase
 	}
 
+	log.Println("ASSETCODE: ", assetCode, "assetIssuer: ", assetIssuer, "limitx:", limitx, "seed=", seed)
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 
 	limit, err := utils.ToString(limitx)
 	if err != nil {
+		log.Println(err)
 		return "", errors.New("could not convert limit to string")
 	}
 
@@ -58,6 +63,7 @@ func TrustAsset(assetCode string, assetIssuer string, limitx float64, seed strin
 
 	_, txHash, err := xlm.SendTx(mykp, tx)
 	if err != nil {
+		log.Println(err)
 		return "", err
 	}
 

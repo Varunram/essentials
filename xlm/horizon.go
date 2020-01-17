@@ -93,6 +93,7 @@ func GetLatestBlockHash() (string, error) {
 	return z[0].Hash, nil
 }
 
+// GetLatestBlock fetches the latest block from the blockchain
 func GetLatestBlock() (int32, error) {
 	url := TestNetClient.HorizonURL + "ledgers?cursor=now&order=desc&limit=1"
 	resp, err := http.Get(url)
@@ -161,7 +162,7 @@ func GetNativeBalance(publicKey string) (float64, error) {
 	b, err := GetAccountData(publicKey)
 	if err != nil {
 		log.Println(err)
-		return balance, errors.New("Account does not exist yet, get funds!")
+		return balance, errors.New("account does not exist yet, get funds")
 	}
 	var x protocols.Account
 	err = json.Unmarshal(b, &x)

@@ -1,13 +1,14 @@
 package stablecoin
 
 import (
-	"github.com/pkg/errors"
 	"log"
 	"time"
 
+	"github.com/pkg/errors"
+
+	tickers "github.com/Varunram/essentials/exchangetickers"
 	xlm "github.com/Varunram/essentials/xlm"
 	assets "github.com/Varunram/essentials/xlm/assets"
-	tickers "github.com/Varunram/essentials/exchangetickers"
 	// utils "github.com/Varunram/essentials/utils"
 )
 
@@ -19,7 +20,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 	}
 
 	if !xlm.AccountExists(recipientPK) {
-		return errors.New("Account does not exist, quitting!")
+		return errors.New("account does not exist, quitting")
 	}
 
 	// check whether user has enough xlm to pay. If not, quit
@@ -45,6 +46,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 
 	hash, err := assets.TrustAsset(StablecoinCode, StablecoinPublicKey, StablecoinTrustLimit, recipientSeed)
 	if err != nil {
+		log.Println(err)
 		return errors.Wrap(err, "couldn't trust asset")
 	}
 	log.Println("tx hash for trusting stableUSD: ", hash)
@@ -52,6 +54,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 	log.Println(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
 	_, hash, err = xlm.SendXLM(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
 	if err != nil {
+		log.Println("error while sending XLM", StablecoinPublicKey, convAmount, recipientSeed, err)
 		return errors.Wrap(err, "couldn't send xlm")
 	}
 	log.Println("tx hash for sent xlm: ", hash, "pubkey: ", recipientPK)

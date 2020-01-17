@@ -1,8 +1,9 @@
 package xlm
 
 import (
-	"github.com/pkg/errors"
 	"log"
+
+	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
 	horizon "github.com/stellar/go/clients/horizonclient"
@@ -26,7 +27,6 @@ func GetKeyPair() (string, string, error) {
 // AccountExists checks whether an account exists
 func AccountExists(publicKey string) bool {
 	x, err := ReturnSourceAccountPubkey(publicKey)
-	log.Println("X=", x)
 	if err != nil {
 		// error in the horizon api call
 		return false
@@ -38,11 +38,13 @@ func AccountExists(publicKey string) bool {
 func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
 	txe, err := tx.BuildSignEncode(mykp.(*keypair.Full))
 	if err != nil {
+		log.Println(err)
 		return -1, "", errors.Wrap(err, "could not build/sign/encode")
 	}
 
 	resp, err := TestNetClient.SubmitTransactionXDR(txe)
 	if err != nil {
+		log.Println(err)
 		return -1, "", errors.Wrap(err, "could not submit tx to horizon")
 	}
 
@@ -122,11 +124,13 @@ func SendXLM(destination string, amountx float64, seed string, memo string) (int
 	// don't check if the account exists or not, hopefully it does
 	sourceAccount, mykp, err := ReturnSourceAccount(seed)
 	if err != nil {
+		log.Println(err)
 		return -1, "", errors.Wrap(err, "could not return source account")
 	}
 
 	amount, err := utils.ToString(amountx)
 	if err != nil {
+		log.Println(err)
 		return -1, "", errors.Wrap(err, "could not convert amount to string")
 	}
 

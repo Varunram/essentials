@@ -7,12 +7,12 @@ import (
 	"os"
 	"time"
 
+	tickers "github.com/Varunram/essentials/exchangetickers"
 	scan "github.com/Varunram/essentials/scan"
 	utils "github.com/Varunram/essentials/utils"
 	xlm "github.com/Varunram/essentials/xlm"
 	assets "github.com/Varunram/essentials/xlm/assets"
 	wallet "github.com/Varunram/essentials/xlm/wallet"
-	tickers "github.com/Varunram/essentials/exchangetickers"
 	"github.com/pkg/errors"
 	horizon "github.com/stellar/go/clients/horizonclient"
 	"github.com/stellar/go/protocols/horizon/operations"
