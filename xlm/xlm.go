@@ -18,7 +18,7 @@ import (
 // you need to call the CreateAccount method in project to be able to send funds
 // to it
 
-// GetKeyPair gets a keypair that can be used to interact with the stellar blockchain
+// KeyPair gets a keypair that can be used to interact with the stellar blockchain
 func GetKeyPair() (string, string, error) {
 	pair, err := keypair.Random()
 	return pair.Seed(), pair.Address(), err

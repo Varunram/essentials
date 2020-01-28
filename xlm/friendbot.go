@@ -1,8 +1,11 @@
 package xlm
 
 import (
-	"github.com/pkg/errors"
+	"io/ioutil"
+	"log"
 	"net/http"
+
+	"github.com/pkg/errors"
 )
 
 // GetXLM makes an API call to the stellar friendbot, which gives 10000 testnet XLM
@@ -12,7 +15,15 @@ func GetXLM(PublicKey string) error {
 	}
 	resp, err := http.Get("https://friendbot.stellar.org/?addr=" + PublicKey)
 	if err != nil || resp.Status != "200 OK" {
-		return errors.New("API Request did not succeed")
+		return errors.Wrap(err, "API Request did not succeed")
 	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	log.Println(string(body))
 	return nil
 }
