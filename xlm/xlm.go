@@ -18,7 +18,7 @@ import (
 // you need to call the CreateAccount method in project to be able to send funds
 // to it
 
-// KeyPair gets a keypair that can be used to interact with the stellar blockchain
+// GetKeyPair gets a keypair that can be used to interact with the stellar blockchain
 func GetKeyPair() (string, string, error) {
 	pair, err := keypair.Random()
 	return pair.Seed(), pair.Address(), err
@@ -87,14 +87,7 @@ func ReturnSourceAccount(seed string) (horizonprotocol.Account, keypair.KP, erro
 	if err != nil {
 		return sourceAccount, mykp, errors.Wrap(err, "could not parse keypair, quitting")
 	}
-	var client *horizon.Client
-	if Mainnet {
-		client = horizon.DefaultPublicNetClient
-	} else {
-		client = horizon.DefaultTestNetClient
-	}
-	ar := horizon.AccountRequest{AccountID: mykp.Address()}
-	sourceAccount, err = client.AccountDetail(ar)
+	sourceAccount, err = ReturnSourceAccountPubkey(mykp.Address())
 	if err != nil {
 		return sourceAccount, mykp, errors.Wrap(err, "could not load client details, quitting")
 	}
@@ -111,11 +104,12 @@ func ReturnSourceAccountPubkey(pubkey string) (horizonprotocol.Account, error) {
 		client = horizon.DefaultTestNetClient
 	}
 	ar := horizon.AccountRequest{AccountID: pubkey}
+	log.Println("call before account detail")
 	sourceAccount, err := client.AccountDetail(ar)
 	if err != nil {
 		return sourceAccount, errors.Wrap(err, "could not load client details, quitting")
 	}
-
+	log.Println("call after client detail")
 	return sourceAccount, nil
 }
 

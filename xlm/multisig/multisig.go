@@ -1,9 +1,10 @@
 package multisig
 
 import (
-	"github.com/pkg/errors"
 	"log"
 	"time"
+
+	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
 	xlm "github.com/Varunram/essentials/xlm"
@@ -65,7 +66,7 @@ func constructThresholdTx(seed string, pubkey string, cosignerPubkey string, y i
 	}
 
 	op2 := build.SetOptions{
-		Signer:          &build.Signer{cosignerPubkey, 1},
+		Signer:          &build.Signer{Address: cosignerPubkey, Weight: 1},
 		MasterWeight:    build.NewThreshold(0),
 		LowThreshold:    build.NewThreshold(x),
 		MediumThreshold: build.NewThreshold(x),
@@ -172,14 +173,14 @@ func Tx2of2(pubkey1 string, destination string, signer1 string, signer2 string, 
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	_, kp1, err := xlm.ReturnSourceAccount(signer1)
+	kp1, err := keypair.Parse(signer1)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
-	_, kp2, err := xlm.ReturnSourceAccount(signer2)
+	kp2, err := keypair.Parse(signer2)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
 	txe, err := tx.BuildSignEncode(kp1.(*keypair.Full), kp2.(*keypair.Full))
@@ -217,14 +218,14 @@ func Tx2of2Asset(pubkey1 string, destination string, signer1 string, signer2 str
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	_, kp1, err := xlm.ReturnSourceAccount(signer1)
+	kp1, err := keypair.Parse(signer1)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
-	_, kp2, err := xlm.ReturnSourceAccount(signer2)
+	kp2, err := keypair.Parse(signer2)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
 	txe, err := tx.BuildSignEncode(kp1.(*keypair.Full), kp2.(*keypair.Full))
@@ -254,21 +255,21 @@ func AuthImmutable2of2(pubkey1 string, signer1 string, signer2 string) error {
 		Network:       xlm.Passphrase,
 	}
 
-	_, kp1, err := xlm.ReturnSourceAccount(signer1)
+	kp1, err := keypair.Parse(signer1)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
-	_, kp2, err := xlm.ReturnSourceAccount(signer2)
+	kp2, err := keypair.Parse(signer2)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
 	txe, err := tx.BuildSignEncode(kp1.(*keypair.Full), kp2.(*keypair.Full))
 	if err != nil {
 		return errors.Wrap(err, "second party couldn't sign tx")
 	}
-
+	log.Println("built tx successfully")
 	_, _, err = SendTx(txe)
 	return err
 }
@@ -292,14 +293,14 @@ func TrustAssetTx(assetCode string, assetIssuer string, limit string, pubkey str
 		Network:       xlm.Passphrase,
 	}
 
-	_, kp1, err := xlm.ReturnSourceAccount(signer1)
+	kp1, err := keypair.Parse(signer1)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
-	_, kp2, err := xlm.ReturnSourceAccount(signer2)
+	kp2, err := keypair.Parse(signer2)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "could not parse keypair, quitting")
 	}
 
 	txe, err := tx.BuildSignEncode(kp1.(*keypair.Full), kp2.(*keypair.Full))
