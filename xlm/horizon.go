@@ -156,48 +156,54 @@ func GetAccountData(a string) ([]byte, error) {
 }
 
 // GetNativeBalance gets the xlm balance of a specific account
-func GetNativeBalance(publicKey string) (float64, error) {
-	var balance float64
+func GetNativeBalance(publicKey string) float64 {
 	var err error
 	b, err := GetAccountData(publicKey)
 	if err != nil {
 		log.Println(err)
-		return balance, errors.New("account does not exist yet, get funds")
+		return -1
 	}
 	var x protocols.Account
 	err = json.Unmarshal(b, &x)
 	if err != nil {
 		log.Println(err)
-		return balance, errors.Wrap(err, "could not unmarshal data")
+		return -1
 	}
 	for _, balance := range x.Balances {
 		if balance.Asset.Type == "native" {
-			return utils.ToFloat(balance.Balance)
+			balance, err := utils.ToFloat(balance.Balance)
+			if err != nil {
+				return 0
+			}
+			return balance
 		}
 	}
 
 	log.Println("Native balance not found")
-	return balance, errors.New("Native balance not found")
+	return 0
 }
 
 // GetAssetBalance gets the balance of the user in the specific asset
-func GetAssetBalance(publicKey string, assetName string) (float64, error) {
-	var balance float64
+func GetAssetBalance(publicKey string, assetName string) float64 {
 	var err error
 	b, err := GetAccountData(publicKey)
 	if err != nil {
 		log.Println(err)
-		return balance, errors.Wrap(err, "could not get account data")
+		return -1
 	}
 	var x protocols.Account
 	err = json.Unmarshal(b, &x)
 	if err != nil {
 		log.Println(err)
-		return balance, errors.Wrap(err, "could not unmarshal data")
+		return -1
 	}
 	for _, balance := range x.Balances {
 		if balance.Asset.Code == assetName {
-			return utils.ToFloat(balance.Balance)
+			balance, err := utils.ToFloat(balance.Balance)
+			if err != nil {
+				return 0
+			}
+			return balance
 		}
 	}
 
@@ -205,33 +211,35 @@ func GetAssetBalance(publicKey string, assetName string) (float64, error) {
 	// but to differentiate between not having the asset and never
 	// having had the asset, we return -1
 	log.Println("Asset balance not found")
-	return -1, nil
+	return 0
 }
 
 // GetAssetTrustLimit gets the trust limit that the user has with an issuer
-func GetAssetTrustLimit(publicKey string, assetName string) (float64, error) {
-	var balance float64
+func GetAssetTrustLimit(publicKey string, assetName string) float64 {
 	var err error
 	b, err := GetAccountData(publicKey)
 	if err != nil {
-		return balance, errors.Wrap(err, "could not get account data")
+		return -1
 	}
 	var x protocols.Account
 	err = json.Unmarshal(b, &x)
 	if err != nil {
-		return balance, errors.Wrap(err, "could not unmarshal data")
+		return -1
 	}
 	for _, balance := range x.Balances {
 		if balance.Asset.Code == assetName {
-			return utils.ToFloat(balance.Limit)
+			balance, err := utils.ToFloat(balance.Balance)
+			if err != nil {
+				return 0
+			}
+			return balance
 		}
 	}
-	return balance, errors.New("Asset limit not found")
+	return 0
 }
 
 // GetAllBalances gets all the balances associated with a certain account.
 func GetAllBalances(publicKey string) ([]protocols.Balance, error) {
-
 	account, err := ReturnSourceAccountPubkey(publicKey)
 	if err != nil {
 		log.Println(err)

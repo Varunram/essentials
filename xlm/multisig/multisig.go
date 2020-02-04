@@ -345,7 +345,6 @@ func Convert2of2(myPubkey string, seed string, cosignerPubkey string) error {
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	log.Println("CHECK THIS: ", mykp, tx)
 	_, _, err = xlm.SendTx(mykp, tx)
 	if err != nil {
 		return errors.Wrap(err, "error while sending tx to horizon")

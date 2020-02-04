@@ -98,18 +98,15 @@ func ReturnSourceAccount(seed string) (horizonprotocol.Account, keypair.KP, erro
 // ReturnSourceAccountPubkey returns the source account of the pubkey
 func ReturnSourceAccountPubkey(pubkey string) (horizonprotocol.Account, error) {
 	var client *horizon.Client
+	client = horizon.DefaultTestNetClient
 	if Mainnet {
 		client = horizon.DefaultPublicNetClient
-	} else {
-		client = horizon.DefaultTestNetClient
 	}
 	ar := horizon.AccountRequest{AccountID: pubkey}
-	log.Println("call before account detail")
 	sourceAccount, err := client.AccountDetail(ar)
 	if err != nil {
 		return sourceAccount, errors.Wrap(err, "could not load client details, quitting")
 	}
-	log.Println("call after client detail")
 	return sourceAccount, nil
 }
 
@@ -161,12 +158,7 @@ func RefillAccount(publicKey string, refillSeed string) error {
 			return errors.Wrap(err, "Account Could not be created")
 		}
 	}
-	// balance is in string, convert to float
-	balance, err := GetNativeBalance(publicKey)
-	if err != nil {
-		return errors.Wrap(err, "could not get native balance")
-	}
-	balanceI, _ := utils.ToFloat(balance)
+	balanceI, _ := utils.ToFloat(GetNativeBalance(publicKey))
 	if balanceI < 3 { // to setup trustlines
 		_, _, err = SendXLM(publicKey, RefillAmount, refillSeed, "Sending XLM to refill")
 		if err != nil {
