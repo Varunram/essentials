@@ -2,11 +2,9 @@ package stablecoin
 
 import (
 	"log"
-	"time"
 
 	"github.com/pkg/errors"
 
-	tickers "github.com/Varunram/essentials/exchangetickers"
 	xlm "github.com/Varunram/essentials/xlm"
 	assets "github.com/Varunram/essentials/xlm/assets"
 	// utils "github.com/Varunram/essentials/utils"
@@ -51,6 +49,7 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 	return nil
 }
 
+/*
 // OfferExchange offers to exchange user's xlm balance for stableusd if the user does not have enough
 // stableUSD to complete the payment
 func OfferExchange(publicKey string, seed string, invAmount float64) error {
@@ -88,3 +87,4 @@ func OfferExchange(publicKey string, seed string, invAmount float64) error {
 
 	return nil
 }
+*/
