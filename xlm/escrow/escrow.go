@@ -8,7 +8,6 @@ import (
 	multisig "github.com/Varunram/essentials/xlm/multisig"
 	stablecoin "github.com/Varunram/essentials/xlm/stablecoin"
 	wallet "github.com/Varunram/essentials/xlm/wallet"
-	consts "github.com/YaleOpenLab/openx/consts"
 	"github.com/pkg/errors"
 )
 
@@ -44,7 +43,7 @@ func InitEscrow(projIndex int, seedpwd string, recpPubkey string, mySeed string,
 			return pubkey, errors.Wrap(err, "could not trust stablecoin, quitting!")
 		}
 	} else {
-		multisig.TrustAssetTx(consts.AnchorUSDCode, stablecoin.AnchorUSDAddress, "10000000000", pubkey, seed1, seed2)
+		multisig.TrustAssetTx(stablecoin.AnchorUSDCode, stablecoin.AnchorUSDAddress, "10000000000", pubkey, seed1, seed2)
 		if err != nil {
 			return pubkey, errors.Wrap(err, "could not trust stablecoin, quitting!")
 		}
@@ -64,7 +63,7 @@ func TransferFundsToEscrow(amount float64, projIndex int, escrowPubkey string, o
 			return errors.Wrap(err, "could not fund escrow, quitting!")
 		}
 	} else {
-		_, txhash, err = assets.SendAsset(consts.AnchorUSDCode, stablecoin.AnchorUSDAddress, escrowPubkey,
+		_, txhash, err = assets.SendAsset(stablecoin.AnchorUSDCode, stablecoin.AnchorUSDAddress, escrowPubkey,
 			amount, otherSeed, "escrow init")
 		if err != nil {
 			return errors.Wrap(err, "could not fund escrow, quitting!")
