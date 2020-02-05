@@ -88,6 +88,8 @@ func GetRandomString(n int) string {
 func ToBigInt(x interface{}) (*big.Int, error) {
 	log.Println("calling anything to byte function")
 	switch x.(type) {
+	case big.Int:
+		return x.(*big.Int), nil
 	case []byte:
 		return new(big.Int).SetBytes(x.([]byte)), nil
 	case int:
@@ -105,6 +107,8 @@ func ToBigInt(x interface{}) (*big.Int, error) {
 // ToByte converts a passed interface to bytes
 func ToByte(x interface{}) ([]byte, error) {
 	switch x.(type) {
+	case []byte:
+		return x.([]byte), nil
 	case int:
 		string1 := strconv.Itoa(x.(int))
 		return []byte(string1), nil
@@ -129,6 +133,8 @@ func ToByte(x interface{}) ([]byte, error) {
 // ToString converts a passed interface to string
 func ToString(x interface{}) (string, error) {
 	switch x.(type) {
+	case string:
+		return x.(string), nil
 	case float64:
 		return strconv.FormatFloat(x.(float64), 'f', 6, 64), nil
 	case int64:
@@ -144,6 +150,8 @@ func ToString(x interface{}) (string, error) {
 // ToInt converts a passed interface to int
 func ToInt(x interface{}) (int, error) {
 	switch x.(type) {
+	case int:
+		return x.(int), nil
 	case string:
 		return strconv.Atoi(x.(string))
 	case []byte:
@@ -157,6 +165,8 @@ func ToInt(x interface{}) (int, error) {
 // ToFloat converts a passed interface to float
 func ToFloat(x interface{}) (float64, error) {
 	switch x.(type) {
+	case float64:
+		return x.(float64), nil
 	case string:
 		return strconv.ParseFloat(x.(string), 32)
 	case int:
@@ -170,6 +180,8 @@ func ToFloat(x interface{}) (float64, error) {
 // ToUint16 converts a passed interface to uint16
 func ToUint16(x interface{}) (uint16, error) {
 	switch x.(type) {
+	case uint16:
+		return x.(uint16), nil
 	case []byte:
 		b := x.([]byte)
 		if len(b) == 1 {
