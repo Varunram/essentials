@@ -2,6 +2,7 @@ package xlm
 
 import (
 	"log"
+	"time"
 
 	"github.com/pkg/errors"
 
@@ -42,10 +43,17 @@ func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
 		return -1, "", errors.Wrap(err, "could not build/sign/encode")
 	}
 
-	resp, err := TestNetClient.SubmitTransactionXDR(txe)
+	var resp horizonprotocol.TransactionSuccess
+	resp, err = TestNetClient.SubmitTransactionXDR(txe)
 	if err != nil {
-		log.Println(err)
-		return -1, "", errors.Wrap(err, "could not submit tx to horizon")
+		// might be a problem with horizon that causes this
+		log.Println("failed to broadcast transaction the first time")
+		time.Sleep(5 * time.Second)
+		resp, err = TestNetClient.SubmitTransactionXDR(txe)
+		if err != nil {
+			log.Println(err)
+			return -1, "", errors.Wrap(err, "could not submit tx to horizon")
+		}
 	}
 
 	log.Printf("Propagated Transaction: %s, sequence: %d\n", resp.Hash, resp.Ledger)

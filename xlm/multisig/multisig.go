@@ -9,6 +9,7 @@ import (
 	utils "github.com/Varunram/essentials/utils"
 	xlm "github.com/Varunram/essentials/xlm"
 	"github.com/stellar/go/keypair"
+	horizonprotocol "github.com/stellar/go/protocols/horizon"
 	build "github.com/stellar/go/txnbuild"
 )
 
@@ -138,9 +139,17 @@ func New2of2(cosigner1Pubkey string, cosigner2Pubkey string) (string, error) {
 
 // SendTx broadcasts a multisig tx
 func SendTx(txXdr string) (int32, string, error) {
+	var resp horizonprotocol.TransactionSuccess
 	resp, err := xlm.TestNetClient.SubmitTransactionXDR(txXdr)
 	if err != nil {
-		return -1, "", errors.Wrap(err, "could not submit tx to horizon")
+		// might be a problem with horizon that causes this
+		log.Println("failed to broadcast multisig transaction the first time")
+		time.Sleep(5 * time.Second)
+		resp, err = xlm.TestNetClient.SubmitTransactionXDR(txXdr)
+		if err != nil {
+			log.Println(err)
+			return -1, "", errors.Wrap(err, "could not submit tx to horizon")
+		}
 	}
 
 	log.Printf("Propagated Transaction: %s, sequence: %d\n", resp.Hash, resp.Ledger)
