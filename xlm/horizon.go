@@ -210,7 +210,7 @@ func GetAssetBalance(publicKey string, assetName string) float64 {
 	// if the asset does not exist, the balance associated is zero
 	// but to differentiate between not having the asset and never
 	// having had the asset, we return -1
-	log.Println("Asset balance not found")
+	log.Println("Asset: ", assetName, " publickey: ", publicKey, " balance not found")
 	return 0
 }
 

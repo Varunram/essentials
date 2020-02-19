@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,6 +11,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // package rpc contains stuff that one would most likely define for their own database
@@ -43,8 +44,8 @@ func CheckGet(w http.ResponseWriter, r *http.Request) error {
 	//err := CheckOrigin(w, r)
 	if r.Method != "GET" {
 		ResponseHandler(w, StatusNotFound)
-		log.Println("method not get or origin not localhost")
-		return errors.New("method not get or origin not localhost")
+		log.Println("method not get")
+		return errors.New("method not get")
 	}
 	return nil
 }

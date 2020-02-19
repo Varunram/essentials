@@ -2,7 +2,6 @@ package xlm
 
 import (
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/pkg/errors"
@@ -19,11 +18,10 @@ func GetXLM(PublicKey string) error {
 	}
 
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	log.Println(string(body))
 	return nil
 }

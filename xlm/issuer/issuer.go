@@ -3,6 +3,7 @@ package issuer
 import (
 	"log"
 	"os"
+	"time"
 
 	utils "github.com/Varunram/essentials/utils"
 	xlm "github.com/Varunram/essentials/xlm"
@@ -64,6 +65,7 @@ func FundIssuer(issuerPath string, projIndex int, seedpwd string, funderSeed str
 		return errors.Wrap(err, "Error while sending xlm to create issuer")
 	}
 	log.Printf("Txhash for setting up Project Issuer for project %d is %s", projIndex, txhash)
+	time.Sleep(5 * time.Second)
 	_, txhash, err = xlm.SetAuthImmutable(seed)
 	if err != nil {
 		return errors.Wrap(err, "Error while setting auth immutable on account")
