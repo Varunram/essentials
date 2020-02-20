@@ -84,6 +84,7 @@ func SendFundsFromEscrow(escrowPubkey string, destination string, signer1 string
 	return multisig.Tx2of2(escrowPubkey, destination, signer1, signer2, amount, memo)
 }
 
-func SendAssetsFromEscrow(escrowPubkey string, destination string, signer1 string, signer2 string, amount float64, memo string, asset string) error {
-	return multisig.Tx2of2Asset(escrowPubkey, destination, signer1, signer2, amount, memo, asset)
+// SendAssetsFromEscrow sends assets to a destination address from the project escrow
+func SendAssetsFromEscrow(escrowPubkey string, destination string, issuer string, signer1 string, signer2 string, amount float64, memo string, asset string) error {
+	return multisig.Tx2of2Asset(escrowPubkey, destination, issuer, signer1, signer2, amount, asset, memo)
 }

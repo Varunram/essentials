@@ -202,7 +202,9 @@ func Tx2of2(pubkey1 string, destination string, signer1 string, signer2 string, 
 }
 
 // Tx2of2Asset constructs a non XLM tx where the source account pubkey1 is the 2of2 account, we need 2 signers for this tx
-func Tx2of2Asset(pubkey1 string, destination string, signer1 string, signer2 string, amountx float64, asset string, memo string) error {
+func Tx2of2Asset(pubkey1 string, destination string, assetIssuer string, signer1 string, signer2 string, amountx float64, asset string, memo string) error {
+	log.Println(pubkey1, destination, signer1, signer2)
+	log.Println(amountx, asset, memo)
 	sourceAccount, err := xlm.ReturnSourceAccountPubkey(pubkey1)
 	if err != nil {
 		return errors.Wrap(err, "could not load account details, quitting")
@@ -216,7 +218,7 @@ func Tx2of2Asset(pubkey1 string, destination string, signer1 string, signer2 str
 	op := build.Payment{
 		Destination: destination,
 		Amount:      amount,
-		Asset:       build.CreditAsset{asset, destination},
+		Asset:       build.CreditAsset{Code: asset, Issuer: assetIssuer},
 	}
 
 	tx := build.Transaction{
