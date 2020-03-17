@@ -24,9 +24,16 @@ const (
 	StatusServiceUnavailable  = http.StatusServiceUnavailable  //  503 RFC 7231, 6.6.4
 )
 
+// StatusResponse defines a generic status response structure
+type StatusResponse struct {
+	Code    int
+	Status  string
+	Message string
+}
+
 // ResponseHandler is the default response handler that sends out response codes on successful
 // completion of certain calls
-func ResponseHandler(w http.ResponseWriter, status int) {
+func ResponseHandler(w http.ResponseWriter, status int, messages ...string) {
 	var response StatusResponse
 	response.Code = status
 	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
@@ -79,6 +86,13 @@ func ResponseHandler(w http.ResponseWriter, status int) {
 	default:
 		response.Status = "404 Page Not Found"
 	}
+
+	var message string
+	if len(messages) > 0 {
+		message = messages[0]
+	}
+
+	response.Message = message
 	MarshalSend(w, response)
 }
 

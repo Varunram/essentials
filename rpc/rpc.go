@@ -17,12 +17,6 @@ import (
 
 // package rpc contains stuff that one would most likely define for their own database
 
-// StatusResponse defines a generic status response structure
-type StatusResponse struct {
-	Code   int
-	Status string
-}
-
 // SetupBasicHandlers sets up two handler functions that serve ping and default response at /
 func SetupBasicHandlers() {
 	SetupDefaultHandler()
@@ -385,7 +379,7 @@ func HTTPSRedirect(w http.ResponseWriter, r *http.Request, origin string) {
 	http.Redirect(w, r, "https://"+origin+r.RequestURI, http.StatusMovedPermanently)
 	// use the above like so:
 	/*
-		if err := http.ListenAndServe(":80", http.HandlerFunc(redirectTLS)); err != nil {
+		if err := http.ListenAndServe(":80", http.HandlerFunc(HTTPSRedirect)); err != nil {
 				log.Fatalf("ListenAndServe error: %v", err)
 		}
 	*/
