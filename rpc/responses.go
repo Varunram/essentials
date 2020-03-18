@@ -98,13 +98,13 @@ func ResponseHandler(w http.ResponseWriter, status int, messages ...string) {
 
 // MarshalSend marshals and writes a json string
 func MarshalSend(w http.ResponseWriter, x interface{}) {
-	xJson, err := json.Marshal(x)
+	xJSON, err := json.Marshal(x)
 	if err != nil {
 		log.Println("could not marshal json: ", err)
 		WriteToHandler(w, []byte("did not marshal json"))
 		return
 	}
-	WriteToHandler(w, xJson)
+	WriteToHandler(w, xJSON)
 }
 
 // WriteToHandler returns a reply to the passed writer
