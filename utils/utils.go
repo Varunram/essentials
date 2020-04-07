@@ -140,7 +140,7 @@ func ToString(x interface{}) (string, error) {
 	case int64:
 		return strconv.FormatInt(x.(int64), 10), nil // s == "97" (decimal)
 	case uint32:
-		return strconv.FormatUint(x.(uint64), 10), nil
+		return strconv.FormatUint(uint64(x.(uint32)), 10), nil
 	case int:
 		return strconv.Itoa(x.(int)), nil
 	}
