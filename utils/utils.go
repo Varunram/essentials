@@ -139,6 +139,8 @@ func ToString(x interface{}) (string, error) {
 		return strconv.FormatFloat(x.(float64), 'f', 6, 64), nil
 	case int64:
 		return strconv.FormatInt(x.(int64), 10), nil // s == "97" (decimal)
+	case uint32:
+		return strconv.FormatUint(x.(uint64), 10), nil
 	case int:
 		return strconv.Itoa(x.(int)), nil
 	}
