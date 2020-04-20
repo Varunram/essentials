@@ -29,6 +29,22 @@ func Unix() int64 {
 	return time.Now().Unix()
 }
 
+// IntToHumanTime converts an int64 to human readable time
+func IntToHumanTime(inputInt int64) string {
+	return time.Unix(inputInt, 0).String()
+}
+
+// StringToHumanTime converts a string to human readable time
+func StringToHumanTime(inputString string) string {
+	inputInt, err := strconv.ParseInt(inputString, 10, 64)
+	if err != nil {
+		log.Println(err)
+		return ""
+	}
+
+	return IntToHumanTime(inputInt)
+}
+
 // SHA3hash gets the SHA3-512 hash of the passed string
 func SHA3hash(inputString string) string {
 	byteString := sha3.Sum512([]byte(inputString))
