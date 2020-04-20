@@ -31,7 +31,7 @@ func Unix() int64 {
 
 // IntToHumanTime converts an int64 to human readable time
 func IntToHumanTime(inputInt int64) string {
-	return time.Unix(inputInt, 0).String()
+	return time.Unix(inputInt, 0).Format(time.RFC850)
 }
 
 // StringToHumanTime converts a string to human readable time
