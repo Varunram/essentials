@@ -34,12 +34,11 @@ func IntToHumanTime(inputInt int64) string {
 	return time.Unix(inputInt, 0).Format(time.RFC850)
 }
 
-// StringToHumanTime converts a string to human readable time
+// StringToHumanTime converts an int64 in string form to human readable time
 func StringToHumanTime(inputString string) string {
 	inputInt, err := strconv.ParseInt(inputString, 10, 64)
 	if err != nil {
 		log.Println(err)
-		return ""
 	}
 
 	return IntToHumanTime(inputInt)
@@ -47,13 +46,13 @@ func StringToHumanTime(inputString string) string {
 
 // StringToIntTime converts a string to unix time
 func StringToIntTime(inputString string) int64 {
-	inputInt, err := strconv.ParseInt(inputString, 10, 64)
+	layout := "Monday, 02-Jan-06 15:04:05 MST"
+	t, err := time.Parse(layout, inputString)
 	if err != nil {
-		log.Println(err)
-		return Unix()
+		return 0
 	}
 
-	return inputInt
+	return t.Unix()
 }
 
 // SHA3hash gets the SHA3-512 hash of the passed string
