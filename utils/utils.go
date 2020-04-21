@@ -45,6 +45,17 @@ func StringToHumanTime(inputString string) string {
 	return IntToHumanTime(inputInt)
 }
 
+// StringToIntTime converts a string to unix time
+func StringToIntTime(inputString string) int64 {
+	inputInt, err := strconv.ParseInt(inputString, 10, 64)
+	if err != nil {
+		log.Println(err)
+		return Unix()
+	}
+
+	return inputInt
+}
+
 // SHA3hash gets the SHA3-512 hash of the passed string
 func SHA3hash(inputString string) string {
 	byteString := sha3.Sum512([]byte(inputString))
