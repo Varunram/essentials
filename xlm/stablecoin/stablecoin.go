@@ -72,10 +72,9 @@ func ListenForPayments() {
 	ctx, cancel := context.WithCancel(context.Background()) // cancel
 	defer cancel()
 	go func() {
-		// Stop streaming after 60 seconds.
 		log.Println("monitoring payments made towards address")
 		time.Sleep(5 * time.Second) // refresh the thread every 5 seconds to check for payments
-		// cancel() don't cancel the handler, let it run indefinitely
+		// cancel() don't cancel, let it run indefinitely
 	}()
 
 	printHandler := func(op operations.Operation) {
@@ -92,18 +91,17 @@ func ListenForPayments() {
 			switch payment := op.(type) {
 			case operations.Payment:
 				log.Println("sending stablecoin to counterparty")
-				// log.Println("CHECK THIS OUT: ", payment.Asset.Type)
-				if payment.Asset.Type == "native" { // native asset
+				if payment.Asset.Type == "native" {
 					payee := payment.From
 					amount, _ := utils.ToFloat(payment.Amount)
 					log.Println("Received request for stablecoin from", payee, ",worth", amount)
+
 					xlmWorth := tickers.ExchangeXLMforUSD(amount)
 					log.Println("The deposited amount is worth: ", xlmWorth)
-					// now send the stableusd asset over to this guy
+
 					_, hash, err := assets.SendAssetFromIssuer(StablecoinCode, payee, xlmWorth, StablecoinSeed, StablecoinPublicKey)
 					if err != nil {
 						log.Println("Error while sending USD Assets back to payee: ", payee, err)
-						//  don't skip here, there's technically nothing we can do
 					}
 					log.Println("Successful payment, hash: ", hash)
 				}
