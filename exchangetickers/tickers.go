@@ -2,8 +2,10 @@ package tickers
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"log"
+	"sync"
+
+	"github.com/pkg/errors"
 
 	erpc "github.com/Varunram/essentials/rpc"
 	utils "github.com/Varunram/essentials/utils"
@@ -205,40 +207,79 @@ func KrakenVolume() (float64, error) {
 
 // XLMUSD returns aggregated XLMUSD ticker data
 func XLMUSD() (float64, error) {
-	binanceVolume, err := CoinbaseVolume()
-	if err != nil {
-		return -1, err
-	}
+	var wg sync.WaitGroup
 
-	cbVolume, err := CoinbaseVolume()
-	if err != nil {
-		return -1, err
-	}
+	binanceVolume, cbVolume, krakenVolume,
+		binanceTicker, cbTicker, krakenTicker := 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
 
-	krakenVolume, err := KrakenVolume()
-	if err != nil {
-		return -1, err
-	}
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		var err error
+		binanceVolume, err = CoinbaseVolume()
+		if err != nil {
+			log.Println(err)
+		}
+	}(&wg)
 
-	binanceTicker, err := CoinbaseTicker()
-	if err != nil {
-		return -1, err
-	}
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		var err error
+		cbVolume, err = CoinbaseVolume()
+		if err != nil {
+			log.Println(err)
+		}
+	}(&wg)
 
-	cbTicker, err := CoinbaseTicker()
-	if err != nil {
-		return -1, err
-	}
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		var err error
+		krakenVolume, err = KrakenVolume()
+		if err != nil {
+			log.Println(err)
+		}
+	}(&wg)
 
-	krakenTicker, err := KrakenTicker()
-	if err != nil {
-		return -1, err
-	}
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		var err error
+		binanceTicker, err = CoinbaseTicker()
+		if err != nil {
+			log.Println(err)
+		}
+	}(&wg)
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		var err error
+		cbTicker, err = CoinbaseTicker()
+		if err != nil {
+			log.Println(err)
+		}
+	}(&wg)
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		var err error
+		krakenTicker, err = KrakenTicker()
+		if err != nil {
+			log.Println(err)
+		}
+	}(&wg)
+
+	wg.Wait()
 
 	netVolume := binanceVolume + cbVolume + krakenVolume
 
 	// return weighted average of all the prices
-	return binanceTicker*(binanceVolume/netVolume) + cbTicker*(cbVolume/netVolume) + krakenTicker*(krakenVolume/netVolume), nil
+	return binanceTicker*(binanceVolume/netVolume) +
+		cbTicker*(cbVolume/netVolume) +
+		krakenTicker*(krakenVolume/netVolume), nil
 }
 
 // ExchangeXLMforUSD retrieves the current price of XLM/USD and then returns the USD amount

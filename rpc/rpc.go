@@ -145,7 +145,6 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 
 // PostForm is a handler that makes it easy to send out POST form requests
 func PostForm(body string, postdata url.Values) ([]byte, error) {
-
 	data, err := http.PostForm(body, postdata)
 	if err != nil {
 		log.Println("could not relay get request: ", err)
@@ -158,11 +157,7 @@ func PostForm(body string, postdata url.Values) ([]byte, error) {
 		}
 	}()
 
-	rData, err := ioutil.ReadAll(data.Body)
-	if err != nil {
-		log.Println(err)
-	}
-	return rData, err
+	return ioutil.ReadAll(data.Body)
 }
 
 // GetAndSendJson is a handler that makes a get request and returns json data
@@ -218,7 +213,6 @@ func PutAndSend(w http.ResponseWriter, body string, payload io.Reader) {
 // SetupDefaultHandler sets up the default handler (ie returns 404 for invalid routes)
 func SetupDefaultHandler() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		// default to 404 for every application not running on localhost
 		err := CheckGet(w, r)
 		if err != nil {
 			log.Println(err) // don't return a response since we've already written to the API caller
