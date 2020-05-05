@@ -15,8 +15,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// package rpc contains stuff that one would most likely define for their own database
-
 // SetupBasicHandlers sets up two handler functions that serve ping and default response at /
 func SetupBasicHandlers() {
 	SetupDefaultHandler()
@@ -68,22 +66,17 @@ func CheckPut(w http.ResponseWriter, r *http.Request) error {
 
 // GetRequest is a handler that makes it easy to send out GET requests
 func GetRequest(url string) ([]byte, error) {
-	var dummy []byte
 	client := &http.Client{
 		Timeout: TimeoutVal,
 	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	res, err := client.Get(url)
 	if err != nil {
-		log.Println("did not create new GET request: ", err)
-		return dummy, errors.Wrap(err, "did not create new GET request")
-	}
-	req.Header.Set("Origin", "localhost")
-
-	res, err := client.Do(req)
-	if err != nil {
-		log.Println("did not make request: ", err)
-		return dummy, errors.Wrap(err, "did not make request")
+		res, err = client.Get(url)
+		if err != nil {
+			log.Println("did not make request: ", err)
+			return nil, errors.Wrap(err, "did not make request")
+		}
 	}
 
 	defer func() {
@@ -98,7 +91,6 @@ func GetRequest(url string) ([]byte, error) {
 // PutRequest is a handler that makes it easy to send out PUT requests
 func PutRequest(body string, payload io.Reader) ([]byte, error) {
 	// the body must be the param that you usually pass to curl's -d option
-	var dummy []byte
 	client := &http.Client{
 		Timeout: TimeoutVal,
 	}
@@ -106,15 +98,15 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 	req, err := http.NewRequest("PUT", body, payload)
 	if err != nil {
 		log.Println("did not create new PUT request: ", err)
-		return dummy, errors.Wrap(err, "did not create new PUT request")
+		return nil, errors.Wrap(err, "did not create new PUT request")
 	}
+
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-	req.Header.Set("Origin", "localhost")
 
 	res, err := client.Do(req)
 	if err != nil {
 		log.Println("did not make request: ", err)
-		return dummy, errors.Wrap(err, "did not make request")
+		return nil, errors.Wrap(err, "did not make request")
 	}
 
 	defer func() {
@@ -123,19 +115,12 @@ func PutRequest(body string, payload io.Reader) ([]byte, error) {
 		}
 	}()
 
-	x, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Println("did not read from ioutil: ", err)
-		return dummy, errors.Wrap(err, "did not read from ioutil")
-	}
-
-	return x, nil
+	return ioutil.ReadAll(res.Body)
 }
 
 // PostRequest is a handler that makes it easy to send out POST requests
 func PostRequest(body string, payload io.Reader) ([]byte, error) {
 	// the body must be the param that you usually pass to curl's -d option
-	var dummy []byte
 	client := &http.Client{
 		Timeout: TimeoutVal,
 	}
@@ -143,14 +128,13 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 	req, err := http.NewRequest("POST", body, payload)
 	if err != nil {
 		log.Println("did not create new POST request: ", err)
-		return dummy, errors.Wrap(err, "did not create new POST request")
+		return nil, errors.Wrap(err, "did not create new POST request")
 	}
-	req.Header.Set("Origin", "localhost")
 
 	res, err := client.Do(req)
 	if err != nil {
 		log.Println("did not make request: ", err)
-		return dummy, errors.Wrap(err, "did not make request")
+		return nil, errors.Wrap(err, "did not make request")
 	}
 
 	defer func() {
@@ -159,13 +143,7 @@ func PostRequest(body string, payload io.Reader) ([]byte, error) {
 		}
 	}()
 
-	x, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Println("did not read from ioutil: ", err)
-		return dummy, errors.Wrap(err, "did not read from ioutil")
-	}
-
-	return x, nil
+	return ioutil.ReadAll(res.Body)
 }
 
 // SetupLocalHttpsClient can be used to setup a local client configured to accept a user generated cert
