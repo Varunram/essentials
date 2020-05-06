@@ -8,7 +8,6 @@ import (
 	utils "github.com/Varunram/essentials/utils"
 	xlm "github.com/Varunram/essentials/xlm"
 	stablecoin "github.com/Varunram/essentials/xlm/stablecoin"
-	"github.com/stellar/go/network"
 	build "github.com/stellar/go/txnbuild"
 )
 
@@ -31,13 +30,16 @@ func NewBuyOrder(seed string, assetName string, issuer string,
 		OfferID: 0,
 	}
 
-	tx := build.Transaction{
+	txparams := build.TransactionParams{
 		SourceAccount: &sourceAccount,
 		Operations:    []build.Operation{&buyOffer},
 		Timebounds:    build.NewInfiniteTimeout(),
-		Network:       network.TestNetworkPassphrase,
 	}
 
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return 0, "", errors.Wrap(err, "could not build new tx")
+	}
 	// once the offer is completed, we need to send a follow up tx to send funds to the requested address
 	return xlm.SendTx(mykp, tx)
 }
@@ -59,11 +61,15 @@ func NewSellOrder(seed string, assetName string, issuer string, amount string,
 		OfferID: 0,
 	}
 
-	tx := build.Transaction{
+	txparams := build.TransactionParams{
 		SourceAccount: &sourceAccount,
 		Operations:    []build.Operation{&sellOffer},
 		Timebounds:    build.NewInfiniteTimeout(),
-		Network:       network.TestNetworkPassphrase,
+	}
+
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return 0, "", errors.Wrap(err, "could not build new tx")
 	}
 
 	return xlm.SendTx(mykp, tx)
