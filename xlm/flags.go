@@ -16,11 +16,15 @@ func SetAuthImmutable(seed string) (int32, string, error) {
 		SetFlags: []build.AccountFlag{build.AuthImmutable},
 	}
 
-	tx := build.Transaction{
+	txparams := build.TransactionParams{
 		SourceAccount: &sourceAccount,
 		Operations:    []build.Operation{&op},
 		Timebounds:    build.NewInfiniteTimeout(),
-		Network:       Passphrase,
+	}
+
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return -1, "", err
 	}
 
 	return SendTx(mykp, tx)
@@ -40,11 +44,15 @@ func FreezeAccount(seed string) (int32, string, error) {
 		HighThreshold:   build.NewThreshold(0),
 	}
 
-	tx := build.Transaction{
+	txparams := build.TransactionParams{
 		SourceAccount: &sourceAccount,
 		Operations:    []build.Operation{&op},
 		Timebounds:    build.NewInfiniteTimeout(),
-		Network:       Passphrase,
+	}
+
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return -1, "", err
 	}
 
 	return SendTx(mykp, tx)

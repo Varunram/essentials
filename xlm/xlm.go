@@ -36,14 +36,20 @@ func AccountExists(publicKey string) bool {
 }
 
 // SendTx signs and broadcasts a given stellar tx
-func SendTx(mykp keypair.KP, tx build.Transaction) (int32, string, error) {
-	txe, err := tx.BuildSignEncode(mykp.(*keypair.Full))
+func SendTx(mykp keypair.KP, tx *build.Transaction) (int32, string, error) {
+	tx, err := tx.Sign(Passphrase, mykp.(*keypair.Full))
 	if err != nil {
 		log.Println(err)
-		return -1, "", errors.Wrap(err, "could not build/sign/encode")
+		return -1, "", errors.Wrap(err, "could not sign")
 	}
 
-	var resp horizonprotocol.TransactionSuccess
+	txe, err := tx.Base64()
+	if err != nil {
+		log.Println(err)
+		return -1, "", errors.Wrap(err, "could not convert to base 64")
+	}
+
+	var resp horizonprotocol.Transaction
 	resp, err = TestNetClient.SubmitTransactionXDR(txe)
 	if err != nil {
 		// might be a problem with horizon that causes this
@@ -78,11 +84,15 @@ func SendXLMCreateAccount(destination string, amountx float64, seed string) (int
 		Amount:      amount,
 	}
 
-	tx := build.Transaction{
+	txparams := build.TransactionParams{
 		SourceAccount: &sourceAccount,
 		Operations:    []build.Operation{&op},
 		Timebounds:    build.NewInfiniteTimeout(),
-		Network:       Passphrase,
+	}
+
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not create a new transaction")
 	}
 
 	return SendTx(mykp, tx)
@@ -139,12 +149,16 @@ func SendXLM(destination string, amountx float64, seed string, memo string) (int
 		Asset:       build.NativeAsset{},
 	}
 
-	tx := build.Transaction{
+	txparams := build.TransactionParams{
 		SourceAccount: &sourceAccount,
 		Operations:    []build.Operation{&op},
 		Timebounds:    build.NewInfiniteTimeout(),
-		Network:       Passphrase,
 		Memo:          build.Memo(build.MemoText(memo)),
+	}
+
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not create a new transaction")
 	}
 
 	return SendTx(mykp, tx)
