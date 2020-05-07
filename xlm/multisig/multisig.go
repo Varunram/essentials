@@ -34,14 +34,7 @@ func addSigner(seed string, pubkey string, cosignerPubkey string) error {
 		Signer: &build.Signer{cosignerPubkey, 1},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op1, &op2},
-		Timebounds:    build.NewInfiniteTimeout(),
-		Memo:          build.Memo(build.MemoText(memo)),
-	}
-
-	_, _, err = xlm.SendTx(mykp, txparams)
+	_, _, err = xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op1), build.Operation(&op2))
 	if err != nil {
 		return errors.Wrap(err, "error while sending tx to horizon")
 	}
@@ -73,14 +66,7 @@ func constructThresholdTx(seed string, pubkey string, cosignerPubkey string, y i
 		HighThreshold:   build.NewThreshold(x),
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op1, &op2},
-		Timebounds:    build.NewInfiniteTimeout(),
-		Memo:          build.Memo(build.MemoText(memo)),
-	}
-
-	_, _, err = xlm.SendTx(mykp, txparams)
+	_, _, err = xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op1), build.Operation(&op2))
 	if err != nil {
 		return errors.Wrap(err, "error while sending tx to horizon")
 	}
@@ -135,15 +121,76 @@ func New2of2(cosigner1Pubkey string, cosigner2Pubkey string) (string, error) {
 	return Newxofy(2, 2, cosigner1Pubkey, cosigner2Pubkey)
 }
 
-// SendTx broadcasts a multisig tx
-func SendTx(txXdr string) (int32, string, error) {
+// SendTx22 signs and broadcasts a given stellar tx
+func SendTx22(pubkey, signer1, signer2, memo string, ops ...build.Operation) (int32, string, error) {
+
+	sourceAccount, err := xlm.ReturnSourceAccountPubkey(pubkey)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not load account details")
+	}
+
+	kp1, err := keypair.Parse(signer1)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not parse keypair, quitting")
+	}
+
+	kp2, err := keypair.Parse(signer2)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not parse keypair, quitting")
+	}
+
+	txparams := build.TransactionParams{
+		SourceAccount:        &sourceAccount,
+		Operations:           ops,
+		Timebounds:           build.NewInfiniteTimeout(),
+		Memo:                 build.Memo(build.MemoText(memo)),
+		IncrementSequenceNum: true,
+		BaseFee:              build.MinBaseFee,
+	}
+
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not create a new transaction")
+	}
+
+	txsigned, err := tx.Sign(xlm.Passphrase, kp1.(*keypair.Full), kp2.(*keypair.Full))
+	if err != nil {
+		log.Println(err)
+		return -1, "", errors.Wrap(err, "could not sign")
+	}
+
+	txe, err := txsigned.Base64()
+	if err != nil {
+		log.Println(err)
+		return -1, "", errors.Wrap(err, "could not convert to base 64")
+	}
+
 	var resp horizonprotocol.Transaction
-	resp, err := xlm.TestNetClient.SubmitTransactionXDR(txXdr)
+	resp, err = xlm.TestNetClient.SubmitTransactionXDR(txe)
+	if err != nil {
+		// might be a problem with horizon that causes this
+		log.Println("failed to broadcast transaction the first time")
+		time.Sleep(5 * time.Second)
+		resp, err = xlm.TestNetClient.SubmitTransactionXDR(txe)
+		if err != nil {
+			log.Println(err)
+			return -1, "", errors.Wrap(err, "could not submit tx to horizon")
+		}
+	}
+
+	log.Printf("Propagated Transaction: %s, sequence: %d\n", resp.Hash, resp.Ledger)
+	return resp.Ledger, resp.Hash, nil
+}
+
+// SendTx broadcasts a multisig tx
+func SendTx(txe string) (int32, string, error) {
+	var resp horizonprotocol.Transaction
+	resp, err := xlm.TestNetClient.SubmitTransactionXDR(txe)
 	if err != nil {
 		// might be a problem with horizon that causes this
 		log.Println("failed to broadcast multisig transaction the first time")
 		time.Sleep(5 * time.Second)
-		resp, err = xlm.TestNetClient.SubmitTransactionXDR(txXdr)
+		resp, err = xlm.TestNetClient.SubmitTransactionXDR(txe)
 		if err != nil {
 			log.Println(err)
 			return -1, "", errors.Wrap(err, "could not submit tx to horizon")
@@ -155,12 +202,7 @@ func SendTx(txXdr string) (int32, string, error) {
 }
 
 // Tx2of2 constructs a tx where the source account pubkey1 is the 2of2 account, we need 2 signers for this tx
-func Tx2of2(pubkey1 string, destination string, signer1 string, signer2 string, amountx float64, memo string) error {
-	sourceAccount, err := xlm.ReturnSourceAccountPubkey(pubkey1)
-	if err != nil {
-		return errors.Wrap(err, "could not load account details, quitting")
-	}
-
+func Tx2of2(pubkey string, destination string, signer1 string, signer2 string, amountx float64, memo string) error {
 	amount, err := utils.ToString(amountx)
 	if err != nil {
 		return errors.Wrap(err, "could not convert to float, quitting")
@@ -172,49 +214,16 @@ func Tx2of2(pubkey1 string, destination string, signer1 string, signer2 string, 
 		Asset:       build.NativeAsset{},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-		Memo:          build.Memo(build.MemoText(memo)),
-	}
-
-	tx, err := build.NewTransaction(txparams)
+	_, _, err = SendTx22(pubkey, signer1, signer2, memo, build.Operation(&op))
 	if err != nil {
-		return errors.Wrap(err, "could not build new tx")
+		return errors.Wrap(err, "could not send 22")
 	}
 
-	kp1, err := keypair.Parse(signer1)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	kp2, err := keypair.Parse(signer2)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	txsign, err := tx.Sign(xlm.Passphrase, kp1.(*keypair.Full), kp2.(*keypair.Full))
-	if err != nil {
-		return errors.Wrap(err, "second party couldn't sign tx")
-	}
-
-	txe, err := txsign.Base64()
-	if err != nil {
-		return errors.Wrap(err, "could not convert tx to base64")
-	}
-
-	_, _, err = SendTx(txe)
 	return err
 }
 
 // Tx2of2Asset constructs a non XLM tx where the source account pubkey1 is the 2of2 account, we need 2 signers for this tx
-func Tx2of2Asset(pubkey1 string, destination string, assetIssuer string, signer1 string, signer2 string, amountx float64, asset string, memo string) error {
-	sourceAccount, err := xlm.ReturnSourceAccountPubkey(pubkey1)
-	if err != nil {
-		return errors.Wrap(err, "could not load account details, quitting")
-	}
-
+func Tx2of2Asset(pubkey string, destination string, assetIssuer string, signer1 string, signer2 string, amountx float64, asset string, memo string) error {
 	amount, err := utils.ToString(amountx)
 	if err != nil {
 		return errors.Wrap(err, "could not convert to float, quitting")
@@ -226,133 +235,44 @@ func Tx2of2Asset(pubkey1 string, destination string, assetIssuer string, signer1
 		Asset:       build.CreditAsset{Code: asset, Issuer: assetIssuer},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-		Memo:          build.Memo(build.MemoText(memo)),
-	}
-
-	tx, err := build.NewTransaction(txparams)
+	_, _, err = SendTx22(pubkey, signer1, signer2, memo, build.Operation(&op))
 	if err != nil {
-		return errors.Wrap(err, "could not build new tx")
+		return errors.Wrap(err, "could not send 22")
 	}
 
-	kp1, err := keypair.Parse(signer1)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	kp2, err := keypair.Parse(signer2)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	txsign, err := tx.Sign(xlm.Passphrase, kp1.(*keypair.Full), kp2.(*keypair.Full))
-	if err != nil {
-		return errors.Wrap(err, "second party couldn't sign tx")
-	}
-
-	txe, err := txsign.Base64()
-	if err != nil {
-		return errors.Wrap(err, "could not convert tx to base64")
-	}
-
-	_, _, err = SendTx(txe)
 	return err
 }
 
 // AuthImmutable2of2 sets the auth immutable flag on a multisig account
-func AuthImmutable2of2(pubkey1 string, signer1 string, signer2 string) error {
-	sourceAccount, err := xlm.ReturnSourceAccountPubkey(pubkey1)
-	if err != nil {
-		return errors.Wrap(err, "could not load account details, quitting")
-	}
-
+func AuthImmutable2of2(pubkey string, signer1 string, signer2 string) error {
 	op := build.SetOptions{
 		SetFlags: []build.AccountFlag{build.AuthImmutable},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
+	memo := ""
 
-	tx, err := build.NewTransaction(txparams)
+	_, _, err := SendTx22(pubkey, signer1, signer2, memo, build.Operation(&op))
 	if err != nil {
-		return errors.Wrap(err, "could not build new tx")
+		return errors.Wrap(err, "could not send 22")
 	}
 
-	kp1, err := keypair.Parse(signer1)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	kp2, err := keypair.Parse(signer2)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	txsign, err := tx.Sign(xlm.Passphrase, kp1.(*keypair.Full), kp2.(*keypair.Full))
-	if err != nil {
-		return errors.Wrap(err, "second party couldn't sign tx")
-	}
-
-	txe, err := txsign.Base64()
-	if err != nil {
-		return errors.Wrap(err, "could not convert tx to base64")
-	}
-
-	log.Println("built tx successfully")
-	_, _, err = SendTx(txe)
 	return err
 }
 
 // TrustAssetTx trusts a specific asset
 func TrustAssetTx(assetCode string, assetIssuer string, limit string, pubkey string, signer1 string, signer2 string) error {
-	sourceAccount, err := xlm.ReturnSourceAccountPubkey(pubkey)
-	if err != nil {
-		return errors.Wrap(err, "could not load account details, quitting")
-	}
-
 	op := build.ChangeTrust{
 		Line:  build.CreditAsset{assetCode, assetIssuer},
 		Limit: limit,
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
+	memo := ""
 
-	tx, err := build.NewTransaction(txparams)
+	_, _, err := SendTx22(pubkey, signer1, signer2, memo, build.Operation(&op))
 	if err != nil {
-		return errors.Wrap(err, "could not build new tx")
+		return errors.Wrap(err, "could not send 22")
 	}
 
-	kp1, err := keypair.Parse(signer1)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	kp2, err := keypair.Parse(signer2)
-	if err != nil {
-		return errors.Wrap(err, "could not parse keypair, quitting")
-	}
-
-	txsign, err := tx.Sign(xlm.Passphrase, kp1.(*keypair.Full), kp2.(*keypair.Full))
-	if err != nil {
-		return errors.Wrap(err, "second party couldn't sign tx")
-	}
-
-	txe, err := txsign.Base64()
-	if err != nil {
-		return errors.Wrap(err, "could not convert tx to base64")
-	}
-
-	_, _, err = SendTx(txe)
 	return err
 }
 
@@ -381,14 +301,7 @@ func Convert2of2(myPubkey string, seed string, cosignerPubkey string) error {
 		HighThreshold:   build.NewThreshold(2),
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op1, &op2},
-		Timebounds:    build.NewInfiniteTimeout(),
-		Memo:          build.Memo(build.MemoText(memo)),
-	}
-
-	_, _, err = xlm.SendTx(mykp, txparams)
+	_, _, err = xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op1), build.Operation(&op2))
 	if err != nil {
 		return errors.Wrap(err, "error while sending tx to horizon")
 	}

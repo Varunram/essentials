@@ -30,14 +30,9 @@ func NewBuyOrder(seed string, assetName string, issuer string,
 		OfferID: 0,
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&buyOffer},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
-
+	memo := "buy"
 	// once the offer is completed, we need to send a follow up tx to send funds to the requested address
-	return xlm.SendTx(mykp, txparams)
+	return xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&buyOffer))
 }
 
 // NewSellOrder creates a new sell order on the stellar dex
@@ -57,13 +52,9 @@ func NewSellOrder(seed string, assetName string, issuer string, amount string,
 		OfferID: 0,
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&sellOffer},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
+	memo := "sell"
 
-	return xlm.SendTx(mykp, txparams)
+	return xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&sellOffer))
 }
 
 // DexStableCoinBuy gets the price from an oracle and places an order on the DEX to buy AnchorUSD
