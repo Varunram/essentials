@@ -46,13 +46,9 @@ func TrustAsset(assetCode string, assetIssuer string, limitx float64, seed strin
 		Limit: limit,
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
+	memo := "trust asset"
 
-	_, txHash, err := xlm.SendTx(mykp, txparams)
+	_, txHash, err := xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op))
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -81,13 +77,9 @@ func SendAssetFromIssuer(assetCode string, destination string, amountx float64,
 		Asset:       build.CreditAsset{assetCode, issuerPubkey},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
+	memo := "send asset"
 
-	return xlm.SendTx(mykp, txparams)
+	return xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op))
 }
 
 // SendAssetToIssuer sends an asset back to the issuer
@@ -110,13 +102,9 @@ func SendAssetToIssuer(assetCode string, destination string, amountx float64,
 		Asset:       build.CreditAsset{assetCode, destination},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
+	memo := "send asset"
 
-	return xlm.SendTx(mykp, txparams)
+	return xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op))
 }
 
 // SendAsset sends an asset to a destination which has an established trustline with the issuer
@@ -139,12 +127,5 @@ func SendAsset(assetCode string, issuerPubkey string, destination string, amount
 		Asset:       build.CreditAsset{assetCode, issuerPubkey},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-		Memo:          build.Memo(build.MemoText(memo)),
-	}
-
-	return xlm.SendTx(mykp, txparams)
+	return xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op))
 }

@@ -36,7 +36,18 @@ func AccountExists(publicKey string) bool {
 }
 
 // SendTx signs and broadcasts a given stellar tx
-func SendTx(mykp keypair.KP, txparams build.TransactionParams) (int32, string, error) {
+func SendTx(mykp keypair.KP, sourceAccount *horizonprotocol.Account,
+	memo string, ops ...build.Operation) (int32, string, error) {
+
+	txparams := build.TransactionParams{
+		SourceAccount:        sourceAccount,
+		Operations:           ops,
+		Timebounds:           build.NewInfiniteTimeout(),
+		Memo:                 build.Memo(build.MemoText(memo)),
+		IncrementSequenceNum: true,
+		BaseFee:              build.MinBaseFee,
+	}
+
 	tx, err := build.NewTransaction(txparams)
 	if err != nil {
 		return -1, "", errors.Wrap(err, "could not create a new transaction")
@@ -89,13 +100,9 @@ func SendXLMCreateAccount(destination string, amountx float64, seed string) (int
 		Amount:      amount,
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-	}
+	memo := "create account"
 
-	return SendTx(mykp, txparams)
+	return SendTx(mykp, &sourceAccount, memo, build.Operation(&op))
 }
 
 // ReturnSourceAccount returns the source account of the seed
@@ -149,14 +156,7 @@ func SendXLM(destination string, amountx float64, seed string, memo string) (int
 		Asset:       build.NativeAsset{},
 	}
 
-	txparams := build.TransactionParams{
-		SourceAccount: &sourceAccount,
-		Operations:    []build.Operation{&op},
-		Timebounds:    build.NewInfiniteTimeout(),
-		Memo:          build.Memo(build.MemoText(memo)),
-	}
-
-	return SendTx(mykp, txparams)
+	return SendTx(mykp, &sourceAccount, memo, build.Operation(&op))
 }
 
 // RefillAccount refills an account

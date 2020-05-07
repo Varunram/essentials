@@ -35,6 +35,10 @@ type StatusResponse struct {
 // completion of certain calls
 func ResponseHandler(w http.ResponseWriter, status int, messages ...string) {
 	var response StatusResponse
+	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
+	w.Header().Add("Access-Control-Allow-Methods", "*")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
 	response.Code = status
 	switch status {
 	case StatusOK:
@@ -105,9 +109,5 @@ func MarshalSend(w http.ResponseWriter, x interface{}) {
 
 // WriteToHandler returns a reply to the passed writer
 func WriteToHandler(w http.ResponseWriter, jsonString []byte) {
-	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
-	w.Header().Add("Access-Control-Allow-Methods", "*")
-	w.Header().Add("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonString)
 }
