@@ -28,7 +28,6 @@ func CreateAsset(assetName string, PublicKey string) build.Asset {
 // preset limit on how much it is willing to trust the issuer
 func TrustAsset(assetCode string, assetIssuer string, limitx float64, seed string) (string, error) {
 	// TRUST is FROM Seed TO assetIssuer
-	log.Println("ASSETCODE: ", assetCode, "assetIssuer: ", assetIssuer, "limitx:", limitx, "seed=", seed)
 	sourceAccount, mykp, err := xlm.ReturnSourceAccount(seed)
 	if err != nil {
 		log.Println(err)

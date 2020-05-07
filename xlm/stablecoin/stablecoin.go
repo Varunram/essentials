@@ -90,20 +90,18 @@ func ListenForPayments() {
 		if op.IsTransactionSuccessful() {
 			switch payment := op.(type) {
 			case operations.Payment:
-				log.Println("sending stablecoin to counterparty")
 				if payment.Asset.Type == "native" {
 					payee := payment.From
 					amount, _ := utils.ToFloat(payment.Amount)
-					log.Println("Received request for stablecoin from", payee, ",worth", amount)
-
 					xlmWorth := tickers.ExchangeXLMforUSD(amount)
-					log.Println("The deposited amount is worth: ", xlmWorth)
 
-					_, hash, err := assets.SendAssetFromIssuer(StablecoinCode, payee, xlmWorth, StablecoinSeed, StablecoinPublicKey)
+					log.Println("Received request for stablecoin from", payee)
+
+					_, _, err := assets.SendAssetFromIssuer(StablecoinCode, payee, xlmWorth, StablecoinSeed, StablecoinPublicKey)
 					if err != nil {
 						log.Println("Error while sending USD Assets back to payee: ", payee, err)
 					}
-					log.Println("Successful payment, hash: ", hash)
+					log.Println("Sent STABLEUSD to: ", payee)
 				}
 			}
 		}

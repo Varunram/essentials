@@ -2,6 +2,7 @@ package stablecoin
 
 import (
 	"log"
+	"sync"
 
 	"github.com/pkg/errors"
 
@@ -21,31 +22,57 @@ func Exchange(recipientPK string, recipientSeed string, convAmount float64) erro
 		return errors.New("account does not exist, quitting")
 	}
 
-	// check whether user has enough xlm to pay. If not, quit
-	balance := xlm.GetNativeBalance(recipientPK)
-	if balance < convAmount {
-		return errors.New("balance is less than amount requested")
+	var balance, trustLimit float64
+
+	var wg sync.WaitGroup
+	err1 := make(chan error, 0)
+	err2 := make(chan error, 0)
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		balance = xlm.GetNativeBalance(recipientPK)
+		if balance < convAmount {
+			err1 <- errors.New("balance is less than amount requested")
+		}
+	}(&wg)
+
+	wg.Add(1)
+	go func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		trustLimit = xlm.GetAssetTrustLimit(recipientPK, StablecoinCode)
+		if trustLimit < convAmount && trustLimit != 0 {
+			err2 <- errors.New("trust limit doesn't warrant investment")
+		}
+	}(&wg)
+
+	wg.Wait()
+
+	select {
+	case err := <-err1:
+		log.Println(err)
+		return err
+	case err := <-err2:
+		log.Println(err)
+		return err
+	default:
+		break
 	}
 
-	trustLimit := xlm.GetAssetTrustLimit(recipientPK, StablecoinCode)
-	if trustLimit < convAmount && trustLimit != 0 {
-		return errors.New("trust limit doesn't warrant investment, please contact platform admin")
-	}
-
-	hash, err := assets.TrustAsset(StablecoinCode, StablecoinPublicKey, StablecoinTrustLimit, recipientSeed)
+	_, err := assets.TrustAsset(StablecoinCode, StablecoinPublicKey, StablecoinTrustLimit, recipientSeed)
 	if err != nil {
 		log.Println(err)
 		return errors.Wrap(err, "couldn't trust asset")
 	}
-	log.Println("tx hash for trusting stableUSD: ", hash)
-	// now send coins across and see if our tracker detects it
-	log.Println(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
-	_, hash, err = xlm.SendXLM(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
+	log.Println("stableUSD trustline created")
+
+	_, _, err = xlm.SendXLM(StablecoinPublicKey, convAmount, recipientSeed, "Exchange XLM for stablecoin")
 	if err != nil {
 		log.Println("error while sending XLM", StablecoinPublicKey, convAmount, recipientSeed, err)
 		return errors.Wrap(err, "couldn't send xlm")
 	}
-	log.Println("tx hash for sent xlm: ", hash, "pubkey: ", recipientPK)
+	log.Println("sent xlm / waiting to receive stableUSD")
+
 	return nil
 }
 
