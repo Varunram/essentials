@@ -63,17 +63,23 @@ func CheckPut(w http.ResponseWriter, r *http.Request) error {
 
 // GetRequest is a handler that makes it easy to send out GET requests
 func GetRequest(url string) ([]byte, error) {
+	var dummy []byte
 	client := &http.Client{
 		Timeout: TimeoutVal,
 	}
 
-	res, err := client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		res, err = client.Get(url)
-		if err != nil {
-			log.Println("did not make request: ", err)
-			return nil, errors.Wrap(err, "did not make request")
-		}
+		log.Println("did not create new GET request: ", err)
+		return dummy, errors.Wrap(err, "did not create new GET request")
+	}
+
+	req.Close = true
+
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println("did not make request: ", err)
+		return dummy, errors.Wrap(err, "did not make request")
 	}
 
 	defer func() {
