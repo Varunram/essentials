@@ -36,14 +36,19 @@ func AccountExists(publicKey string) bool {
 }
 
 // SendTx signs and broadcasts a given stellar tx
-func SendTx(mykp keypair.KP, tx *build.Transaction) (int32, string, error) {
-	tx, err := tx.Sign(Passphrase, mykp.(*keypair.Full))
+func SendTx(mykp keypair.KP, txparams build.TransactionParams) (int32, string, error) {
+	tx, err := build.NewTransaction(txparams)
+	if err != nil {
+		return -1, "", errors.Wrap(err, "could not create a new transaction")
+	}
+
+	txsigned, err := tx.Sign(Passphrase, mykp.(*keypair.Full))
 	if err != nil {
 		log.Println(err)
 		return -1, "", errors.Wrap(err, "could not sign")
 	}
 
-	txe, err := tx.Base64()
+	txe, err := txsigned.Base64()
 	if err != nil {
 		log.Println(err)
 		return -1, "", errors.Wrap(err, "could not convert to base 64")
@@ -90,12 +95,7 @@ func SendXLMCreateAccount(destination string, amountx float64, seed string) (int
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return -1, "", errors.Wrap(err, "could not create a new transaction")
-	}
-
-	return SendTx(mykp, tx)
+	return SendTx(mykp, txparams)
 }
 
 // ReturnSourceAccount returns the source account of the seed
@@ -156,12 +156,7 @@ func SendXLM(destination string, amountx float64, seed string, memo string) (int
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return -1, "", errors.Wrap(err, "could not create a new transaction")
-	}
-
-	return SendTx(mykp, tx)
+	return SendTx(mykp, txparams)
 }
 
 // RefillAccount refills an account

@@ -52,12 +52,7 @@ func TrustAsset(assetCode string, assetIssuer string, limitx float64, seed strin
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return "", errors.Wrap(err, "could not build new tx")
-	}
-
-	_, txHash, err := xlm.SendTx(mykp, tx)
+	_, txHash, err := xlm.SendTx(mykp, txparams)
 	if err != nil {
 		log.Println(err)
 		return "", err
@@ -92,12 +87,7 @@ func SendAssetFromIssuer(assetCode string, destination string, amountx float64,
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return -1, "", err
-	}
-
-	return xlm.SendTx(mykp, tx)
+	return xlm.SendTx(mykp, txparams)
 }
 
 // SendAssetToIssuer sends an asset back to the issuer
@@ -126,12 +116,7 @@ func SendAssetToIssuer(assetCode string, destination string, amountx float64,
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return -1, "", err
-	}
-
-	return xlm.SendTx(mykp, tx)
+	return xlm.SendTx(mykp, txparams)
 }
 
 // SendAsset sends an asset to a destination which has an established trustline with the issuer
@@ -161,10 +146,5 @@ func SendAsset(assetCode string, issuerPubkey string, destination string, amount
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return -1, "", err
-	}
-
-	return xlm.SendTx(mykp, tx)
+	return xlm.SendTx(mykp, txparams)
 }

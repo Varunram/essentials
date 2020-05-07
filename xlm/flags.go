@@ -22,12 +22,7 @@ func SetAuthImmutable(seed string) (int32, string, error) {
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return -1, "", err
-	}
-
-	return SendTx(mykp, tx)
+	return SendTx(mykp, txparams)
 }
 
 // FreezeAccount freezes an account
@@ -50,10 +45,5 @@ func FreezeAccount(seed string) (int32, string, error) {
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return -1, "", err
-	}
-
-	return SendTx(mykp, tx)
+	return SendTx(mykp, txparams)
 }

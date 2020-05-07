@@ -36,12 +36,8 @@ func NewBuyOrder(seed string, assetName string, issuer string,
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return 0, "", errors.Wrap(err, "could not build new tx")
-	}
 	// once the offer is completed, we need to send a follow up tx to send funds to the requested address
-	return xlm.SendTx(mykp, tx)
+	return xlm.SendTx(mykp, txparams)
 }
 
 // NewSellOrder creates a new sell order on the stellar dex
@@ -67,12 +63,7 @@ func NewSellOrder(seed string, assetName string, issuer string, amount string,
 		Timebounds:    build.NewInfiniteTimeout(),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return 0, "", errors.Wrap(err, "could not build new tx")
-	}
-
-	return xlm.SendTx(mykp, tx)
+	return xlm.SendTx(mykp, txparams)
 }
 
 // DexStableCoinBuy gets the price from an oracle and places an order on the DEX to buy AnchorUSD

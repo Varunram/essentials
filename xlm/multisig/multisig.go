@@ -41,12 +41,7 @@ func addSigner(seed string, pubkey string, cosignerPubkey string) error {
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return errors.Wrap(err, "could not build new tx")
-	}
-
-	_, _, err = xlm.SendTx(mykp, tx)
+	_, _, err = xlm.SendTx(mykp, txparams)
 	if err != nil {
 		return errors.Wrap(err, "error while sending tx to horizon")
 	}
@@ -85,12 +80,7 @@ func constructThresholdTx(seed string, pubkey string, cosignerPubkey string, y i
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return errors.Wrap(err, "could not build new tx")
-	}
-
-	_, _, err = xlm.SendTx(mykp, tx)
+	_, _, err = xlm.SendTx(mykp, txparams)
 	if err != nil {
 		return errors.Wrap(err, "error while sending tx to horizon")
 	}
@@ -398,12 +388,7 @@ func Convert2of2(myPubkey string, seed string, cosignerPubkey string) error {
 		Memo:          build.Memo(build.MemoText(memo)),
 	}
 
-	tx, err := build.NewTransaction(txparams)
-	if err != nil {
-		return errors.Wrap(err, "could not build new tx")
-	}
-
-	_, _, err = xlm.SendTx(mykp, tx)
+	_, _, err = xlm.SendTx(mykp, txparams)
 	if err != nil {
 		return errors.Wrap(err, "error while sending tx to horizon")
 	}
