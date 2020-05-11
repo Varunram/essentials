@@ -1,8 +1,9 @@
 package algorand
 
 import (
-	"github.com/pkg/errors"
 	"log"
+
+	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
 	"github.com/algorand/go-algorand-sdk/client/algod"
@@ -320,16 +321,16 @@ func GenerateBackup(walletName string, password string) (string, error) {
 	return backupPhrase, nil
 }
 
-// AlgorandWallet defines the algorand wallet strcuture
-type AlgorandWallet struct {
+// Wallet defines the algorand wallet strcuture
+type Wallet struct {
 	WalletName string
 	WalletID   string
 }
 
 // GenNewWallet generates a new algorand wallet
-func GenNewWallet(walletName string, password string) (AlgorandWallet, error) {
+func GenNewWallet(walletName string, password string) (Wallet, error) {
 
-	var x AlgorandWallet
+	var x Wallet
 	var err error
 	if len(walletName) > 16 {
 		return x, errors.New("wallet name too long, quitting")

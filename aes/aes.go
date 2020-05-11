@@ -3,10 +3,11 @@ package aes
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
 )
@@ -35,7 +36,7 @@ func Encrypt(data []byte, passphrase string) ([]byte, error) {
 func Decrypt(data []byte, passphrase string) ([]byte, error) {
 	if len(data) == 0 || len(passphrase) == 0 {
 		log.Println("length of data is zero, can't decrypt")
-		return data, errors.New("Length of data is zero, can't decrpyt!")
+		return data, errors.New("length of data is zero, can't decrpyt")
 	}
 
 	sha3Hash := utils.SHA3hash(passphrase)

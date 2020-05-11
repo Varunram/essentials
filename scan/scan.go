@@ -3,11 +3,12 @@ package scan
 import (
 	"bufio"
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"os"
 	"strconv"
 	"syscall"
+
+	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
 	"golang.org/x/crypto/ssh/terminal"
@@ -15,8 +16,8 @@ import (
 
 // package scan can be used by CLI clients that want to accept inptus from the CLI
 
-// ScanInt scans for an integer
-func ScanInt() (int, error) {
+// Int scans for an integer
+func Int() (int, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -30,8 +31,8 @@ func ScanInt() (int, error) {
 	return numI, nil
 }
 
-// ScanFloat scans for a float
-func ScanFloat() (float64, error) {
+// Float scans for a float
+func Float() (float64, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -43,8 +44,8 @@ func ScanFloat() (float64, error) {
 	return x, err
 }
 
-// ScanString scans for a string
-func ScanString() (string, error) {
+// String scans for a string
+func String() (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -54,8 +55,8 @@ func ScanString() (string, error) {
 	return inputString, nil
 }
 
-// ScanStringCheckInt scans for a string checking whether it is an integer
-func ScanStringCheckInt() (string, error) {
+// StringCheckInt scans for a string checking whether it is an integer
+func StringCheckInt() (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -69,8 +70,8 @@ func ScanStringCheckInt() (string, error) {
 	return inputString, nil
 }
 
-// ScanStringCheckFloat scans for a string checking whether its a float
-func ScanStringCheckFloat() (string, error) {
+// StringCheckFloat scans for a string checking whether its a float
+func StringCheckFloat() (string, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Scan()
 	if scanner.Err() != nil {
@@ -84,8 +85,8 @@ func ScanStringCheckFloat() (string, error) {
 	return inputString, nil
 }
 
-// ScanPassword scans for a password
-func ScanPassword() (string, error) {
+// Password scans for a password
+func Password() (string, error) {
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Println()
 	if err != nil {
@@ -97,8 +98,8 @@ func ScanPassword() (string, error) {
 	return hashedPassword, nil
 }
 
-// ScanRawPassword scans for a raw password
-func ScanRawPassword() (string, error) {
+// RawPassword scans for a raw password
+func RawPassword() (string, error) {
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	fmt.Println()
 	if err != nil {

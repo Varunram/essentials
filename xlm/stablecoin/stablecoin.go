@@ -31,7 +31,7 @@ func InitStableCoin() (string, string, error) {
 	if _, err := os.Stat(StableCoinSeedFile); !os.IsNotExist(err) {
 		// the seed exists
 		fmt.Println("ENTER YOUR PASSWORD TO DECRYPT THE STABLECOIN SEED FILE")
-		password, err := scan.ScanRawPassword()
+		password, err := scan.RawPassword()
 		if err != nil {
 			return "", "", errors.Wrap(err, "couldn't scan raw password")
 		}
@@ -42,7 +42,7 @@ func InitStableCoin() (string, string, error) {
 	} else {
 		// stablecoin doesn't exist yet
 		fmt.Println("Enter a password to encrypt your stablecoin's master seed. Please store this in a very safe place. This prompt will not ask to confirm your password")
-		password, err := scan.ScanRawPassword()
+		password, err := scan.RawPassword()
 		if err != nil {
 			return "", "", err
 		}

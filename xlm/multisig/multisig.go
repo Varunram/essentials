@@ -31,7 +31,7 @@ func addSigner(seed string, pubkey string, cosignerPubkey string) error {
 	}
 
 	op2 := build.SetOptions{
-		Signer: &build.Signer{cosignerPubkey, 1},
+		Signer: &build.Signer{Address: cosignerPubkey, Weight: 1},
 	}
 
 	_, _, err = xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&op1), build.Operation(&op2))
@@ -249,7 +249,7 @@ func AuthImmutable2of2(pubkey string, signer1 string, signer2 string) error {
 		SetFlags: []build.AccountFlag{build.AuthImmutable},
 	}
 
-	memo := ""
+	memo := "auth immutable"
 
 	_, _, err := SendTx22(pubkey, signer1, signer2, memo, build.Operation(&op))
 	if err != nil {
@@ -262,11 +262,11 @@ func AuthImmutable2of2(pubkey string, signer1 string, signer2 string) error {
 // TrustAssetTx trusts a specific asset
 func TrustAssetTx(assetCode string, assetIssuer string, limit string, pubkey string, signer1 string, signer2 string) error {
 	op := build.ChangeTrust{
-		Line:  build.CreditAsset{assetCode, assetIssuer},
+		Line:  build.CreditAsset{Code: assetCode, Issuer: assetIssuer},
 		Limit: limit,
 	}
 
-	memo := ""
+	memo := "auth immutable"
 
 	_, _, err := SendTx22(pubkey, signer1, signer2, memo, build.Operation(&op))
 	if err != nil {
@@ -294,7 +294,7 @@ func Convert2of2(myPubkey string, seed string, cosignerPubkey string) error {
 	}
 
 	op2 := build.SetOptions{
-		Signer:          &build.Signer{cosignerPubkey, 1},
+		Signer:          &build.Signer{Address: cosignerPubkey, Weight: 1},
 		MasterWeight:    build.NewThreshold(1),
 		LowThreshold:    build.NewThreshold(2),
 		MediumThreshold: build.NewThreshold(2),

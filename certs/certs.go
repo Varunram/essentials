@@ -17,7 +17,7 @@ import (
 
 // ref: https://ericchiang.github.io/post/go-tls/
 
-// helper function to create a cert template with a serial number and other required fields
+// CertTemplate is a helper function to create a cert template with a serial number and other required fields
 func CertTemplate() (*x509.Certificate, error) {
 	// generate a random serial number (a real cert authority would have some logic behind this)
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
@@ -58,6 +58,7 @@ func createCert(template, parent *x509.Certificate, pub interface{}, parentPriv 
 	return
 }
 
+// GenCert generates a new certificate
 func GenCert() (string, string, tls.Certificate, error) {
 	// generate a new key-pair
 	var keypem []byte

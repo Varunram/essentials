@@ -57,8 +57,8 @@ func NewSellOrder(seed string, assetName string, issuer string, amount string,
 	return xlm.SendTx(mykp, &sourceAccount, memo, build.Operation(&sellOffer))
 }
 
-// DexStableCoinBuy gets the price from an oracle and places an order on the DEX to buy AnchorUSD
-func DexStableCoinBuy(seed string, amount string) (int32, string, error) {
+// StableCoinBuy gets the price from an oracle and places an order on the DEX to buy AnchorUSD
+func StableCoinBuy(seed string, amount string) (int32, string, error) {
 	assetName := "USD"
 	issuer := stablecoin.AnchorUSDAddress
 	price, err := ticker.BinanceTicker()
@@ -70,8 +70,8 @@ func DexStableCoinBuy(seed string, amount string) (int32, string, error) {
 	return NewBuyOrder(seed, assetName, issuer, amount, ftss)
 }
 
-// DexStableCoinSell places a sell order for STABLEUSD on the Stellar dex
-func DexStableCoinSell(seed string, amount string) (int32, string, error) {
+// StableCoinSell places a sell order for STABLEUSD on the Stellar dex
+func StableCoinSell(seed string, amount string) (int32, string, error) {
 	assetName := "USD"
 	issuer := stablecoin.AnchorUSDAddress
 	price, err := ticker.BinanceTicker()

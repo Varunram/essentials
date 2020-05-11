@@ -39,8 +39,8 @@ func ReadfromFile(filepath string) ([]byte, error) {
 	return data, err
 }
 
-// IpfsAddString stores the passed string in ipfs and returns the hash
-func IpfsAddString(a string) (string, error) {
+// AddString stores the passed string in ipfs and returns the hash
+func AddString(a string) (string, error) {
 	sh := RetrieveShell()
 	hash, err := sh.Add(strings.NewReader(a)) // input must be an io.Reader
 	if err != nil {
@@ -49,8 +49,8 @@ func IpfsAddString(a string) (string, error) {
 	return hash, err
 }
 
-// IpfsAddFile returns the ipfs hash of a file
-func IpfsAddFile(filepath string) (string, error) {
+// AddFile returns the ipfs hash of a file
+func AddFile(filepath string) (string, error) {
 	var dummy string
 	dataStream, err := ReadfromFile(filepath)
 	if err != nil {
@@ -67,8 +67,8 @@ func IpfsAddFile(filepath string) (string, error) {
 	return hash, err
 }
 
-// IpfsAddBytes hashes a byte string
-func IpfsAddBytes(data []byte) (string, error) {
+// AddBytes hashes a byte string
+func AddBytes(data []byte) (string, error) {
 	reader := bytes.NewReader(data)
 	sh := RetrieveShell()
 	hash, err := sh.Add(reader)
@@ -78,11 +78,11 @@ func IpfsAddBytes(data []byte) (string, error) {
 	return hash, err
 }
 
-// IpfsGetFile gets back the contents of an ipfs hash and stores them
+// GetFile gets back the contents of an ipfs hash and stores them
 // in the required extension format. This has to match with the extension
 // format that the original file had or else one would not be able to view
 // the file
-func IpfsGetFile(hash string, extension string) (string, error) {
+func GetFile(hash string, extension string) (string, error) {
 	// extension can be pdf, txt, ppt and others
 	sh := RetrieveShell()
 	// generate a random fileName and then return the file to the user
@@ -90,8 +90,8 @@ func IpfsGetFile(hash string, extension string) (string, error) {
 	return fileName, sh.Get(hash, fileName)
 }
 
-// IpfsGetString gets back the contents of an ipfs hash as a string
-func IpfsGetString(hash string) (string, error) {
+// GetString gets back the contents of an ipfs hash as a string
+func GetString(hash string) (string, error) {
 	sh := RetrieveShell()
 	// since ipfs doesn't provide a method to read the string directly, we create a
 	// random file at tmp/, decrypt contents to that fiel and then read the file

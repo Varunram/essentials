@@ -2,16 +2,20 @@ package database
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"log"
 	"os"
 	"runtime"
+
+	"github.com/pkg/errors"
 
 	utils "github.com/Varunram/essentials/utils"
 	"github.com/boltdb/bolt"
 )
 
+// ErrBucketMissing is an error handler for a missing bucket
 var ErrBucketMissing = errors.New("bucket doesn't exist")
+
+// ErrElementNotFound is an error handler for a missing element
 var ErrElementNotFound = errors.New("element not found")
 
 // package database contains useful boltdb handlers
@@ -194,7 +198,7 @@ func RetrieveAllKeys(dir string, bucketName []byte) ([][]byte, error) {
 	return arr, err
 }
 
-// RetrieveAllKeys retrieves all key value pairs from the database
+// RetrieveAllKeysLim gets the total number of keys in a bucket
 func RetrieveAllKeysLim(dir string, bucketName []byte) (int, error) {
 	lim := 0
 	db, err := OpenDB(dir)

@@ -1,9 +1,10 @@
 package wallet
 
 import (
-	"github.com/pkg/errors"
 	"log"
 	"os"
+
+	"github.com/pkg/errors"
 
 	aes "github.com/Varunram/essentials/aes"
 	"github.com/stellar/go/keypair"
@@ -73,7 +74,7 @@ func DecryptSeed(encryptedSeed []byte, seedpwd string) (string, error) {
 // ReturnPubkey returns the pubkey when passed the seed
 func ReturnPubkey(seed string) (string, error) {
 	if len(seed) == 0 {
-		return seed, errors.New("Empty Seed passed!")
+		return seed, errors.New("empty Seed passed")
 	}
 	keyp, err := keypair.Parse(seed)
 	return keyp.Address(), errors.Wrap(err, "could not parse seed to get keypair")
