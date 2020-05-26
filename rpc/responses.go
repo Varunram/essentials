@@ -31,19 +31,14 @@ type StatusResponse struct {
 	Message string
 }
 
-// HeaderSet sets the needed headers on a writer
-func HeaderSet(w http.ResponseHandler) {
-	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
-	w.Header().Add("Access-Control-Allow-Methods", "*")
-	w.Header().Add("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-Type", "application/json")
-}
-
 // ResponseHandler is the default response handler that sends out response codes on successful
 // completion of certain calls
 func ResponseHandler(w http.ResponseWriter, status int, messages ...string) {
 	var response StatusResponse
-	HeaderSet(w)
+	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
+	w.Header().Add("Access-Control-Allow-Methods", "*")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
 	response.Code = status
 	switch status {
 	case StatusOK:
@@ -103,7 +98,10 @@ func ResponseHandler(w http.ResponseWriter, status int, messages ...string) {
 
 // MarshalSend marshals and writes a json string
 func MarshalSend(w http.ResponseWriter, x interface{}) {
-	HeaderSet(w)
+	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
+	w.Header().Add("Access-Control-Allow-Methods", "*")
+	w.Header().Add("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
 	xJSON, err := json.Marshal(x)
 	if err != nil {
 		log.Println("could not marshal json: ", err)
