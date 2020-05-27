@@ -313,6 +313,8 @@ github.com/spf13/viper v0.0.0-20150621231900-db7ff930a189/go.mod h1:A8kyI5cUJhb8
 github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4/go.mod h1:RZLeN1LMWmRsyYjvAu+I6Dm9QmlDaIIt+Y+4Kd7Tp+Q=
 github.com/steakknife/bloomfilter v0.0.0-20180922174646-6819c0d2a570/go.mod h1:8OR4w3TdeIHIh1g6EMY5p0gVNOovcWC+1vpc7naMuAw=
 github.com/steakknife/hamming v0.0.0-20180906055917-c99c65617cd3/go.mod h1:hpGUWaI9xL8pRQCTXQgocU38Qw1g0Us7n5PxxTwTCYU=
+github.com/stellar/go v0.0.0-20200515153832-820becd8083b h1:bXG6jOM0MGSyR4euTMYZPazBbtUZbt/ZzphYN1vZ04I=
+github.com/stellar/go v0.0.0-20200515153832-820becd8083b/go.mod h1:kfZjGLxoc7P6QAk7BOrXL1qVk7gJV3+OSk4FCf0dXsM=
 github.com/stellar/go v0.0.0-20200519000909-93dd37921340 h1:14QFc3b6Yeb4sNZ1kbtK4H/3WJc4l9wRsANIQweCHFY=
 github.com/stellar/go v0.0.0-20200519000909-93dd37921340/go.mod h1:Q4JDgZhGw7Ytu1924PzNkwr2GsLptrzAjwC/icuXnLU=
 github.com/stellar/go-xdr v0.0.0-20180917104419-0bc96f33a18e h1:n/hfey8pO+RYMoGXyvyzuw5pdO8IFDoyAL/g5OiCesY=

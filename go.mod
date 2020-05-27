@@ -10,7 +10,7 @@ require (
 	github.com/ipfs/go-ipfs-api v0.0.3
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/pkg/errors v0.9.1
-	github.com/stellar/go v0.0.0-20200519000909-93dd37921340
+	github.com/stellar/go v0.0.0-20200515153832-820becd8083b
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
 	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 )
