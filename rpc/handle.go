@@ -19,8 +19,9 @@ func Err(w http.ResponseWriter, err error, status int, msgs ...string) bool {
 	}
 
 	if err != nil {
+		log.Println(err)
 		if print {
-			log.Println(err, msgs[0])
+			log.Println(msgs[0])
 		}
 		if retmsg {
 			ResponseHandler(w, StatusBadRequest, msgs[1])
