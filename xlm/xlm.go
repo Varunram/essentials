@@ -2,7 +2,6 @@ package xlm
 
 import (
 	"log"
-	"time"
 
 	"github.com/pkg/errors"
 
@@ -68,13 +67,39 @@ func SendTx(mykp keypair.KP, sourceAccount *horizonprotocol.Account,
 	var resp horizonprotocol.Transaction
 	resp, err = TestNetClient.SubmitTransactionXDR(txe)
 	if err != nil {
-		// might be a problem with horizon that causes this
-		log.Println("failed to broadcast transaction the first time")
-		time.Sleep(5 * time.Second)
-		resp, err = TestNetClient.SubmitTransactionXDR(txe)
+		// might be a problem with horizon that causes this or might be a fee problem
+		// bump fee
+		log.Println("failed to broadcast transaction the first time: ", err)
+
+		txparams := build.TransactionParams{
+			SourceAccount:        sourceAccount,
+			Operations:           ops,
+			Timebounds:           build.NewInfiniteTimeout(),
+			Memo:                 build.Memo(build.MemoText(memo)),
+			IncrementSequenceNum: true,
+			BaseFee:              10000,
+		}
+
+		tx, err = build.NewTransaction(txparams)
+		if err != nil {
+			return -1, "", errors.Wrap(err, "could not create a new transaction")
+		}
+
+		txsigned, err = tx.Sign(Passphrase, mykp.(*keypair.Full))
 		if err != nil {
 			log.Println(err)
-			return -1, "", errors.Wrap(err, "could not submit tx to horizon")
+			return -1, "", errors.Wrap(err, "could not sign")
+		}
+
+		txe, err = txsigned.Base64()
+		if err != nil {
+			log.Println(err)
+			return -1, "", errors.Wrap(err, "could not convert to base 64")
+		}
+
+		resp, err = TestNetClient.SubmitTransactionXDR(txe)
+		if err != nil {
+			return -1, "", errors.Wrap(err, "could not propagate tx")
 		}
 	}
 
