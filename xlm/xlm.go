@@ -44,7 +44,7 @@ func SendTx(mykp keypair.KP, sourceAccount *horizonprotocol.Account,
 		Timebounds:           build.NewInfiniteTimeout(),
 		Memo:                 build.Memo(build.MemoText(memo)),
 		IncrementSequenceNum: true,
-		BaseFee:              build.MinBaseFee,
+		BaseFee:              1000,
 	}
 
 	tx, err := build.NewTransaction(txparams)
