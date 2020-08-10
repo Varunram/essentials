@@ -232,9 +232,9 @@ func PrintMemUsage() {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	log.Printf("Alloc = %v MiB", bToMb(m.Alloc))
-	log.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
-	log.Printf("\tSys = %v MiB", bToMb(m.Sys))
+	log.Printf("Alloc = %v MiB", BToMb(m.Alloc))
+	log.Printf("\tTotalAlloc = %v MiB", BToMb(m.TotalAlloc))
+	log.Printf("\tSys = %v MiB", BToMb(m.Sys))
 	log.Printf("\tNumGC = %v\n", m.NumGC)
 }
 
