@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"os/user"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -223,4 +224,21 @@ func ToUint16(x interface{}) (uint16, error) {
 
 	log.Println("type conversion not supported")
 	return 0, ErrTypeNotSupported
+}
+
+// PrintMemUsage outputs the current, total and OS memory being used. As well as the number 
+// of garage collection cycles completed.
+func PrintMemUsage() {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	log.Printf("Alloc = %v MiB", bToMb(m.Alloc))
+	log.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
+	log.Printf("\tSys = %v MiB", bToMb(m.Sys))
+	log.Printf("\tNumGC = %v\n", m.NumGC)
+}
+
+// BToMb converts bytes (b) to Mb
+func BToMb(b uint64) uint64 {
+    return b / 1024 / 1024
 }
