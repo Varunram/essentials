@@ -98,6 +98,7 @@ func ResponseHandler(w http.ResponseWriter, status int, messages ...string) {
 
 // MarshalSend marshals and writes a json string
 func MarshalSend(w http.ResponseWriter, x interface{}) {
+	w.Header().Add("Access-Control-Allow-Headers", "Access-Control-Allow-Origin")
 	w.Header().Add("Access-Control-Allow-Headers", "Accept, Authorization, Cache-Control, Content-Type")
 	w.Header().Add("Access-Control-Allow-Methods", "*")
 	w.Header().Add("Access-Control-Allow-Origin", "*")
