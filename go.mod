@@ -3,14 +3,12 @@ module github.com/Varunram/essentials
 go 1.13
 
 require (
-	bitbucket.org/ww/goautoneg v0.0.0-20120707110453-75cd24fc2f2c // indirect
 	github.com/algorand/go-algorand-sdk v1.3.0
 	github.com/bithyve/research v0.0.0-20191102090848-d238806b60bf
 	github.com/boltdb/bolt v1.3.1
 	github.com/ethereum/go-ethereum v1.9.14
 	github.com/ipfs/go-ipfs-api v0.0.3
 	github.com/jessevdk/go-flags v1.4.0
-	github.com/nullstyle/go-xdr v0.0.0-20180726165426-f4c839f75077 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/stellar/go v0.0.0-20201102212521-6182f21f97a7
 	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
